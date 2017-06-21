@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.DS_Store
+
+build/
+dev/
+
+.checksum
+
+*.zip
+*.crx
+*.pem
+*.xpi
+update.xml
+npm-debug.log.*
+/.gtm/
