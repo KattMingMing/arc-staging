@@ -1,5 +1,3 @@
-/// <reference path="../../globals.d.ts" />
-
 import { useAccessToken } from "app/backend/xhr";
 import { BlobAnnotator } from "app/components/BlobAnnotator";
 import { ProjectsOverview } from "app/components/ProjectsOverview";

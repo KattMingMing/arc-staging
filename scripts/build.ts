@@ -25,7 +25,7 @@ require("hash-files")({ files: ["./app/**", "./chrome/**", "./phabricator/**", "
 	tasks.replaceWebpack();
 	console.info("[Copy assets]");
 	console.info("--------------------------------");
-	tasks.copyAssets("build");
+	tasks.copyAssets("prod");
 
 	console.info("[Webpack Build]");
 	console.info("--------------------------------");

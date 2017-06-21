@@ -1,11 +1,11 @@
+import * as backend from "app/backend";
+import { SourcegraphIcon } from "app/components/Icons";
+import * as utils from "app/utils";
+import { addAnnotations, RepoRevSpec } from "app/utils/annotations";
+import { eventLogger, sourcegraphUrl } from "app/utils/context";
+import * as github from "app/utils/github";
+import { CodeCell, GitHubBlobUrl, GitHubMode } from "app/utils/types";
 import * as React from "react";
-import * as backend from "../backend";
-import * as utils from "../utils";
-import { addAnnotations, RepoRevSpec } from "../utils/annotations";
-import { eventLogger, sourcegraphUrl } from "../utils/context";
-import * as github from "../utils/github";
-import { CodeCell, GitHubBlobUrl, GitHubMode } from "../utils/types";
-import { SourcegraphIcon } from "./Icons";
 
 const className = "btn btn-sm tooltipped tooltipped-n";
 const buttonStyle = { marginRight: "5px" };

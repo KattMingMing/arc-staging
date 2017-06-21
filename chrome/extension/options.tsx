@@ -1,5 +1,3 @@
-/// <reference path="../../globals.d.ts" />
-
 import { isFirefoxExtension } from "app/utils";
 
 /**

@@ -1,16 +1,14 @@
 .PHONY: install build bundle phabricator deploy deploy-e2e test-unit test-watch test-e2e test-all selenium-chrome fmt fmt-check clean
 
-default: build
+default: bundle
 
 install:
 	yarn
 
-build: install
+bundle: install
 	yarn run build
-
-bundle: build
-	zip -r chrome-bundle.zip build/*
-	cd build && zip -r ../firefox-bundle.xpi *
+	zip -r chrome-bundle.zip dist/*
+	cd dist && zip -r ../firefox-bundle.xpi *
 
 phabricator: clean build
 	# this is phabricator, not umami, because we don't control the code and it references phabricator
@@ -25,11 +23,6 @@ test-unit:
 
 test-watch:
 	yarn run test:auto
-
-test-e2e:
-	cd ../../test/e2e2 && make browser-ext
-
-test-all: test-unit test-e2e fmt-check
 
 fmt:
 	yarn run fmt

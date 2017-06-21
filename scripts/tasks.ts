@@ -12,11 +12,11 @@ export function replaceWebpack(): void {
 	replaceTasks.forEach((task) => shelljs.cp(task.from, task.to));
 }
 
-export function copyAssets(type: string): void {
-	const env = type === "build" ? "prod" : type;
-	shelljs.rm("-rf", type);
-	shelljs.mkdir(type);
-	shelljs.cp(`chrome/manifest.${env}.json`, `${type}/manifest.json`);
-	shelljs.cp("-R", "chrome/assets/", type);
-	shelljs.exec(`jade -O "{ env: '${env}' }" -o ${type} chrome/views/`);
+export function copyAssets(env: string): void {
+	const dir = "dist";
+	shelljs.rm("-rf", dir);
+	shelljs.mkdir(dir);
+	shelljs.cp(`chrome/manifest.${env}.json`, `${dir}/manifest.json`);
+	shelljs.cp("-R", "chrome/assets/", dir);
+	shelljs.exec(`jade -O "{ env: '${env}' }" -o ${dir} chrome/views/`);
 }

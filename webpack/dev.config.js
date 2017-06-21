@@ -10,7 +10,7 @@ module.exports = {
 		umami: path.join(__dirname, '../phabricator/umami/umami.tsx')
 	},
 	output: {
-		path: path.join(__dirname, '../dev/js'),
+		path: path.join(__dirname, '../dist/js'),
 		filename: '[name].bundle.js',
 		chunkFilename: '[id].chunk.js'
 	},

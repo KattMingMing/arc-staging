@@ -9,7 +9,7 @@
     "build": "NODE_ENV=production ts-node scripts/build",
     "fmt": "./node_modules/.bin/tsfmt -r",
     "fmt-check": "./node_modules/.bin/tsfmt --verify",
-    "clean": "rm -rf build/ dev/ *.zip *.xpi .checksum"
+    "clean": "rm -rf dist/ *.zip *.xpi .checksum"
   },
   "author": "John Rothfels <john@sourcegraph.com>",
   "license": "MIT",

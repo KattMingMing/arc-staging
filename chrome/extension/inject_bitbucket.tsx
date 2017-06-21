@@ -1,10 +1,8 @@
-/// <reference path="../../globals.d.ts" />
-
+import { BitbucketBlobAnnotator } from "app/components/BitbucketBlobAnnotator";
 import * as bitbucket from "app/utils/bitbucket";
 import { BitbucketBrowseUrl, BitbucketMode } from "app/utils/types";
 import * as React from "react";
 import { render } from "react-dom";
-import { BitbucketBlobAnnotator } from "../../app/components/BitbucketBlobAnnotator";
 
 export function injectBitbucketApplication(): void {
 	window.addEventListener("load", () => {
@@ -17,7 +15,7 @@ function injectModules(): void {
 }
 
 function injectBitbucketBlobAnnotators(): void {
-	const bitbucketURL = bitbucket.getBitbucketState(global.window.location);
+	const bitbucketURL = bitbucket.getBitbucketState(window.location);
 	if (!bitbucketURL) {
 		return;
 	}
