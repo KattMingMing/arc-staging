@@ -1,5 +1,5 @@
-import { getDomain } from "../utils";
-import { Domain, SourcegraphURL } from "../utils/types";
+import { getDomain } from "app/utils";
+import { Domain, SourcegraphURL } from "app/utils/types";
 
 export function parseURL(loc: Location = window.location): SourcegraphURL {
 	const domain = getDomain(loc);

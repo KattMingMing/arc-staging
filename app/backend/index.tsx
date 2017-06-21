@@ -1,5 +1,5 @@
-import { sourcegraphUrl } from "../utils/context";
-import { doFetch as fetch } from "./xhr";
+import { doFetch as fetch } from "app/backend/xhr";
+import { sourcegraphUrl } from "app/utils/context";
 
 export const cacheKey = (repo: string, rev?: string) => `${repo}@${rev || null}`;
 

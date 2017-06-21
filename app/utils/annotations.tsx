@@ -1,10 +1,10 @@
 import * as Rx from "@sourcegraph/rxjs";
+import { eventLogger } from "app/utils/context";
+import { fetchJumpURL, getTooltip } from "app/utils/lsp";
+import { clearTooltip, getTooltipEventProperties, setTooltip, store, TooltipContext } from "app/utils/store";
+import * as tooltips from "app/utils/tooltips";
+import { CodeCell, TooltipData } from "app/utils/types";
 import * as _ from "lodash";
-import { eventLogger } from "../utils/context";
-import { fetchJumpURL, getTooltip } from "./lsp";
-import { clearTooltip, getTooltipEventProperties, setTooltip, store, TooltipContext } from "./store";
-import * as tooltips from "./tooltips";
-import { CodeCell, TooltipData } from "./types";
 
 export interface RepoRevSpec { // TODO(john): move to types.
 	repoURI: string;

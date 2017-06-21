@@ -1,5 +1,5 @@
-import * as phabricator from "../../app/utils/phabricator";
-import { injectPhabricatorBlobAnnotators } from "../../app/utils/phabricator_inject";
+import * as phabricator from "app/utils/phabricator";
+import { injectPhabricatorBlobAnnotators } from "app/utils/phabricator_inject";
 
 export function injectPhabricatorApplication(): void {
 	// make sure this is called before javelinPierce

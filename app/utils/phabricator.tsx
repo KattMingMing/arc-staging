@@ -1,5 +1,5 @@
-import { CodeCell, PhabChangeUrl, PhabDifferentialUrl, PhabDiffusionUrl, PhabRevisionUrl, PhabricatorCodeCell, PhabricatorMode } from "../../app/utils/types";
-import { phabricatorInstance } from "./context";
+import { phabricatorInstance } from "app/utils/context";
+import { CodeCell, PhabChangeUrl, PhabDifferentialUrl, PhabDiffusionUrl, PhabRevisionUrl, PhabricatorCodeCell, PhabricatorMode } from "app/utils/types";
 
 const REV_SHA_PATTERN = /r([0-9A-z]+)([0-9a-f]{40})/;
 

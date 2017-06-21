@@ -1,8 +1,8 @@
 /**
  * set the event logger before anything else proceeds, to avoid logging events before we have it set.
  */
-import { ExtensionEventLogger } from "../../app/tracking/ExtensionEventLogger";
-import { eventLogger, setEventLogger, setPhabricatorInstance, setSearchEnabled, setSourcegraphUrl } from "../../app/utils/context";
+import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
+import { eventLogger, setEventLogger, setPhabricatorInstance, setSearchEnabled, setSourcegraphUrl } from "app/utils/context";
 
 setEventLogger(new ExtensionEventLogger());
 

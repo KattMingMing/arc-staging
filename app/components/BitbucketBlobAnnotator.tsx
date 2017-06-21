@@ -1,9 +1,9 @@
+import * as backend from "app/backend";
+import * as utils from "app/utils";
+import { addAnnotations } from "app/utils/annotations";
+import { CodeCell } from "app/utils/types";
 import * as _ from "lodash";
 import * as React from "react";
-import * as backend from "../backend";
-import * as utils from "../utils";
-import { addAnnotations } from "../utils/annotations";
-import { CodeCell } from "../utils/types";
 
 interface Props {
 	blobElement: HTMLElement;

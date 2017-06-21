@@ -1,6 +1,6 @@
-import { sourcegraphUrl } from "../utils/context";
-import { EventLogger } from "./EventLogger";
-import { TelligentWrapper } from "./TelligentWrapper";
+import { EventLogger } from "app/tracking/EventLogger";
+import { TelligentWrapper } from "app/tracking/TelligentWrapper";
+import { sourcegraphUrl } from "app/utils/context";
 
 export class InPageEventLogger extends EventLogger {
 	private userId: string | null;

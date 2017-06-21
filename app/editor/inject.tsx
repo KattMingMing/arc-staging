@@ -1,6 +1,6 @@
+import { EditorApp } from "app/editor/EditorApp";
 import * as React from "react";
 import { render } from "react-dom";
-import { EditorApp } from "./EditorApp";
 
 const APP_ID = "sourcegraph-connect-editor";
 

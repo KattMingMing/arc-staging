@@ -7,7 +7,6 @@ const emphasisFontColor = "#666";
 const modalBorderColor = "#afb2b7";
 const dividerColor = "#e1e4e8";
 const lightContrastBackground = "#fafbfc";
-const altLightContrastBackground = "#f6f8fa";
 
 export const tooltip = {
 	backgroundColor: lightContrastBackground,

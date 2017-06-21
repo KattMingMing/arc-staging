@@ -1,4 +1,4 @@
-import { PhabricatorInstance } from "../../app/utils/classes";
+import { PhabricatorInstance } from "app/utils/classes";
 
 const securePhabricatorMap = {
 	"arcanist": "github.com/phacility/arcanist",

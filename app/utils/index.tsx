@@ -1,7 +1,5 @@
 import { isBrowserExtension } from "./context";
 import { Domain, GitHubURL } from "./types";
-import { parseURL as parseGitHubURL } from "../github/utils";
-import { parseURL as parseSourcegraphURL } from "../sourcegraph/utils";
 
 /**
  * supportedExtensions are the file extensions

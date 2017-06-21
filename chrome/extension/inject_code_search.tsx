@@ -1,8 +1,8 @@
-import * as backend from "../../app/backend";
-import { eventLogger, searchEnabled, sourcegraphUrl } from "../../app/utils/context";
-import { insertAfter } from "../../app/utils/dom";
-import { getPlatformName, parseURL } from "../../app/utils/index";
-import { GITHUB_LIGHT_THEME } from "../assets/themes/github_theme";
+import * as backend from "app/backend";
+import { eventLogger, searchEnabled, sourcegraphUrl } from "app/utils/context";
+import { insertAfter } from "app/utils/dom";
+import { getPlatformName, parseURL } from "app/utils/index";
+import { GITHUB_LIGHT_THEME } from "chrome/assets/themes/github_theme";
 
 import * as querystring from "query-string";
 
@@ -196,7 +196,7 @@ function renderSourcegraphSearchTab(): void {
 		if (isGitHubCodeSearch()) {
 			firstChild.className = "underline-nav-item selected";
 		}
-		firstChild.onclick = function(e: MouseEvent): void {
+		firstChild.onclick = function (e: MouseEvent): void {
 			window.location.hash = "";
 			if (isGitHubCodeSearch()) {
 				e.preventDefault();
@@ -341,7 +341,7 @@ function createCodeSearchFrame(parent: HTMLElement): HTMLIFrameElement {
 	if (renderedSearchFrame()) {
 		return renderedSearchFrame()!;
 	}
-	eventLogger.logSearchView({query: getSearchQuery()});
+	eventLogger.logSearchView({ query: getSearchQuery() });
 	const searchFrame = document.createElement("iframe") as HTMLIFrameElement;
 	searchFrame.id = CODE_SEARCH_ELEMENT_ID;
 	searchFrame.style.height = `calc(100vh - ${GITHUB_HEADER_HEIGHT}px)`;

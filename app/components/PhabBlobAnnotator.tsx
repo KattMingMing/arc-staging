@@ -1,10 +1,10 @@
+import * as backend from "app/backend";
+import { SourcegraphIcon } from "app/components/Icons";
+import * as utils from "app/utils";
+import { addAnnotations } from "app/utils/annotations";
+import { eventLogger } from "app/utils/context";
+import { CodeCell } from "app/utils/types";
 import * as React from "react";
-import * as backend from "../backend";
-import * as utils from "../utils";
-import { addAnnotations } from "../utils/annotations";
-import { eventLogger } from "../utils/context";
-import { CodeCell } from "../utils/types";
-import { SourcegraphIcon } from "./Icons";
 
 interface Props {
 	blobElement: HTMLElement;

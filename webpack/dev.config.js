@@ -17,8 +17,6 @@ module.exports = {
 	devtool: "cheap-module-source-map",
 	plugins: [
 		new webpack.NoErrorsPlugin(),
-		new webpack.optimize.OccurenceOrderPlugin(),
-		new webpack.IgnorePlugin(/[^/]+\/[\S]+.prod$/),
 		new webpack.DefinePlugin({
 			'process.env': {
 				NODE_ENV: JSON.stringify('development')
@@ -26,12 +24,16 @@ module.exports = {
 		})
 	],
 	resolve: {
-		extensions: ['', '.ts', '.tsx', '.js']
+		extensions: ['.ts', '.tsx', '.js'],
+		alias: {
+			app: path.resolve(__dirname, '..', 'app/'),
+			chrome: path.resolve(__dirname, '..', 'chrome/'),
+		}
 	},
 	module: {
 		loaders: [{
 			test: /\.tsx?$/,
-			loader: 'ts?' + JSON.stringify({
+			loader: 'ts-loader?' + JSON.stringify({
 				compilerOptions: {
 					noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
 				},

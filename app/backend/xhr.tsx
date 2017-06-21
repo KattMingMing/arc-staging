@@ -1,6 +1,6 @@
+import { getPlatformName } from "app/utils";
+import { isBrowserExtension } from "app/utils/context";
 import "whatwg-fetch";
-import { getPlatformName } from "../utils";
-import { isBrowserExtension } from "../utils/context";
 
 let token: string | null = null;
 export function useAccessToken(tok: string): void {

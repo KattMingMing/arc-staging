@@ -1,6 +1,6 @@
 /// <reference path="../../../globals.d.ts" />
 
-import { TelligentWrapper } from "../../../app/tracking/TelligentWrapper";
+import { TelligentWrapper } from "app/tracking/TelligentWrapper";
 
 let telligentWrapper: TelligentWrapper | null = null;
 

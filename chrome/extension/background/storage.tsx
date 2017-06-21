@@ -1,4 +1,4 @@
-import { sourcegraphUrl } from "../../../app/utils/context";
+import { sourcegraphUrl } from "app/utils/context";
 
 const application = "com.sourcegraph.browser_ext_host";
 let port = null;

@@ -1,5 +1,5 @@
-import * as utils from ".";
-import { CodeCell, GitHubBlobUrl, GitHubMode, GitHubPullUrl } from "./types";
+import * as utils from "app/utils";
+import { CodeCell, GitHubBlobUrl, GitHubMode, GitHubPullUrl } from "app/utils/types";
 
 function invariant(cond: any): void {
 	if (!cond) {

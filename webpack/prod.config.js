@@ -16,8 +16,6 @@ module.exports = {
 	},
 	devtool: "source-map",
 	plugins: [
-		new webpack.optimize.OccurenceOrderPlugin(),
-		new webpack.IgnorePlugin(/[^/]+\/[\S]+.dev$/),
 		new webpack.optimize.DedupePlugin(),
 		new webpack.optimize.UglifyJsPlugin({
 			sourceMap: true,
@@ -32,12 +30,16 @@ module.exports = {
 		})
 	],
 	resolve: {
-		extensions: ['', '.ts', '.tsx', '.js']
+		extensions: ['.ts', '.tsx', '.js'],
+		alias: {
+			app: path.resolve(__dirname, '..', 'app/'),
+			chrome: path.resolve(__dirname, '..', 'chrome/'),
+		}
 	},
 	module: {
 		loaders: [{
 			test: /\.tsx?$/,
-			loader: 'ts?' + JSON.stringify({
+			loader: 'ts-loader?' + JSON.stringify({
 				compilerOptions: {
 					noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
 				},

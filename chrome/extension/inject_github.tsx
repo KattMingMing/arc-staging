@@ -1,17 +1,17 @@
 /// <reference path="../../globals.d.ts" />
 
+import { useAccessToken } from "app/backend/xhr";
+import { BlobAnnotator } from "app/components/BlobAnnotator";
+import { ProjectsOverview } from "app/components/ProjectsOverview";
+import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
+import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
+import { eventLogger } from "app/utils/context";
+import * as github from "app/utils/github";
+import { getGitHubRoute, parseURL } from "app/utils/index";
+import * as tooltips from "app/utils/tooltips";
+import { GitHubBlobUrl, GitHubMode } from "app/utils/types";
 import * as React from "react";
 import { render } from "react-dom";
-import { useAccessToken } from "../../app/backend/xhr";
-import { BlobAnnotator } from "../../app/components/BlobAnnotator";
-import { ProjectsOverview } from "../../app/components/ProjectsOverview";
-import { injectGitHub as injectGitHubEditor } from "../../app/editor/inject";
-import { ExtensionEventLogger } from "../../app/tracking/ExtensionEventLogger";
-import { eventLogger } from "../../app/utils/context";
-import * as github from "../../app/utils/github";
-import { getGitHubRoute, parseURL } from "../../app/utils/index";
-import * as tooltips from "../../app/utils/tooltips";
-import { GitHubBlobUrl, GitHubMode } from "../../app/utils/types";
 import { injectCodeSearch } from "./inject_code_search";
 
 export function injectGitHubApplication(marker: HTMLElement): void {

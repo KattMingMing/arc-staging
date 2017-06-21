@@ -1,12 +1,11 @@
+import * as styles from "app/github/styles";
+import { getModeFromExtension, getPlatformName } from "app/utils";
+import { eventLogger, searchEnabled, sourcegraphUrl } from "app/utils/context";
+import { fetchJumpURL } from "app/utils/lsp";
+import { getTooltipEventProperties, store, TooltipState } from "app/utils/store";
+import { highlightBlock } from "highlight.js";
 import * as marked from "marked";
 import { style } from "typestyle";
-import * as styles from "../github/styles";
-import { getModeFromExtension, getPlatformName } from "../utils";
-import { eventLogger, searchEnabled, sourcegraphUrl } from "../utils/context";
-import { fetchJumpURL } from "./lsp";
-import { getTooltipEventProperties, store, TooltipState } from "./store";
-
-import { highlightBlock } from "highlight.js";
 
 let tooltip: HTMLElement;
 let loadingTooltip: HTMLElement;

@@ -1,6 +1,6 @@
 /// <reference path="../../globals.d.ts" />
 
-import { isFirefoxExtension } from "../../app/utils";
+import { isFirefoxExtension } from "app/utils";
 
 /**
  * Helpers

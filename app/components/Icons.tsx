@@ -1,6 +1,5 @@
 import * as React from "react";
 
-// tslint:disable-next-line
 const IconBase = require("react-icon-base");
 
 export class SourcegraphIcon extends React.Component<any, {}> {

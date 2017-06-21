@@ -1,9 +1,9 @@
-import * as backend from "../backend";
-import * as utils from "../utils";
-import { sourcegraphUrl } from "../utils/context";
-import * as phabricator from "../utils/phabricator";
-import { CodeCell } from "../utils/types";
-import { DiffusionProps, PhabBlobAnnotator, SourcegraphButton } from "./PhabBlobAnnotator";
+import * as backend from "app/backend";
+import { DiffusionProps, PhabBlobAnnotator, SourcegraphButton } from "app/components/PhabBlobAnnotator";
+import * as utils from "app/utils";
+import { sourcegraphUrl } from "app/utils/context";
+import * as phabricator from "app/utils/phabricator";
+import { CodeCell } from "app/utils/types";
 
 export class PhabDiffusionBlobAnnotator extends PhabBlobAnnotator<DiffusionProps> {
 	constructor(props: DiffusionProps) {

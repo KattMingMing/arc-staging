@@ -1,5 +1,5 @@
-import { getDomain } from "../utils";
-import { Domain, GitHubURL } from "../utils/types";
+import { getDomain } from "app/utils";
+import { Domain, GitHubURL } from "app/utils/types";
 
 export function parseURL(loc: Location = window.location): GitHubURL {
 	// TODO(john): this method has problems handling branch revisions with "/" character.
