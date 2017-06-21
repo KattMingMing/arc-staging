@@ -27,3 +27,11 @@ export function parseURL(loc: Location = window.location): SourcegraphURL {
 
 	return { uri, rev, path };
 }
+
+export function openSourcegraphTab(url: string): void {
+	chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url }, (opened) => {
+		if (!opened) {
+			window.open(url, "_blank");
+		}
+	});
+}

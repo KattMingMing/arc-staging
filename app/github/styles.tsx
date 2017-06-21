@@ -60,3 +60,10 @@ export const tooltipMoreActions = {
 	paddingLeft: "5px",
 	paddingRight: "5px",
 };
+
+export const fileNavButton = {
+	borderTopLeftRadius: 0,
+	borderBottomLeftRadius: 0,
+	color: "black",
+	textDecoration: "none",
+};

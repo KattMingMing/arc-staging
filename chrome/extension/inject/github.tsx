@@ -1,15 +1,20 @@
 import { useAccessToken } from "app/backend/xhr";
 import { BlobAnnotator } from "app/components/BlobAnnotator";
+import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
 import { ProjectsOverview } from "app/components/ProjectsOverview";
 import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
+import { fileNavButton } from "app/github/styles";
 import * as github from "app/github/util";
 import { injectCodeSearch } from "app/search/inject";
 import * as tooltips from "app/tooltips/dom";
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
-import { eventLogger } from "app/util/context";
+import { getPlatformName } from "app/util";
+import { eventLogger, sourcegraphUrl } from "app/util/context";
 import { GitHubBlobUrl, GitHubMode } from "app/util/types";
 import * as React from "react";
 import { render } from "react-dom";
+
+const OPEN_ON_SOURCEGRAPH_ID = "open-on-sourcegraph";
 
 export function injectGitHubApplication(marker: HTMLElement): void {
 	window.addEventListener("load", () => {
@@ -65,6 +70,7 @@ function injectModules(): void {
 		injectSourcegraphInternalTools();
 		injectCodeSearch();
 		injectGitHubEditor();
+		injectOpenOnSourcegraphButton();
 	});
 }
 
@@ -114,4 +120,55 @@ function injectSourcegraphInternalTools(): void {
 		(container as Element).insertBefore(mount, (container as Element).firstChild);
 		render(<ProjectsOverview />, mount);
 	}
+}
+
+/**
+ * Appends an Open on Sourcegraph button to the GitHub DOM.
+ * The button is only rendered on a repo homepage after the "find file" button.
+ */
+function injectOpenOnSourcegraphButton(): void {
+	// Only show button inside the file navigation section.
+	if (!document.querySelector(".file-navigation.in-mid-page")) {
+		return;
+	}
+
+	const fileNav = document.querySelector(".BtnGroup.float-right");
+	const container = createOpenOnSourcegraphIfNotExists();
+	if (fileNav && container) {
+		const url = openOnSourcegraphURL();
+		if (url) {
+			const findFile = fileNav.lastElementChild as HTMLElement;
+			findFile.className = findFile.className.replace("float-right", "");
+			container.className = "btn btn-sm empty-icon float-right BtnGroup-item";
+			fileNav.appendChild(container);
+			render(<OpenOnSourcegraph style={fileNavButton} url={url} onClick={() => openOnSourcegraphClickHandler()} />, container);
+		}
+	}
+}
+
+function createOpenOnSourcegraphIfNotExists(): HTMLElement {
+	let container = document.getElementById(OPEN_ON_SOURCEGRAPH_ID);
+	if (container) {
+		container.remove();
+	}
+
+	container = document.createElement("div");
+	container.id = OPEN_ON_SOURCEGRAPH_ID;
+	return container;
+}
+
+function openOnSourcegraphURL(): string | undefined {
+	const { uri, rev } = github.parseURL();
+	if (uri) {
+		const url = `${sourcegraphUrl}/${uri}`;
+		if (rev) {
+			return `${url}@${rev}`;
+		}
+		return `${url}?utm_source=${getPlatformName()}`;
+	}
+}
+
+function openOnSourcegraphClickHandler(): void {
+	const { uri } = github.parseURL();
+	eventLogger.logOpenOnSourcegraphButtonClicked(uri && { repo: uri });
 }

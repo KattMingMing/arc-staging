@@ -46,6 +46,10 @@ export abstract class EventLogger {
 		this.logEventForCategory("BrowserExtension", "Click", "SourcegraphSearchTabClicked", eventProperties);
 	}
 
+	logOpenOnSourcegraphButtonClicked(eventProperties: any = {}): void {
+		this.logEventForCategory("BrowserExtension", "Click", "OpenOnSourcegraphClicked", eventProperties);
+	}
+
 	protected abstract sendEvent(eventAction: string, eventProps: any): void;
 
 	private defaultProperties(): any {

@@ -1,5 +1,5 @@
 import * as backend from "app/backend";
-import { SourcegraphIcon } from "app/components/Icons";
+import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
 import * as github from "app/github/util";
 import { addAnnotations, RepoRevSpec } from "app/tooltips";
 import * as utils from "app/util";
@@ -8,7 +8,7 @@ import { CodeCell, GitHubBlobUrl, GitHubMode } from "app/util/types";
 import * as React from "react";
 
 const className = "btn btn-sm tooltipped tooltipped-n";
-const buttonStyle = { marginRight: "5px" };
+const buttonStyle = { marginRight: "5px", textDecoration: "none", color: "inherit"};
 const iconStyle = { marginTop: "-1px", paddingRight: "4px", fontSize: "18px" };
 
 interface Props {
@@ -232,19 +232,17 @@ export class BlobAnnotator extends React.Component<Props, State> {
 }
 
 function getSourcegraphButton(cantFindPrivateRepo: boolean, blobUrl: string, fileCallack: () => void, authCallback: () => void): JSX.Element {
+	let url = blobUrl;
+	let callback = fileCallack;
+	let ariaLabel = "View on Sourcegraph";
+	let customIconStyle = iconStyle;
+
+	// Not signed in or not auth'd for private repos
 	if (cantFindPrivateRepo) {
-		// Not signed in or not auth'd for private repos
-		return (<a href={`${sourcegraphUrl}/login?private=true&utm_source=${utils.getPlatformName()}`}
-			style={{ textDecoration: "none", color: "inherit" }} onClick={authCallback}>
-			<div style={buttonStyle} className={className} aria-label={`Authorize Sourcegraph`}>
-				<SourcegraphIcon style={Object.assign({ WebkitFilter: "grayscale(100%)" }, iconStyle)} />
-				Sourcegraph
-			</div>
-		</a>);
+		url = `${sourcegraphUrl}/login?private=true&utm_source=${utils.getPlatformName()}`;
+		callback = authCallback;
+		ariaLabel = "Authorize Sourcegraph";
+		customIconStyle = Object.assign({ WebkitFilter: "grayscale(100%)" }, customIconStyle);
 	}
-	return (<a href={blobUrl} style={{ textDecoration: "none", color: "inherit" }} onClick={fileCallack}>
-		<div style={buttonStyle} className={className} aria-label="View on Sourcegraph"><SourcegraphIcon style={iconStyle} />
-			Sourcegraph
-		</div>
-	</a>);
+	return <OpenOnSourcegraph ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />;
 }

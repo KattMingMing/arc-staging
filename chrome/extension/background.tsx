@@ -39,7 +39,7 @@ chrome.tabs.onUpdated.addListener((tabID, changeInfo) => {
 			chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
 				if (tabs.length > 1 && tabs[0].id !== tabID) {
 					chrome.tabs.remove(tabID, () => {
-						navigateSourcegraphTab(tabs[0].id!, changeInfo.url!);
+						navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, changeInfo.url!);
 					});
 				}
 			});
@@ -47,9 +47,11 @@ chrome.tabs.onUpdated.addListener((tabID, changeInfo) => {
 	}
 });
 
-function navigateSourcegraphTab(tabID: number, url: string): void {
-	chrome.tabs.update(tabID, { active: true }, () => {
-		chrome.tabs.executeScript(tabID, { code: `window.dispatchEvent(new CustomEvent("browser-ext-navigate", {detail: {url: "${url}"}}))` });
+function navigateSourcegraphTab(windowID: number, tabID: number, url: string): void {
+	chrome.windows.update(windowID, { focused: true }, () => {
+		chrome.tabs.update(tabID, { active: true }, () => {
+			chrome.tabs.executeScript(tabID, { code: `window.dispatchEvent(new CustomEvent("browser-ext-navigate", {detail: {url: "${url}"}}))` });
+		});
 	});
 }
 
@@ -75,7 +77,7 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 		case "openSourcegraphTab":
 			chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
 				if (tabs.length > 0) {
-					navigateSourcegraphTab(tabs[0].id!, message.url);
+					navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, message.url);
 					cb(true);
 				} else {
 					cb(false);

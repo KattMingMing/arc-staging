@@ -1,4 +1,5 @@
 import * as styles from "app/github/styles";
+import { openSourcegraphTab } from "app/sourcegraph/util";
 import { getTooltipEventProperties, store, TooltipState } from "app/tooltips/store";
 import { getModeFromExtension, getPlatformName } from "app/util";
 import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
@@ -52,11 +53,7 @@ export function createTooltips(): void {
 				.then((defUrl) => {
 					eventLogger.logJumpToDef({ ...getTooltipEventProperties(data, context), hasResolvedJ2D: Boolean(defUrl) });
 					if (defUrl) {
-						chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: defUrl }, (opened) => {
-							if (!opened) {
-								window.open(defUrl, "_blank");
-							}
-						});
+						openSourcegraphTab(defUrl);
 					}
 				});
 		}
@@ -70,11 +67,7 @@ export function createTooltips(): void {
 		const { data, context } = store.getValue();
 		if (data && context && context.coords && context.path && context.repoRevSpec) {
 			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}/-/blob/${context.path}?utm_source=${getPlatformName()}#L${context.coords.line}:${context.coords.char}$references`;
-			chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url }, (opened) => {
-				if (!opened) {
-					window.open(url, "_blank");
-				}
-			});
+			openSourcegraphTab(url);
 		}
 	};
 
@@ -90,11 +83,7 @@ export function createTooltips(): void {
 			const { data, context } = store.getValue();
 			if (data && context && context.repoRevSpec) {
 				const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}?q=${encodeURIComponent(searchText)}&utm_source=${getPlatformName()}`;
-				chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url }, (opened) => {
-					if (!opened) {
-						window.open(url, "_blank");
-					}
-				});
+				openSourcegraphTab(url);
 				return;
 			}
 		}

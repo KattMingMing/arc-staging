@@ -500,7 +500,7 @@ export function parseURL(loc: Location = window.location): GitHubURL {
 
 	let revParts = 1; // a revision may have "/" chars, in which case we consume multiple parts;
 	if (urlsplit[3] && (urlsplit[2] === "tree" || urlsplit[2] === "blob") || urlsplit[2] === "commit") {
-		const currBranch = getCurrentBranch();
+		const currBranch = getBranchName();
 		if (currBranch) {
 			revParts = currBranch.split("/").length;
 		}
@@ -518,13 +518,4 @@ export function parseURL(loc: Location = window.location): GitHubURL {
 	const isDelta = isPullRequest || isCommit;
 
 	return { user, repo, rev, path, repoURI, uri: repoURI, isDelta, isPullRequest, isCommit };
-}
-
-export function getCurrentBranch(): string | null {
-	const branchDropdownEl = document.getElementsByClassName("btn btn-sm select-menu-button js-menu-target css-truncate");
-	if (branchDropdownEl.length !== 1) {
-		return null;
-	}
-
-	return (branchDropdownEl[0] as HTMLElement).title;
 }
