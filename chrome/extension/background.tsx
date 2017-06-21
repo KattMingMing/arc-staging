@@ -33,6 +33,26 @@ if (process.env.NODE_ENV === "development") {
 	});
 }
 
+chrome.tabs.onUpdated.addListener((tabID, changeInfo) => {
+	if (changeInfo.url && changeInfo.url.indexOf("https://sourcegraph.com") !== -1) {
+		if (changeInfo.url.indexOf("https://sourcegraph.com/-/editor") === -1) { // let redirect happen first
+			chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
+				if (tabs.length > 1 && tabs[0].id !== tabID) {
+					chrome.tabs.remove(tabID, () => {
+						navigateSourcegraphTab(tabs[0].id!, changeInfo.url!);
+					});
+				}
+			});
+		}
+	}
+});
+
+function navigateSourcegraphTab(tabID: number, url: string): void {
+	chrome.tabs.update(tabID, { active: true }, () => {
+		chrome.tabs.executeScript(tabID, { code: `window.dispatchEvent(new CustomEvent("browser-ext-navigate", {detail: {url: "${url}"}}))` });
+	});
+}
+
 chrome.runtime.onMessage.addListener((message, _, cb) => {
 	switch (message.type) {
 		case "setIdentity":
@@ -55,10 +75,7 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 		case "openSourcegraphTab":
 			chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
 				if (tabs.length > 0) {
-					const tab = tabs[0];
-					chrome.tabs.update(tab.id!, { active: true }, () => {
-						chrome.tabs.executeScript(tab.id!, { code: `window.dispatchEvent(new CustomEvent("browser-ext-navigate", {detail: {url: "${message.url}"}}))` });
-					});
+					navigateSourcegraphTab(tabs[0].id!, message.url);
 					cb(true);
 				} else {
 					cb(false);
