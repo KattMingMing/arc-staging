@@ -1,9 +1,9 @@
 import * as backend from "app/backend";
 import { DifferentialProps, PhabBlobAnnotator, SourcegraphButton } from "app/components/PhabBlobAnnotator";
 import * as phabricator from "app/phabricator/util";
-import * as utils from "app/utils";
-import { sourcegraphUrl } from "app/utils/context";
-import { CodeCell } from "app/utils/types";
+import * as utils from "app/util";
+import { sourcegraphUrl } from "app/util/context";
+import { CodeCell } from "app/util/types";
 
 export class PhabDifferentialBlobAnnotator extends PhabBlobAnnotator<DifferentialProps> {
 	private viewChangedChecker: number;

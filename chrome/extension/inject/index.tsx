@@ -1,14 +1,14 @@
+import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
+import { eventLogger, setEventLogger, setPhabricatorInstance, setSearchEnabled, setSourcegraphUrl } from "app/util/context";
+
 /**
  * set the event logger before anything else proceeds, to avoid logging events before we have it set.
  */
-import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
-import { eventLogger, setEventLogger, setPhabricatorInstance, setSearchEnabled, setSourcegraphUrl } from "app/utils/context";
-
 setEventLogger(new ExtensionEventLogger());
 
 import { injectSourcegraph as injectSourcegraphEditor } from "app/editor/inject";
-import { getDomain } from "app/utils";
-import { Domain } from "app/utils/types";
+import { getDomain } from "app/util";
+import { Domain } from "app/util/types";
 import { injectBitbucketApplication } from "chrome/extension/inject/bitbucket";
 import { injectGitHubApplication } from "chrome/extension/inject/github";
 import { injectPhabricatorApplication } from "chrome/extension/inject/phabricator";

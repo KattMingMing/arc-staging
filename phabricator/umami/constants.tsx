@@ -1,4 +1,4 @@
-import { PhabricatorInstance } from "app/utils/classes";
+import { PhabricatorInstance } from "app/util/classes";
 
 const umamiPhabricatorRepoMap = {
 	"moiosa": "code.uber.internal/mobile/ios",

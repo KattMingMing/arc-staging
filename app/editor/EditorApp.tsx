@@ -1,8 +1,8 @@
 import { SourcegraphIcon } from "app/components/Icons";
 import { parseURL as parseGitHubURL } from "app/github/util";
-import { parseURL as parseSourcegraphURL } from "app/sourcegraph/utils";
-import { getDomain } from "app/utils";
-import { Domain, ParsedURL } from "app/utils/types";
+import { parseURL as parseSourcegraphURL } from "app/sourcegraph/util";
+import { getDomain } from "app/util";
+import { Domain, ParsedURL } from "app/util/types";
 import * as React from "react";
 
 export class EditorApp extends React.Component<{}, {}> {

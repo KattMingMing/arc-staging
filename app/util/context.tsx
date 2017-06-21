@@ -1,5 +1,5 @@
 import { EventLogger } from "app/tracking/EventLogger";
-import { PhabricatorInstance } from "app/utils/classes";
+import { PhabricatorInstance } from "app/util/classes";
 
 export let eventLogger: EventLogger;
 

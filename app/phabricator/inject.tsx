@@ -1,7 +1,7 @@
 import { PhabDifferentialBlobAnnotator } from "app/components/PhabDifferentialBlobAnnotator";
 import { PhabDiffusionBlobAnnotator } from "app/components/PhabDiffusionBlobAnnotator";
 import { getFilepathFromFile, getPhabricatorState, tryGetBlobElement } from "app/phabricator/util";
-import { PhabChangeUrl, PhabDifferentialUrl, PhabDiffusionUrl, PhabRevisionUrl, PhabricatorMode } from "app/utils/types";
+import { PhabChangeUrl, PhabDifferentialUrl, PhabDiffusionUrl, PhabRevisionUrl, PhabricatorMode } from "app/util/types";
 import * as React from "react";
 import { render } from "react-dom";
 

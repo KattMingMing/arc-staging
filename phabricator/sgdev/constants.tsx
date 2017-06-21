@@ -1,4 +1,4 @@
-import { PhabricatorInstance } from "app/utils/classes";
+import { PhabricatorInstance } from "app/util/classes";
 
 const sgdevPhabricatorRepoMap = {
 	"nzap": "gitolite.aws.sgdev.org/uber-go/zap.git",

@@ -1,8 +1,8 @@
 import * as styles from "app/github/styles";
 import { getTooltipEventProperties, store, TooltipState } from "app/tooltips/store";
-import { getModeFromExtension, getPlatformName } from "app/utils";
-import { eventLogger, searchEnabled, sourcegraphUrl } from "app/utils/context";
-import { fetchJumpURL } from "app/utils/lsp";
+import { getModeFromExtension, getPlatformName } from "app/util";
+import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
+import { fetchJumpURL } from "app/util/lsp";
 import { highlightBlock } from "highlight.js";
 import * as marked from "marked";
 import { style } from "typestyle";

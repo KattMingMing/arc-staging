@@ -1,8 +1,8 @@
 import * as backend from "app/backend";
 import { parseURL} from "app/github/util";
-import { eventLogger, searchEnabled, sourcegraphUrl } from "app/utils/context";
-import { insertAfter } from "app/utils/dom";
-import { getPlatformName } from "app/utils/index";
+import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
+import { insertAfter } from "app/util/dom";
+import { getPlatformName } from "app/util/index";
 import { GITHUB_LIGHT_THEME } from "chrome/assets/themes/github_theme";
 
 import * as querystring from "query-string";

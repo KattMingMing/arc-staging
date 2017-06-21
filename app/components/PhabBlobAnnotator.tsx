@@ -1,9 +1,9 @@
 import * as backend from "app/backend";
 import { SourcegraphIcon } from "app/components/Icons";
 import { addAnnotations } from "app/tooltips";
-import * as utils from "app/utils";
-import { eventLogger } from "app/utils/context";
-import { CodeCell } from "app/utils/types";
+import * as utils from "app/util";
+import { eventLogger } from "app/util/context";
+import { CodeCell } from "app/util/types";
 import * as React from "react";
 
 interface Props {

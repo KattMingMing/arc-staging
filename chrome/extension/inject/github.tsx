@@ -6,8 +6,8 @@ import * as github from "app/github/util";
 import { injectCodeSearch } from "app/search/inject";
 import * as tooltips from "app/tooltips/dom";
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
-import { eventLogger } from "app/utils/context";
-import { GitHubBlobUrl, GitHubMode } from "app/utils/types";
+import { eventLogger } from "app/util/context";
+import { GitHubBlobUrl, GitHubMode } from "app/util/types";
 import * as React from "react";
 import { render } from "react-dom";
 

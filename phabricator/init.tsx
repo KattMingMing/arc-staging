@@ -1,8 +1,8 @@
 import { injectPhabricatorBlobAnnotators } from "app/phabricator/inject";
 import { expanderListen, getPhabricatorUsername, metaClickOverride, setupPageLoadListener } from "app/phabricator/util";
 import { InPageEventLogger } from "app/tracking/InPageEventLogger";
-import { getDomainUsername } from "app/utils";
-import { eventLogger, phabricatorInstance } from "app/utils/context";
+import { getDomainUsername } from "app/util";
+import { eventLogger, phabricatorInstance } from "app/util/context";
 
 // fragile and not great
 export function init(): void {
@@ -14,7 +14,7 @@ export function init(): void {
 	/**
 	 * This is the main entry point for the phabricator in-page JavaScript plugin.
 	 */
-	if (global && global.window && global.window.localStorage && !(global.window.localStorage.SOURCEGRAPH_DISABLED === "true")) {
+	if (window.localStorage && window.localStorage.SOURCEGRAPH_DISABLED !== "true") {
 		document.addEventListener("phabPageLoaded", () => {
 			expanderListen();
 			metaClickOverride();
@@ -25,7 +25,7 @@ export function init(): void {
 		setupPageLoadListener();
 	} else {
 		// tslint:disable-next-line
-		console.log(`Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${global.window.localStorage.SOURCEGRAPH_DISABLED}.`);
+		console.log(`Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${window.localStorage.SOURCEGRAPH_DISABLED}.`);
 	}
 
 	// NOTE: injectModules is idempotent, so safe to call multiple times on the same page.

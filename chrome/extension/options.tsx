@@ -1,4 +1,4 @@
-import { isFirefoxExtension } from "app/utils";
+import { isFirefoxExtension } from "app/util";
 
 /**
  * Helpers

@@ -1,5 +1,5 @@
-import { getPlatformName } from "app/utils";
-import { isBrowserExtension } from "app/utils/context";
+import { getPlatformName } from "app/util";
+import { isBrowserExtension } from "app/util/context";
 import "whatwg-fetch";
 
 let token: string | null = null;

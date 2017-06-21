@@ -2,9 +2,9 @@ import * as backend from "app/backend";
 import { SourcegraphIcon } from "app/components/Icons";
 import * as github from "app/github/util";
 import { addAnnotations, RepoRevSpec } from "app/tooltips";
-import * as utils from "app/utils";
-import { eventLogger, sourcegraphUrl } from "app/utils/context";
-import { CodeCell, GitHubBlobUrl, GitHubMode } from "app/utils/types";
+import * as utils from "app/util";
+import { eventLogger, sourcegraphUrl } from "app/util/context";
+import { CodeCell, GitHubBlobUrl, GitHubMode } from "app/util/types";
 import * as React from "react";
 
 const className = "btn btn-sm tooltipped tooltipped-n";

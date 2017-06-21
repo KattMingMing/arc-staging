@@ -1,4 +1,4 @@
-import { BitbucketBrowseUrl, BitbucketMode, BitbucketUrl } from "app/utils/types";
+import { BitbucketBrowseUrl, BitbucketMode, BitbucketUrl } from "app/util/types";
 
 const BB_BROWSE_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})(\.([A-Z]{2,}))?(:\d{2,4})?\/projects\/([A-Za-z0-9]+)\/repos\/([A-Za-z0-9]+)\/browse\/(.*)/i;
 

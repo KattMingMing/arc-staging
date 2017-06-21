@@ -1,5 +1,5 @@
-import { getDomain } from "app/utils";
-import { CodeCell, Domain, GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubURL } from "app/utils/types";
+import { getDomain } from "app/util";
+import { CodeCell, Domain, GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubURL } from "app/util/types";
 
 function invariant(cond: any): void {
 	if (!cond) {

@@ -1,5 +1,5 @@
 import { TelligentWrapper } from "app/tracking/TelligentWrapper";
-import { sourcegraphUrl } from "app/utils/context";
+import { sourcegraphUrl } from "app/util/context";
 import * as bluebird from "bluebird";
 
 let telligentWrapper: TelligentWrapper | null = null;

@@ -1,5 +1,5 @@
 import { EventLogger } from "app/tracking/EventLogger";
-import { isE2ETest } from "app/utils";
+import { isE2ETest } from "app/util";
 
 export class ExtensionEventLogger extends EventLogger {
 	constructor() {

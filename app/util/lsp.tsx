@@ -1,9 +1,9 @@
 import { doFetch as fetch } from "app/backend/xhr";
 import { RepoRevSpec } from "app/tooltips";
-import { supportedExtensions } from "app/utils";
-import * as utils from "app/utils";
-import { sourcegraphUrl } from "app/utils/context";
-import { TooltipData } from "app/utils/types";
+import { supportedExtensions } from "app/util";
+import * as utils from "app/util";
+import { sourcegraphUrl } from "app/util/context";
+import { TooltipData } from "app/util/types";
 
 const tooltipCache: { [key: string]: TooltipData | null } = {};
 const j2dCache = {};
