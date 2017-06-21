@@ -1,9 +1,9 @@
 import * as backend from "app/backend";
 import { SourcegraphIcon } from "app/components/Icons";
+import * as github from "app/github/util";
+import { addAnnotations, RepoRevSpec } from "app/tooltips";
 import * as utils from "app/utils";
-import { addAnnotations, RepoRevSpec } from "app/utils/annotations";
 import { eventLogger, sourcegraphUrl } from "app/utils/context";
-import * as github from "app/utils/github";
 import { CodeCell, GitHubBlobUrl, GitHubMode } from "app/utils/types";
 import * as React from "react";
 
@@ -50,8 +50,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
 
 		this.fileExtension = utils.getPathExtension(props.headPath);
 
-		const { isDelta, isPullRequest, isCommit } = utils.parseURL(window.location);
-		let { rev } = utils.parseURL(window.location);
+		const { isDelta, isPullRequest, isCommit } = github.parseURL(window.location);
+		let { rev } = github.parseURL(window.location);
 		const gitHubState = github.getGitHubState(window.location.href);
 		// TODO(uforic): Eventually, use gitHubState for everything, but for now, only use it when the branch should have a
 		// slash in it to fix that bug

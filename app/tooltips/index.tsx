@@ -1,8 +1,8 @@
 import * as Rx from "@sourcegraph/rxjs";
+import * as tooltips from "app/tooltips/dom";
+import { clearTooltip, getTooltipEventProperties, setTooltip, store, TooltipContext } from "app/tooltips/store";
 import { eventLogger } from "app/utils/context";
 import { fetchJumpURL, getTooltip } from "app/utils/lsp";
-import { clearTooltip, getTooltipEventProperties, setTooltip, store, TooltipContext } from "app/utils/store";
-import * as tooltips from "app/utils/tooltips";
 import { CodeCell, TooltipData } from "app/utils/types";
 import * as _ from "lodash";
 

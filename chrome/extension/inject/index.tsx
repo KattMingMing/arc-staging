@@ -6,14 +6,14 @@ import { eventLogger, setEventLogger, setPhabricatorInstance, setSearchEnabled, 
 
 setEventLogger(new ExtensionEventLogger());
 
-import { injectSourcegraph as injectSourcegraphEditor } from "../../app/editor/inject";
-import { getDomain } from "../../app/utils";
-import { Domain } from "../../app/utils/types";
-import { injectBitbucketApplication } from "./inject_bitbucket";
-import { injectGitHubApplication } from "./inject_github";
-import { injectPhabricatorApplication } from "./inject_phabricator";
+import { injectSourcegraph as injectSourcegraphEditor } from "app/editor/inject";
+import { getDomain } from "app/utils";
+import { Domain } from "app/utils/types";
+import { injectBitbucketApplication } from "chrome/extension/inject/bitbucket";
+import { injectGitHubApplication } from "chrome/extension/inject/github";
+import { injectPhabricatorApplication } from "chrome/extension/inject/phabricator";
 
-import { SGDEV_SOURCEGRAPH_URL, sgDevPhabricatorInstance } from "../../phabricator/sgdev/constants";
+import { SGDEV_SOURCEGRAPH_URL, sgDevPhabricatorInstance } from "../../../phabricator/sgdev/constants";
 
 const SGDEV_SOURCEGRAPH_URL_BITBUCKET = "http://localhost:3080";
 

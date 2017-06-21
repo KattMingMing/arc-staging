@@ -1,11 +1,15 @@
-import * as utils from "app/utils";
-import { CodeCell, GitHubBlobUrl, GitHubMode, GitHubPullUrl } from "app/utils/types";
+import { getDomain } from "app/utils";
+import { CodeCell, Domain, GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubURL } from "app/utils/types";
 
 function invariant(cond: any): void {
 	if (!cond) {
 		console.error("github invariant exception");
 		throw new Error("github invariant exception");
 	}
+}
+
+export function getGitHubRoute(loc: Location): string {
+	return loc.pathname.split("/")[3];
 }
 
 /**
@@ -130,7 +134,7 @@ function getPathNamesFromElement(element: HTMLElement): { headFilePath: string, 
  * isSplitDiff returns if the current view shows diffs with split (vs. unified) view.
  */
 export function isSplitDiff(): boolean {
-	const { isDelta, isPullRequest } = utils.parseURL(window.location);
+	const { isDelta, isPullRequest } = parseURL();
 	if (!isDelta) {
 		return false;
 	}
@@ -171,7 +175,7 @@ export interface DeltaRevs {
  * getDeltaRevs returns the base and head revision SHA, or null for non-diff views.
  */
 export function getDeltaRevs(): DeltaRevs | null {
-	const { isDelta, isCommit, isPullRequest } = utils.parseURL(window.location);
+	const { isDelta, isCommit, isPullRequest } = parseURL();
 	if (!isDelta) {
 		return null;
 	}
@@ -249,7 +253,7 @@ export interface DeltaInfo {
  * getDeltaInfo returns the base and head branches & URIs, or null for non-diff views.
  */
 export function getDeltaInfo(): DeltaInfo | null {
-	const { repoURI, isDelta, isPullRequest, isCommit } = utils.parseURL(window.location);
+	const { repoURI, isDelta, isPullRequest, isCommit } = parseURL();
 	if (!isDelta) {
 		return null;
 	}
@@ -473,4 +477,54 @@ function getRevOrBranch(revAndPath: string): string | null {
 		return null;
 	}
 	return branch;
+}
+
+export function parseURL(loc: Location = window.location): GitHubURL {
+	// TODO(john): this method has problems handling branch revisions with "/" character.
+	// TODO(john): this all needs unit testing!
+
+	let user: string | undefined;
+	let repo: string | undefined;
+	let repoURI: string | undefined;
+	let rev: string | undefined;
+	let path: string | undefined;
+
+	const domain = getDomain(loc);
+	if (domain !== Domain.GITHUB) {
+		return {};
+	}
+
+	const urlsplit = loc.pathname.slice(1).split("/");
+	user = urlsplit[0];
+	repo = urlsplit[1];
+
+	let revParts = 1; // a revision may have "/" chars, in which case we consume multiple parts;
+	if (urlsplit[3] && (urlsplit[2] === "tree" || urlsplit[2] === "blob") || urlsplit[2] === "commit") {
+		const currBranch = getCurrentBranch();
+		if (currBranch) {
+			revParts = currBranch.split("/").length;
+		}
+		rev = urlsplit.slice(3, 3 + revParts).join("/");
+	}
+	if (urlsplit[2] === "blob") {
+		path = urlsplit.slice(3 + revParts).join("/");
+	}
+	if (user && repo) {
+		repoURI = `github.com/${user}/${repo}`;
+	}
+
+	const isPullRequest = urlsplit[2] === "pull";
+	const isCommit = urlsplit[2] === "commit";
+	const isDelta = isPullRequest || isCommit;
+
+	return { user, repo, rev, path, repoURI, uri: repoURI, isDelta, isPullRequest, isCommit };
+}
+
+export function getCurrentBranch(): string | null {
+	const branchDropdownEl = document.getElementsByClassName("btn btn-sm select-menu-button js-menu-target css-truncate");
+	if (branchDropdownEl.length !== 1) {
+		return null;
+	}
+
+	return (branchDropdownEl[0] as HTMLElement).title;
 }

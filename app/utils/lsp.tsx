@@ -1,7 +1,7 @@
 import { doFetch as fetch } from "app/backend/xhr";
+import { RepoRevSpec } from "app/tooltips";
 import { supportedExtensions } from "app/utils";
 import * as utils from "app/utils";
-import { RepoRevSpec } from "app/utils/annotations";
 import { sourcegraphUrl } from "app/utils/context";
 import { TooltipData } from "app/utils/types";
 

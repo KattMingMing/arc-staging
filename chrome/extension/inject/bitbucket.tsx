@@ -1,5 +1,5 @@
+import * as bitbucket from "app/bitbucket/util";
 import { BitbucketBlobAnnotator } from "app/components/BitbucketBlobAnnotator";
-import * as bitbucket from "app/utils/bitbucket";
 import { BitbucketBrowseUrl, BitbucketMode } from "app/utils/types";
 import * as React from "react";
 import { render } from "react-dom";

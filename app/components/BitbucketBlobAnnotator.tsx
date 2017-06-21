@@ -1,6 +1,6 @@
 import * as backend from "app/backend";
+import { addAnnotations } from "app/tooltips";
 import * as utils from "app/utils";
-import { addAnnotations } from "app/utils/annotations";
 import { CodeCell } from "app/utils/types";
 import * as _ from "lodash";
 import * as React from "react";

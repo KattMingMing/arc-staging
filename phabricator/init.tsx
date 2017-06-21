@@ -1,8 +1,8 @@
+import { injectPhabricatorBlobAnnotators } from "app/phabricator/inject";
+import { expanderListen, getPhabricatorUsername, metaClickOverride, setupPageLoadListener } from "app/phabricator/util";
 import { InPageEventLogger } from "app/tracking/InPageEventLogger";
 import { getDomainUsername } from "app/utils";
 import { eventLogger, phabricatorInstance } from "app/utils/context";
-import { expanderListen, getPhabricatorUsername, metaClickOverride, setupPageLoadListener } from "app/utils/phabricator";
-import { injectPhabricatorBlobAnnotators } from "app/utils/phabricator_inject";
 
 // fragile and not great
 export function init(): void {

@@ -1,7 +1,8 @@
 import * as backend from "app/backend";
+import { parseURL} from "app/github/util";
 import { eventLogger, searchEnabled, sourcegraphUrl } from "app/utils/context";
 import { insertAfter } from "app/utils/dom";
-import { getPlatformName, parseURL } from "app/utils/index";
+import { getPlatformName } from "app/utils/index";
 import { GITHUB_LIGHT_THEME } from "chrome/assets/themes/github_theme";
 
 import * as querystring from "query-string";
@@ -33,7 +34,7 @@ export function injectCodeSearch(): void {
 	}
 
 	// Skip rendering all together if this is not a code search URL.
-	const { repoURI } = parseURL(window.location);
+	const { repoURI } = parseURL();
 	if (!repoURI) {
 		return;
 	}
@@ -65,7 +66,7 @@ window.addEventListener("popstate", (e: any) => {
 	if (isCodeSearchURL()) {
 		renderSourcegraphSearchTab();
 	}
-	const { repoURI } = parseURL(window.location);
+	const { repoURI } = parseURL();
 	if (!repoURI) {
 		return;
 	}
@@ -134,7 +135,7 @@ function createSourcegraphTogglePart(): HTMLDivElement {
 		toggle.className = "underline-nav-item";
 	}
 	// Update search type to Sourcegraph
-	const { repoURI } = parseURL(window.location);
+	const { repoURI } = parseURL();
 	query["type"] = "Sourcegraph";
 	const decodedSearch = decodeURIComponent((query["q"] || "" + "").replace(/\+/g, "%20"));
 	toggle.onclick = (e) => {

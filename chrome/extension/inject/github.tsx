@@ -2,15 +2,14 @@ import { useAccessToken } from "app/backend/xhr";
 import { BlobAnnotator } from "app/components/BlobAnnotator";
 import { ProjectsOverview } from "app/components/ProjectsOverview";
 import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
+import * as github from "app/github/util";
+import { injectCodeSearch } from "app/search/inject";
+import * as tooltips from "app/tooltips/dom";
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
 import { eventLogger } from "app/utils/context";
-import * as github from "app/utils/github";
-import { getGitHubRoute, parseURL } from "app/utils/index";
-import * as tooltips from "app/utils/tooltips";
 import { GitHubBlobUrl, GitHubMode } from "app/utils/types";
 import * as React from "react";
 import { render } from "react-dom";
-import { injectCodeSearch } from "./inject_code_search";
 
 export function injectGitHubApplication(marker: HTMLElement): void {
 	window.addEventListener("load", () => {
@@ -23,7 +22,7 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 		});
 	});
 	document.addEventListener("keydown", (e: KeyboardEvent) => {
-		if (getGitHubRoute(window.location) !== "blob") {
+		if (github.getGitHubRoute(window.location) !== "blob") {
 			return;
 		}
 		if ((e.target as HTMLElement).tagName === "INPUT" ||
@@ -70,8 +69,8 @@ function injectModules(): void {
 }
 
 function injectBlobAnnotators(): void {
-	const { repoURI, isDelta } = parseURL(window.location);
-	let { path } = parseURL(window.location);
+	const { repoURI, isDelta } = github.parseURL();
+	let { path } = github.parseURL();
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (gitHubState && gitHubState.mode === GitHubMode.Blob && (gitHubState as GitHubBlobUrl).rev.indexOf("/") > 0) {
 		// correct in case branch has slash in it

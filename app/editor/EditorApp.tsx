@@ -1,5 +1,5 @@
 import { SourcegraphIcon } from "app/components/Icons";
-import { parseURL as parseGitHubURL } from "app/github/utils";
+import { parseURL as parseGitHubURL } from "app/github/util";
 import { parseURL as parseSourcegraphURL } from "app/sourcegraph/utils";
 import { getDomain } from "app/utils";
 import { Domain, ParsedURL } from "app/utils/types";

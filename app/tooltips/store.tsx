@@ -1,6 +1,6 @@
 import * as Rx from "@sourcegraph/rxjs";
+import * as github from "app/github/util";
 import { getPathExtension } from "app/utils";
-import * as github from "app/utils/github";
 import * as types from "app/utils/types";
 
 // reference implementation: http://rudiyardley.com/redux-single-line-of-code-rxjs/

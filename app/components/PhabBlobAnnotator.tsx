@@ -1,7 +1,7 @@
 import * as backend from "app/backend";
 import { SourcegraphIcon } from "app/components/Icons";
+import { addAnnotations } from "app/tooltips";
 import * as utils from "app/utils";
-import { addAnnotations } from "app/utils/annotations";
 import { eventLogger } from "app/utils/context";
 import { CodeCell } from "app/utils/types";
 import * as React from "react";
