@@ -29,9 +29,5 @@ export function parseURL(loc: Location = window.location): SourcegraphURL {
 }
 
 export function openSourcegraphTab(url: string): void {
-	chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url }, (opened) => {
-		if (!opened) {
-			window.open(url, "_blank");
-		}
-	});
+	chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url });
 }

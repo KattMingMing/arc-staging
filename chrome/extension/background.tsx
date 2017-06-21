@@ -25,12 +25,16 @@ const application = "com.sourcegraph.browser_ext_host";
 let port: any = null;
 
 if (process.env.NODE_ENV === "development") {
-	port = chrome.runtime.connectNative(application);
-	// port.onMessage.addListener((e) => console.log("port connected", e));
-	port.onDisconnect.addListener((e) => {
-		console.error("unexpected disconnect", e);
-		port = null;
-	});
+	try {
+		port = chrome.runtime.connectNative(application);
+		// port.onMessage.addListener((e) => console.log("port connected", e));
+		port.onDisconnect.addListener((e) => {
+			console.error("unexpected disconnect", e);
+			port = null;
+		});
+	} catch (err) {
+		console.error(err);
+	}
 }
 
 chrome.tabs.onUpdated.addListener((tabID, changeInfo) => {
@@ -80,6 +84,7 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 					navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, message.url);
 					cb(true);
 				} else {
+					chrome.tabs.create({ url: message.url });
 					cb(false);
 				}
 			});
