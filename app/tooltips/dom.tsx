@@ -206,7 +206,7 @@ function updateTooltip(state: TooltipState): void {
 
 		const closeContainer = document.createElement("a");
 		Object.assign(closeContainer.style, styles.closeIcon);
-		closeContainer.onclick = clearTooltip as any;
+		closeContainer.onclick = () => clearTooltip();
 
 		if (docked) {
 			const closeButton = document.createElement("img");
