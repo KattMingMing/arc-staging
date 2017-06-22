@@ -148,8 +148,8 @@ function updateTooltip(state: TooltipState): void {
 		// no data; bail
 		return;
 	}
-	if (!context) {
-		// no context; bail
+	if (!context || (context.selectedText && context.selectedText.trim()) === "") {
+		// no context or selected text is only whitespace; bail
 		return;
 	}
 
