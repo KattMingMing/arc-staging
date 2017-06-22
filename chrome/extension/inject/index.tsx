@@ -1,5 +1,5 @@
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
-import { eventLogger, setEventLogger, setPhabricatorInstance, setSearchEnabled, setSourcegraphUrl } from "app/util/context";
+import { eventLogger, setEventLogger, setPhabricatorInstance, setSearchEnabled, setSourcegraphSearchAsDefault, setSourcegraphUrl } from "app/util/context";
 
 /**
  * set the event logger before anything else proceeds, to avoid logging events before we have it set.
@@ -33,6 +33,7 @@ function injectApplication(loc: Location): void {
 				const sgurl = items.sourcegraphURL ? items.sourcegraphURL : "https://sourcegraph.com";
 				setSourcegraphUrl(sgurl);
 				setSearchEnabled(items.searchEnabled);
+				setSourcegraphSearchAsDefault(items.isDefaultSearch && items.searchEnabled);
 				injectGitHubApplication(extensionMarker);
 			});
 			break;

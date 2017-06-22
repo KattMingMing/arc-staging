@@ -11,6 +11,10 @@ html
       input#sourcegraph_url
       input(type="submit", value="Save")
     div(id="sourcegraph-enable-search-container")
-      label Enable Search:
-      input(type="checkbox", id="sourcegraph-enable-search")
+      div
+        label Enable search:
+        input(type="checkbox", id="sourcegraph-enable-search")
+      div
+        label Use Sourcegraph as default search:
+        input(type="checkbox", id="sourcegraph-default-search")
     script(src='/js/options.bundle.js')
