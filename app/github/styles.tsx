@@ -90,3 +90,7 @@ export const closeIcon = {
 	verticalAlign: "middle",
 	cursor: "pointer",
 };
+
+export const loadingTooltip = {
+	padding: "16px",
+};

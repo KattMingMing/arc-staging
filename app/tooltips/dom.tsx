@@ -34,6 +34,7 @@ export function createTooltips(): void {
 
 	loadingTooltip = document.createElement("DIV");
 	loadingTooltip.appendChild(document.createTextNode("Loading..."));
+	Object.assign(loadingTooltip.style, styles.loadingTooltip);
 
 	tooltipActions = document.createElement("DIV");
 	Object.assign(tooltipActions.style, styles.tooltipActions);
