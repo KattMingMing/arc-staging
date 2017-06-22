@@ -7,7 +7,6 @@ import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
 import { fetchJumpURL } from "app/util/lsp";
 import { highlightBlock } from "highlight.js";
 import * as marked from "marked";
-import { style } from "typestyle";
 
 let tooltip: HTMLElement;
 let loadingTooltip: HTMLElement;
