@@ -208,10 +208,12 @@ function updateTooltip(state: TooltipState): void {
 		Object.assign(closeContainer.style, styles.closeIcon);
 		closeContainer.onclick = hideTooltip;
 
-		const closeButton = document.createElement("img");
-		closeButton.src = getAssetURL("close-icon.svg");
-		closeContainer.appendChild(closeButton);
-		container.appendChild(closeContainer);
+		if (docked) {
+			const closeButton = document.createElement("img");
+			closeButton.src = getAssetURL("close-icon.svg");
+			closeContainer.appendChild(closeButton);
+			container.appendChild(closeContainer);
+		}
 
 		highlightBlock(tooltipText);
 
