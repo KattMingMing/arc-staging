@@ -1,5 +1,6 @@
 import * as backend from "app/backend";
 import { parseURL} from "app/github/util";
+import { getAssetURL } from "app/util/assets";
 import { eventLogger, searchEnabled, sourcegraphUrl, useSourcegraphSearch } from "app/util/context";
 import { insertAfter } from "app/util/dom";
 import { getPlatformName } from "app/util/index";
@@ -300,7 +301,7 @@ function createAuthPage(parent: HTMLElement): HTMLElement {
 	container.style.top = `${GITHUB_HEADER_HEIGHT}px`;
 
 	const icon = document.createElement("img");
-	icon.src = (window as any).chrome.extension.getURL("img/sourcegraph-mark.svg");
+	icon.src = getAssetURL("sourcegraph-mark.svg");
 	icon.style.display = "block";
 	icon.style.margin = "auto";
 	icon.style.width = "125px";

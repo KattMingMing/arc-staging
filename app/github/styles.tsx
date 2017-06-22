@@ -11,7 +11,7 @@ const lightContrastBackground = "#fafbfc";
 export const tooltip = {
 	backgroundColor: lightContrastBackground,
 	maxWidth: "500px",
-	maxHeight: "250px",
+	maxHeight: "266px",
 	border: `solid 1px ${modalBorderColor}`,
 	fontFamily: normalFontFamily,
 	color: normalFontColor,
@@ -19,7 +19,6 @@ export const tooltip = {
 	zIndex: 100,
 	position: "absolute",
 	overflow: "auto",
-	padding: "5px 5px",
 	borderRadius,
 	boxShadow,
 };
@@ -27,16 +26,25 @@ export const tooltip = {
 export const tooltipTitle = {
 	fontFamily: codeFontFamily,
 	wordWrap: "break-word",
-	paddingBottom: "5px",
-	borderBottom: `solid 1px ${dividerColor}`,
+	marginLeft: "24px",
+	marginRight: "32px",
+	padding: "0px",
+};
+
+export const divider = {
+	borderBottom: `1px solid ${dividerColor}`,
+	padding: "16px",
+	lineHeight: "16px",
 };
 
 export const tooltipDoc = {
-	paddingTop: "5px",
-	paddingLeft: "5px",
-	paddingRight: "10px",
+	paddingTop: "16px",
+	paddingLeft: "16px",
+	paddingRight: "16px",
+	paddingBottom: "6px",
 	maxHeight: "150px",
 	overflow: "auto",
+	marginBottom: "0px",
 	fontFamily: normalFontFamily,
 	borderBottom: `1px solid ${dividerColor}`,
 };
@@ -44,7 +52,7 @@ export const tooltipDoc = {
 export const tooltipActions = {
 	display: "flex",
 	textAlign: "center",
-	paddingTop: "5px",
+	padding: "16px",
 };
 
 export const tooltipAction = {
@@ -56,9 +64,7 @@ export const tooltipMoreActions = {
 	fontStyle: "italic",
 	fontWeight: "bold",
 	color: emphasisFontColor,
-	paddingTop: "5px",
-	paddingLeft: "5px",
-	paddingRight: "5px",
+	padding: "16px",
 };
 
 export const fileNavButton = {
@@ -66,4 +72,21 @@ export const fileNavButton = {
 	borderBottomLeftRadius: 0,
 	color: "black",
 	textDecoration: "none",
+};
+
+export const sourcegraphIcon = {
+	width: "16px",
+	position: "absolute",
+	left: "16px",
+	marginBottom: "2px",
+	verticalAlign: "middle",
+};
+
+export const closeIcon = {
+	width: "12px",
+	position: "absolute",
+	top: "18px",
+	right: "16px",
+	verticalAlign: "middle",
+	cursor: "pointer",
 };

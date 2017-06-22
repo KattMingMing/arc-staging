@@ -2,6 +2,7 @@ import * as styles from "app/github/styles";
 import { openSourcegraphTab } from "app/sourcegraph/util";
 import { getTooltipEventProperties, store, TooltipState } from "app/tooltips/store";
 import { getModeFromExtension, getPlatformName } from "app/util";
+import { getAssetURL } from "app/util/assets";
 import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
 import { fetchJumpURL } from "app/util/lsp";
 import { highlightBlock } from "highlight.js";
@@ -27,7 +28,7 @@ export function createTooltips(): void {
 	}
 
 	tooltip = document.createElement("DIV");
-	tooltip.className = style(styles.tooltip as any);
+	Object.assign(tooltip.style, styles.tooltip);
 	tooltip.classList.add("sg-tooltip");
 	tooltip.style.visibility = "hidden";
 	document.body.appendChild(tooltip);
@@ -36,15 +37,16 @@ export function createTooltips(): void {
 	loadingTooltip.appendChild(document.createTextNode("Loading..."));
 
 	tooltipActions = document.createElement("DIV");
-	tooltipActions.className = style(styles.tooltipActions as any);
+	Object.assign(tooltipActions.style, styles.tooltipActions);
 
 	moreContext = document.createElement("DIV");
-	moreContext.className = style(styles.tooltipMoreActions as any);
+	Object.assign(moreContext.style, styles.tooltipMoreActions);
 	moreContext.appendChild(document.createTextNode("Click for more actions"));
 
 	j2dAction = document.createElement("A") as HTMLAnchorElement;
 	j2dAction.appendChild(document.createTextNode("Go to Def"));
-	j2dAction.className = `${style(styles.tooltipAction as any)} btn btn-sm BtnGroup-item`;
+	j2dAction.className = `btn btn-sm BtnGroup-item`;
+	Object.assign(j2dAction.style, styles.tooltipAction);
 	j2dAction.onclick = (e) => {
 		e.preventDefault();
 		const { data, context } = store.getValue();
@@ -61,7 +63,8 @@ export function createTooltips(): void {
 
 	findRefsAction = document.createElement("A") as HTMLAnchorElement;
 	findRefsAction.appendChild(document.createTextNode("Find Refs"));
-	findRefsAction.className = `${style(styles.tooltipAction as any)} btn btn-sm BtnGroup-item`;
+	Object.assign(findRefsAction.style, styles.tooltipAction);
+	findRefsAction.className = `btn btn-sm BtnGroup-item`;
 	findRefsAction.onclick = (e) => {
 		e.preventDefault();
 		const { data, context } = store.getValue();
@@ -73,7 +76,8 @@ export function createTooltips(): void {
 
 	searchAction = document.createElement("A") as HTMLAnchorElement;
 	searchAction.appendChild(document.createTextNode("Search"));
-	searchAction.className = `${style(styles.tooltipAction as any)} btn btn-sm BtnGroup-item`;
+	Object.assign(searchAction.style, styles.tooltipAction);
+	searchAction.className = `btn btn-sm BtnGroup-item`;
 	searchAction.onclick = (e) => {
 		e.preventDefault();
 		const searchText = store.getValue().context && store.getValue().context!.selectedText ?
@@ -185,15 +189,36 @@ function updateTooltip(state: TooltipState): void {
 			return;
 		}
 
+		const container = document.createElement("DIV");
+		Object.assign(container.style, styles.divider);
+
 		const tooltipText = document.createElement("DIV");
-		tooltipText.className = `${style(styles.tooltipTitle as any)} ${getModeFromExtension(context.path)}`;
+		tooltipText.className = `${getModeFromExtension(context.path)}`;
+		Object.assign(tooltipText.style, styles.tooltipTitle);
 		tooltipText.appendChild(document.createTextNode(data.title));
-		tooltip.insertBefore(tooltipText, moreContext);
+
+		const icon = document.createElement("img");
+		icon.src = getAssetURL("sourcegraph-mark.svg");
+		Object.assign(icon.style, styles.sourcegraphIcon);
+
+		container.appendChild(icon);
+		container.appendChild(tooltipText);
+		tooltip.insertBefore(container, moreContext);
+
+		const closeContainer = document.createElement("a");
+		Object.assign(closeContainer.style, styles.closeIcon);
+		closeContainer.onclick = hideTooltip;
+
+		const closeButton = document.createElement("img");
+		closeButton.src = getAssetURL("close-icon.svg");
+		closeContainer.appendChild(closeButton);
+		container.appendChild(closeContainer);
+
 		highlightBlock(tooltipText);
 
 		if (data.doc) {
 			const tooltipDoc = document.createElement("DIV");
-			tooltipDoc.className = style(styles.tooltipDoc as any);
+			Object.assign(tooltipDoc.style, styles.tooltipDoc);
 			tooltipDoc.innerHTML = marked(data.doc, { gfm: true, breaks: true, sanitize: true });
 			tooltip.insertBefore(tooltipDoc, moreContext);
 		}
