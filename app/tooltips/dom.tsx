@@ -1,6 +1,6 @@
 import * as styles from "app/github/styles";
 import { openSourcegraphTab } from "app/sourcegraph/util";
-import { getTooltipEventProperties, store, TooltipState } from "app/tooltips/store";
+import { clearTooltip, getTooltipEventProperties, store, TooltipState } from "app/tooltips/store";
 import { getModeFromExtension, getPlatformName } from "app/util";
 import { getAssetURL } from "app/util/assets";
 import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
@@ -206,7 +206,7 @@ function updateTooltip(state: TooltipState): void {
 
 		const closeContainer = document.createElement("a");
 		Object.assign(closeContainer.style, styles.closeIcon);
-		closeContainer.onclick = hideTooltip;
+		closeContainer.onclick = clearTooltip as any;
 
 		if (docked) {
 			const closeButton = document.createElement("img");
