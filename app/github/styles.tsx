@@ -11,7 +11,6 @@ const lightContrastBackground = "#fafbfc";
 export const tooltip = {
 	backgroundColor: lightContrastBackground,
 	maxWidth: "500px",
-	maxHeight: "266px",
 	border: `solid 1px ${modalBorderColor}`,
 	fontFamily: normalFontFamily,
 	color: normalFontColor,
