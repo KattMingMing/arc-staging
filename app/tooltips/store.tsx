@@ -51,7 +51,7 @@ export function getTooltipEventProperties(data: types.TooltipData, context: Tool
 	return {
 		repo: context.repoRevSpec.repoURI,
 		path: context.path,
-		lanaguage: getPathExtension(context.path),
+		language: getPathExtension(context.path),
 		isPrivateRepo: github.isPrivateRepo(), // TODO(john): this won't work for Bitbucket / Phabricator
 		isLoading: Boolean(data.loading),
 		hasData: Boolean(data.title),
