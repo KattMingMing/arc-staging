@@ -1,5 +1,6 @@
 import * as backend from "app/backend";
 import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
+import { EditorApp } from "app/editor/EditorApp";
 import * as github from "app/github/util";
 import { addAnnotations, RepoRevSpec } from "app/tooltips";
 import * as utils from "app/util";
@@ -8,7 +9,7 @@ import { CodeCell, GitHubBlobUrl, GitHubMode } from "app/util/types";
 import * as React from "react";
 
 const className = "btn btn-sm tooltipped tooltipped-n";
-const buttonStyle = { marginRight: "5px", textDecoration: "none", color: "inherit"};
+const buttonStyle = { marginRight: "5px", textDecoration: "none", color: "inherit" };
 const iconStyle = { marginTop: "-1px", paddingRight: "4px", fontSize: "18px" };
 
 interface Props {
@@ -216,7 +217,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 		}
 		// this is crappy, and only works because we stick in the cache both the repoURI as key as well as the repoURI@revision
 		const resolvedRevs = this.state.resolvedRevs[this.props.repoURI] as backend.ResolvedRevResp;
-		return getSourcegraphButton(github.isPrivateRepo() && resolvedRevs.notFound as boolean,
+		return getSourcegraphButton(this.props.repoURI, this.props.headPath, github.isPrivateRepo() && resolvedRevs.notFound as boolean,
 			this.isDelta ? utils.getSourcegraphBlobUrl(sourcegraphUrl, this.headRepoURI as string, this.props.headPath, this.headCommitID) : utils.getSourcegraphBlobUrl(sourcegraphUrl, this.props.repoURI, this.props.headPath, this.rev),
 			this.getFileOpenCallback,
 			this.getAuthFileCallback);
@@ -231,7 +232,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 	}
 }
 
-function getSourcegraphButton(cantFindPrivateRepo: boolean, blobUrl: string, fileCallack: () => void, authCallback: () => void): JSX.Element {
+function getSourcegraphButton(uri: string, path: string, cantFindPrivateRepo: boolean, blobUrl: string, fileCallack: () => void, authCallback: () => void): JSX.Element {
 	let url = blobUrl;
 	let callback = fileCallack;
 	let ariaLabel = "View on Sourcegraph";
@@ -244,5 +245,8 @@ function getSourcegraphButton(cantFindPrivateRepo: boolean, blobUrl: string, fil
 		ariaLabel = "Authorize Sourcegraph";
 		customIconStyle = Object.assign({ WebkitFilter: "grayscale(100%)" }, customIconStyle);
 	}
-	return <OpenOnSourcegraph ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />;
+	return <div style={{ display: "inline-block" }}>
+		{process.env.NODE_ENV === "development" && <span style={{ marginRight: "5px" }}><EditorApp uri={uri} path={path} /></span>}
+		<OpenOnSourcegraph ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />
+	</div>;
 }

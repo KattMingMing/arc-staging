@@ -34,15 +34,16 @@ export function injectSourcegraph(): void {
 }
 
 export function injectGitHub(): void {
-	if (process.env.NODE_ENV !== "development") {
-		return;
-	}
-	const app = createAppContainerIfNotExists("li");
-	if (app) {
-		const pageheadActions = document.querySelector(".pagehead-actions");
-		if (pageheadActions) {
-			pageheadActions.insertBefore(app, pageheadActions.children[0]);
-			render(<EditorApp />, app);
-		}
-	}
+	// no top-level app injected; injected in BlobAnnotator instead
+	// if (process.env.NODE_ENV !== "development") {
+	// 	return;
+	// }
+	// const app = createAppContainerIfNotExists("li");
+	// if (app) {
+	// 	const pageheadActions = document.querySelector(".pagehead-actions");
+	// 	if (pageheadActions) {
+	// 		pageheadActions.insertBefore(app, pageheadActions.children[0]);
+	// 		render(<EditorApp />, app);
+	// 	}
+	// }
 }
