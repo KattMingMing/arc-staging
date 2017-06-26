@@ -69,6 +69,7 @@ export function createTooltips(): void {
 		e.preventDefault();
 		const { data, context } = store.getValue();
 		if (data && context && context.coords && context.path && context.repoRevSpec) {
+			eventLogger.logFindRefs( {...getTooltipEventProperties(data, context) });
 			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}/-/blob/${context.path}?utm_source=${getPlatformName()}#L${context.coords.line}:${context.coords.char}$references`;
 			openSourcegraphTab(url);
 		}
@@ -240,5 +241,11 @@ function updateTooltip(state: TooltipState): void {
 	// Make it all visible to the user.
 	tooltip.style.visibility = "visible";
 }
+
+window.addEventListener("keyup", (e: KeyboardEvent) => {
+	if (e.keyCode === 27) {
+		clearTooltip();
+	}
+});
 
 store.subscribe(updateTooltip);

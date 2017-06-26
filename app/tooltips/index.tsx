@@ -213,12 +213,12 @@ function getLoadingTooltipObservable(target: HTMLElement, tooltipObservable: Rx.
  * @param context Parameters used to fetch the tooltip data.
  * @param type Which type of user interaction caused the event.
  */
-function tooltipEvent(ev: { target: HTMLElement, data: TooltipData }, context: TooltipContext, type: TooltipEventType): void {
+function tooltipEvent(ev: { target: HTMLElement, data: TooltipData }, context: TooltipContext, type: TooltipEventType, logEvent: boolean = true): void {
 	if (store.getValue().docked && type === TooltipEventType.HOVER) {
 		// While a tooltip is docked, hovers should not update the active tooltip.
 		return;
 	}
-	if (ev.target === activeTarget) {
+	if (ev.target === activeTarget && logEvent) {
 		const eventProperties = getTooltipEventProperties(ev.data, context);
 		if (ev.data.title || ev.data.j2dUrl) {
 			switch (type) {
@@ -318,7 +318,7 @@ export function addAnnotations(path: string, repoRevSpec: RepoRevSpec, cells: Co
 		tooltipObservable.zip(getJ2DObservable(context)).subscribe((ev) => {
 			if (ev[1]) {
 				ev[0].data.j2dUrl = ev[1]!;
-				tooltipEvent(ev[0], context, TooltipEventType.HOVER);
+				tooltipEvent(ev[0], context, TooltipEventType.HOVER, false);
 			}
 		});
 		loadingTooltipObservable.subscribe((ev) => tooltipEvent(ev, context, TooltipEventType.HOVER));
@@ -383,7 +383,7 @@ export function addAnnotations(path: string, repoRevSpec: RepoRevSpec, cells: Co
 		tooltipObservable.zip(getJ2DObservable(context)).subscribe((ev) => {
 			if (ev[1]) {
 				ev[0].data.j2dUrl = ev[1]!;
-				tooltipEvent(ev[0], context, TooltipEventType.CLICK);
+				tooltipEvent(ev[0], context, TooltipEventType.CLICK, false);
 			}
 		});
 		loadingTooltipObservable.subscribe((ev) => tooltipEvent(ev, context, TooltipEventType.CLICK));
