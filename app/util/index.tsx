@@ -11,6 +11,7 @@ export const supportedExtensions = new Set<string>([
 	"js", "jsx", // JavaScript
 	"java", // Java
 	"py", // Python
+	"php", // PHP
 ]);
 
 /**
@@ -36,6 +37,15 @@ export function getModeFromExtension(ext: string): string {
 		case "pyw":
 		case "pyz":
 			return "python";
+		case "php":
+		case "phtml":
+		case "php3":
+		case "php4":
+		case "php5":
+		case "php6":
+		case "php7":
+		case "phps":
+			return "php";
 		default:
 			return "unknown";
 	}
