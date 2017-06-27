@@ -28,6 +28,6 @@ export function parseURL(loc: Location = window.location): SourcegraphURL {
 	return { uri, rev, path };
 }
 
-export function openSourcegraphTab(url: string): void {
-	chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url });
+export function openSourcegraphTab(url: string, withModifierKey: boolean): void {
+	chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url, withModifierKey: withModifierKey });
 }

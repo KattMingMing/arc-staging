@@ -27,7 +27,8 @@
         "js/inject.bundle.js"
       ],
       "css": [
-        "css/highlight.css"
+        "css/highlight.css",
+        "css/options.css"
       ]
     }
   ],

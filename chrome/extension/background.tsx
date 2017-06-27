@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 chrome.storage.sync.get((items) => {
-	if (!items.useSingleSourcegraphTab) {
+	if (!items.useSingleSourcegraphTab || !items.openInExistingTab) {
 		return;
 	}
 	chrome.tabs.onUpdated.addListener((tabID, changeInfo) => {
@@ -87,7 +87,7 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 			chrome.storage.sync.get((items) => {
 				if (items.useSingleSourcegraphTab) {
 					chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
-						if (tabs.length > 0) {
+						if (tabs.length > 0 && !message.withModifierKey) {
 							navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, message.url);
 							cb(true);
 						} else {

@@ -55,7 +55,8 @@ export function createTooltips(): void {
 				.then((defUrl) => {
 					eventLogger.logJumpToDef({ ...getTooltipEventProperties(data, context), hasResolvedJ2D: Boolean(defUrl) });
 					if (defUrl) {
-						openSourcegraphTab(defUrl);
+						const withModifierKey = isClickEventWithModifierKey(e);
+						openSourcegraphTab(defUrl, withModifierKey);
 					}
 				});
 		}
@@ -71,7 +72,8 @@ export function createTooltips(): void {
 		if (data && context && context.coords && context.path && context.repoRevSpec) {
 			eventLogger.logFindRefs( {...getTooltipEventProperties(data, context) });
 			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}/-/blob/${context.path}?utm_source=${getPlatformName()}#L${context.coords.line}:${context.coords.char}$references`;
-			openSourcegraphTab(url);
+			const withModifierKey = isClickEventWithModifierKey(e);
+			openSourcegraphTab(url, withModifierKey);
 		}
 	};
 
@@ -88,7 +90,8 @@ export function createTooltips(): void {
 			const { data, context } = store.getValue();
 			if (data && context && context.repoRevSpec) {
 				const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}?q=${encodeURIComponent(searchText)}&utm_source=${getPlatformName()}`;
-				openSourcegraphTab(url);
+				const withModifierKey = isClickEventWithModifierKey(e);
+				openSourcegraphTab(url, withModifierKey);
 				return;
 			}
 		}
@@ -240,6 +243,10 @@ function updateTooltip(state: TooltipState): void {
 
 	// Make it all visible to the user.
 	tooltip.style.visibility = "visible";
+}
+
+function isClickEventWithModifierKey(e: MouseEvent): boolean {
+	return e.altKey || e.shiftKey || e.ctrlKey || e.metaKey || e.which === 2;
 }
 
 window.addEventListener("keyup", (e: KeyboardEvent) => {
