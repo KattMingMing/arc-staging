@@ -37,18 +37,23 @@ if (process.env.NODE_ENV === "development") {
 	}
 }
 
-chrome.tabs.onUpdated.addListener((tabID, changeInfo) => {
-	if (changeInfo.url && changeInfo.url.indexOf("https://sourcegraph.com") !== -1) {
-		if (changeInfo.url.indexOf("https://sourcegraph.com/-/editor") === -1) { // let redirect happen first
-			chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
-				if (tabs.length > 1 && tabs[0].id !== tabID) {
-					chrome.tabs.remove(tabID, () => {
-						navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, changeInfo.url!);
-					});
-				}
-			});
-		}
+chrome.storage.sync.get((items) => {
+	if (!items.useSingleSourcegraphTab) {
+		return;
 	}
+	chrome.tabs.onUpdated.addListener((tabID, changeInfo) => {
+		if (changeInfo.url && changeInfo.url.indexOf("https://sourcegraph.com") !== -1) {
+			if (changeInfo.url.indexOf("https://sourcegraph.com/-/editor") === -1) { // let redirect happen first
+				chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
+					if (tabs.length > 1 && tabs[0].id !== tabID) {
+						chrome.tabs.remove(tabID, () => {
+							navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, changeInfo.url!);
+						});
+					}
+				});
+			}
+		}
+	});
 });
 
 function navigateSourcegraphTab(windowID: number, tabID: number, url: string): void {
@@ -79,13 +84,19 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 			return true;
 
 		case "openSourcegraphTab":
-			chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
-				if (tabs.length > 0) {
-					navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, message.url);
-					cb(true);
-				} else {
+			chrome.storage.sync.get((items) => {
+				if (items.useSingleSourcegraphTab) {
+					chrome.tabs.query({ url: "https://sourcegraph.com/*" }, (tabs) => {
+						if (tabs.length > 0) {
+							navigateSourcegraphTab(tabs[0].windowId, tabs[0].id!, message.url);
+							cb(true);
+						} else {
+							chrome.tabs.create({ url: message.url });
+							cb(false);
+						}
+					});
+				}  else {
 					chrome.tabs.create({ url: message.url });
-					cb(false);
 				}
 			});
 			return true;
