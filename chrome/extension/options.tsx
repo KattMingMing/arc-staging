@@ -11,10 +11,6 @@ function getSourcegraphEnableSearchCheckbox(): HTMLInputElement {
 	return document.getElementById("sourcegraph-enable-search") as HTMLInputElement;
 }
 
-function getSourcegraphDefaultSearchCheckbox(): HTMLInputElement {
-	return document.getElementById("sourcegraph-default-search") as HTMLInputElement;
-}
-
 function getSourcegraphURLForm(): HTMLFormElement {
 	return document.getElementById("sourcegraph_url_form") as HTMLFormElement;
 }
@@ -39,7 +35,6 @@ function syncUIToModel(): void {
 	chrome.storage.sync.get((items) => {
 		getSourcegraphURLInput().value = items.sourcegraphURL;
 		getSourcegraphEnableSearchCheckbox().checked = items.searchEnabled;
-		getSourcegraphDefaultSearchCheckbox().checked = items.isDefaultSearch;
 		getUseSingleSourcegraphTab().checked = items.useSingleSourcegraphTab;
 		getAlwaysOpenInExistingSourcegraphTab().checked = items.openInExistingTab;
 	});
@@ -58,9 +53,6 @@ chrome.storage.sync.get((items) => {
 	}
 	if (!items.searchEnabled) {
 		chrome.storage.sync.set({ searchEnabled: false });
-	}
-	if (!items.isDefaultSearch) {
-		chrome.storage.sync.set({ isDefaultSearch: false });
 	}
 	if (items.useSingleSourcegraphTab === undefined) {
 		chrome.storage.sync.set({ useSingleSourcegraphTab: true });
@@ -108,11 +100,6 @@ getSourcegraphURLInput().addEventListener("keydown", (evt) => {
 getSourcegraphEnableSearchCheckbox().addEventListener("click", () => {
 	const checkbox = getSourcegraphEnableSearchCheckbox();
 	chrome.storage.sync.set({ searchEnabled: checkbox.checked });
-});
-
-getSourcegraphDefaultSearchCheckbox().addEventListener("click", () => {
-	const checkbox = getSourcegraphDefaultSearchCheckbox();
-	chrome.storage.sync.set({ isDefaultSearch: checkbox.checked });
 });
 
 getUseSingleSourcegraphTab().addEventListener("click", () => {

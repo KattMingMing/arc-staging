@@ -141,7 +141,7 @@ function injectOpenOnSourcegraphButton(): void {
 			findFile.className = findFile.className.replace("float-right", "");
 			container.className = "btn btn-sm empty-icon float-right BtnGroup-item";
 			fileNav.appendChild(container);
-			render(<OpenOnSourcegraph style={fileNavButton} url={url} onClick={() => openOnSourcegraphClickHandler()} />, container);
+			render(<OpenOnSourcegraph ariaLabel="View on Sourcegraph" style={fileNavButton} url={url} onClick={() => openOnSourcegraphClickHandler()} />, container);
 		}
 	}
 }

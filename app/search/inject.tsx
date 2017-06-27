@@ -1,7 +1,7 @@
 import * as backend from "app/backend";
 import { parseURL} from "app/github/util";
 import { getAssetURL } from "app/util/assets";
-import { eventLogger, searchEnabled, sourcegraphUrl, useSourcegraphSearch } from "app/util/context";
+import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
 import { insertAfter } from "app/util/dom";
 import { getPlatformName } from "app/util/index";
 import { GITHUB_LIGHT_THEME } from "chrome/assets/themes/github_theme";
@@ -31,9 +31,6 @@ export function injectCodeSearch(): void {
 	}
 
 	if (isCodeSearchURL()) {
-		if (useSourcegraphSearch) {
-			window.location.hash = "#sourcegraph";
-		}
 		renderSourcegraphSearchTab();
 	}
 

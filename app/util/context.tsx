@@ -16,8 +16,6 @@ export let sourcegraphUrl: string = "https://sourcegraph.com";
 
 export let searchEnabled: boolean = false;
 
-export let useSourcegraphSearch: boolean = false;
-
 export let useSingleSourcegraphTab: boolean = true;
 
 export function setSourcegraphUrl(url: string): void {
@@ -36,10 +34,6 @@ export function isBrowserExtension(): boolean {
 
 export function setSearchEnabled(enabled: boolean): void {
 	searchEnabled = enabled;
-}
-
-export function setSourcegraphSearchAsDefault(enabled: boolean): void {
-	useSourcegraphSearch = enabled;
 }
 
 export function setUseSingleSourcegraphTab(enabled: boolean): void {

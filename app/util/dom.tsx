@@ -8,3 +8,7 @@ export function insertAfter(el: HTMLElement, referenceNode: Node): void {
 		referenceNode.parentNode.insertBefore(el, referenceNode.nextSibling);
 	}
 }
+
+export function isMouseEventWithModifierKey(e: MouseEvent): boolean {
+	return e.altKey || e.shiftKey || e.ctrlKey || e.metaKey || e.which === 2;
+}
