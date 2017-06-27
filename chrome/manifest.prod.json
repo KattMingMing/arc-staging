@@ -4,7 +4,8 @@
   "manifest_version": 2,
   "description": "Gives GitHub IDE powers: jump to definition and hover tooltips in code, PRs, and diffs",
   "browser_action": {
-    "default_title": "Sourcegraph"
+    "default_title": "Sourcegraph",
+    "default_popup": "options.html"
   },
   "applications": {
     "gecko": {
