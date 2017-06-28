@@ -31,13 +31,21 @@ function getAlwaysOpenInExistingSourcegraphTab(): HTMLInputElement {
 	return document.getElementById("sourcegraph-open-existing-tab") as HTMLInputElement;
 }
 
+function getReuseBrowserTabContainer(): HTMLElement {
+	return document.getElementById("reuse-browser-tab") as HTMLElement;
+}
+
 function syncUIToModel(): void {
 	chrome.storage.sync.get((items) => {
 		getSourcegraphURLInput().value = items.sourcegraphURL;
 		getSourcegraphEnableSearchCheckbox().checked = items.searchEnabled;
-		getUseSingleSourcegraphTab().checked = items.useSingleSourcegraphTab;
-		getAlwaysOpenInExistingSourcegraphTab().checked = items.openInExistingTab;
+		getUseSingleSourcegraphTab().checked = showReuseBrowserTabOption() ? items.useSingleSourcegraphTab : false;
+		getAlwaysOpenInExistingSourcegraphTab().checked = showReuseBrowserTabOption() ? items.openInExistingTab : false;
 	});
+}
+
+function showReuseBrowserTabOption(): boolean {
+	return window.localStorage["single-browser-tab"] === true;
 }
 
 /**
@@ -47,6 +55,9 @@ chrome.storage.sync.get((items) => {
 	if (isFirefoxExtension() && getSourcegraphSearchContainer()) {
 		getSourcegraphSearchContainer().style.display = "none";
 	}
+	if ( !showReuseBrowserTabOption() && getReuseBrowserTabContainer()) {
+		getReuseBrowserTabContainer().style.display = "none";
+	}
 
 	if (!items.sourcegraphURL) {
 		chrome.storage.sync.set({ sourcegraphURL: "https://sourcegraph.com" });
@@ -54,8 +65,8 @@ chrome.storage.sync.get((items) => {
 	if (!items.searchEnabled) {
 		chrome.storage.sync.set({ searchEnabled: false });
 	}
-	if (items.useSingleSourcegraphTab === undefined) {
-		chrome.storage.sync.set({ useSingleSourcegraphTab: true });
+	if (!items.useSingleSourcegraphTab) {
+		chrome.storage.sync.set({ useSingleSourcegraphTab: false });
 	}
 	if (!items.openInExistingTab) {
 		chrome.storage.sync.set({ openInExistingTab: false });

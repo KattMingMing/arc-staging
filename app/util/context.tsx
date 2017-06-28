@@ -16,7 +16,7 @@ export let sourcegraphUrl: string = "https://sourcegraph.com";
 
 export let searchEnabled: boolean = false;
 
-export let useSingleSourcegraphTab: boolean = true;
+export let useSingleSourcegraphTab: boolean = false;
 
 export function setSourcegraphUrl(url: string): void {
 	sourcegraphUrl = url;
