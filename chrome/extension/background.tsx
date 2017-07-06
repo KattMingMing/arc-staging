@@ -37,7 +37,11 @@ if (process.env.NODE_ENV === "development") {
 	}
 }
 
+let trackingEnabled = false;
+
 chrome.storage.sync.get((items) => {
+	trackingEnabled = items.eventTrackingEnabled;
+
 	if (!items.useSingleSourcegraphTab || !items.openInExistingTab) {
 		return;
 	}
@@ -111,7 +115,7 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 			return true;
 
 		case "trackEvent":
-			if (telligentWrapper) {
+			if (telligentWrapper && trackingEnabled) {
 				telligentWrapper.track(message.payload.eventAction, message.payload);
 			}
 			return;

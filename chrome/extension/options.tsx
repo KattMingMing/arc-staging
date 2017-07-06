@@ -35,12 +35,21 @@ function getReuseBrowserTabContainer(): HTMLElement {
 	return document.getElementById("reuse-browser-tab") as HTMLElement;
 }
 
+function getEnableEventTrackingCheckbox(): HTMLInputElement {
+	return document.getElementById("sourcegraph-enable-event-tracking") as HTMLInputElement;
+}
+
+function getEnableEventTrackingContainer(): HTMLElement {
+	return document.getElementById("sourcegraph-event-tracking-container") as HTMLElement;
+}
+
 function syncUIToModel(): void {
 	chrome.storage.sync.get((items) => {
 		getSourcegraphURLInput().value = items.sourcegraphURL;
 		getSourcegraphEnableSearchCheckbox().checked = items.searchEnabled;
 		getUseSingleSourcegraphTab().checked = showReuseBrowserTabOption() ? items.useSingleSourcegraphTab : false;
 		getAlwaysOpenInExistingSourcegraphTab().checked = showReuseBrowserTabOption() ? items.openInExistingTab : false;
+		getEnableEventTrackingCheckbox().checked = getEnableEventTrackingCheckbox() ? items.eventTrackingEnabled : false;
 	});
 }
 
@@ -55,6 +64,10 @@ chrome.storage.sync.get((items) => {
 	if (isFirefoxExtension() && getSourcegraphSearchContainer()) {
 		getSourcegraphSearchContainer().style.display = "none";
 	}
+	if (!isFirefoxExtension() && getEnableEventTrackingContainer()) {
+		getEnableEventTrackingContainer().style.display = "none";
+	}
+
 	if ( !showReuseBrowserTabOption() && getReuseBrowserTabContainer()) {
 		getReuseBrowserTabContainer().style.display = "none";
 	}
@@ -70,6 +83,9 @@ chrome.storage.sync.get((items) => {
 	}
 	if (!items.openInExistingTab) {
 		chrome.storage.sync.set({ openInExistingTab: false });
+	}
+	if (!items.eventTrackingEnabled) {
+		chrome.storage.sync.set({ eventTrackingEnabled: !isFirefoxExtension() });
 	}
 
 	syncUIToModel();
@@ -121,4 +137,9 @@ getUseSingleSourcegraphTab().addEventListener("click", () => {
 getAlwaysOpenInExistingSourcegraphTab().addEventListener("click", () => {
 	const checkbox = getAlwaysOpenInExistingSourcegraphTab();
 	chrome.storage.sync.set({ openInExistingTab: checkbox.checked });
+});
+
+getEnableEventTrackingCheckbox().addEventListener("click", () => {
+	const checkbox = getEnableEventTrackingCheckbox();
+	chrome.storage.sync.set({eventTrackingEnabled: checkbox.checked});
 });

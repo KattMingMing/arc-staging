@@ -18,6 +18,8 @@ export let searchEnabled: boolean = false;
 
 export let useSingleSourcegraphTab: boolean = false;
 
+export let eventTrackingEnabled: boolean = false;
+
 export function setSourcegraphUrl(url: string): void {
 	sourcegraphUrl = url;
 }
@@ -38,4 +40,8 @@ export function setSearchEnabled(enabled: boolean): void {
 
 export function setUseSingleSourcegraphTab(enabled: boolean): void {
 	useSingleSourcegraphTab = enabled;
+}
+
+export function setEventTrackingEnabled(enabled: boolean): void {
+	eventTrackingEnabled = enabled;
 }

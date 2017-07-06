@@ -29,4 +29,10 @@ html
           label(class="advanced-options-label") Sourcegraph URL:
           input(id="sourcegraph_url", class="url-input")
           input(type="submit", value="Save", class="save-button")
+      div(id="sourcegraph-event-tracking-container")
+        h4(class="section-header") Data collection:
+        p(class="section-subheader") Allow data collection for an improved user experience and personalization.
+        div(class="option-container")
+          input(type="checkbox", id="sourcegraph-enable-event-tracking")
+          label(class="options-label") Enable event logging
       script(src='/js/options.bundle.js')
