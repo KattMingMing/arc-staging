@@ -79,38 +79,51 @@ export function searchText(uri: string, query: string): Promise<ResolvedSearchTe
 	}
 	const variables = {
 		pattern: query,
-		isRegExp: false,
-		isCaseSensitive: false,
-		isWordMatch: false,
-		wordSeparators: "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
-		revision: "",
-		uri: uri,
 		fileMatchLimit: 10000,
+		isRegExp: false,
+		isWordMatch: false,
+		repositories: [{ repo: uri, rev: "" }],
+		isCaseSensitive: false,
 		includePattern: "",
 		excludePattern: "{.git,**/.git,.svn,**/.svn,.hg,**/.hg,CVS,**/CVS,.DS_Store,**/.DS_Store,node_modules,bower_components,vendor,dist,out,Godeps,third_party}",
 	};
 
 	const body = {
-		query: `query SearchText($uri: String!, $pattern: String!, $revision: String!, $isRegExp: Boolean!, $isWordMatch: Boolean!, $isCaseSensitive: Boolean!, $fileMatchLimit: Int!, $includePattern: String!, $excludePattern: String!) {
+		query: `query SearchText(
+			$pattern: String!,
+			$fileMatchLimit: Int!,
+			$isRegExp: Boolean!,
+			$isWordMatch: Boolean!,
+			$repositories: [RepositoryRevision!]!,
+			$isCaseSensitive: Boolean!,
+			$includePattern: String!,
+			$excludePattern: String!,
+		) {
 			root {
-				repository(uri: $uri) {
-					commit(rev: $revision) {
-						commit {
-							textSearch(query: { pattern: $pattern, isRegExp: $isRegExp, isWordMatch: $isWordMatch, isCaseSensitive: $isCaseSensitive, fileMatchLimit: $fileMatchLimit, includePattern: $includePattern, excludePattern: $excludePattern }) {
-								results {
-									resource
-									lineMatches {
-										preview
-										lineNumber
-										offsetAndLengths
-									}
-								}
-							}
+				searchRepos(
+					repositories: $repositories,
+					query: {
+						pattern: $pattern,
+						isRegExp: $isRegExp,
+						fileMatchLimit: $fileMatchLimit,
+						isWordMatch: $isWordMatch,
+						isCaseSensitive: $isCaseSensitive,
+						includePattern: $includePattern,
+						excludePattern: $excludePattern,
+				}) {
+					limitHit
+					results {
+						resource
+						limitHit
+						lineMatches {
+							preview
+							lineNumber
+							offsetAndLengths
 						}
 					}
 				}
 			}
-			}`,
+		}`,
 		variables: variables,
 	};
 
@@ -119,21 +132,15 @@ export function searchText(uri: string, query: string): Promise<ResolvedSearchTe
 		body: JSON.stringify(body),
 	}).then((resp) => resp.json()).then((json: any) => {
 		searchPromiseCache.delete(key);
-		const repo = json.data && json.data.root!.repository;
-		if (!repo) {
+		const results = json.data && json.data.root!.searchRepos;
+		if (!results) {
 			const notFound = { notFound: true };
 			promiseCache.set(key, Promise.resolve(notFound));
 			return notFound;
 		}
 
-		if (!repo.commit.commit || !repo.commit.commit.textSearch) {
-			const error = new Error("invalid response received from search graphql endpoint");
-			searchPromiseCache.set(key, Promise.reject(error));
-			throw error;
-		}
-		const found = repo.commit.commit.textSearch;
-		searchPromiseCache.set(key, Promise.resolve(found));
-		return found;
+		searchPromiseCache.set(key, Promise.resolve(results));
+		return results;
 	});
 
 	searchPromiseCache.set(key, p);

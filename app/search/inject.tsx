@@ -385,7 +385,6 @@ function searchURLConfig(repo: string, query?: string, initialStartup?: boolean)
 		themeData: GITHUB_LIGHT_THEME,
 		isChromeExtension: true,
 		standaloneWorkbench: true,
-		activityBarHidden: true,
 	};
 
 	const queryString = encodeURIComponent(JSON.stringify(queryParams));
