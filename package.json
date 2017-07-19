@@ -36,6 +36,7 @@
     "shelljs": "^0.6.0",
     "ts-loader": "^2.1.0",
     "ts-node": "^1.7.0",
+    "tslint": "^5.5.0",
     "typescript": "^2.3.3",
     "typescript-formatter": "^4.0.1",
     "webpack": "^3.0.0"
