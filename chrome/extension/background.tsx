@@ -1,4 +1,5 @@
 import { TelligentWrapper } from "app/tracking/TelligentWrapper";
+import { isFirefoxExtension } from "app/util";
 import { sourcegraphUrl } from "app/util/context";
 import * as bluebird from "bluebird";
 
@@ -37,10 +38,14 @@ if (process.env.NODE_ENV === "development") {
 	}
 }
 
-let trackingEnabled = false;
+let trackingEnabled = true;
 
 chrome.storage.sync.get((items) => {
-	trackingEnabled = items.eventTrackingEnabled;
+	if (isFirefoxExtension()) {
+		trackingEnabled = items.eventTrackingEnabled;
+	} else if (items.eventTrackingEnabled === undefined) {
+		chrome.storage.sync.set({ eventTrackingEnabled: true });
+	}
 
 	if (!items.useSingleSourcegraphTab || !items.openInExistingTab) {
 		return;
