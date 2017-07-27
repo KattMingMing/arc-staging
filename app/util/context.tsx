@@ -20,6 +20,8 @@ export let useSingleSourcegraphTab: boolean = false;
 
 export let eventTrackingEnabled: boolean = false;
 
+export let sourcegraphRepoSearchToggled: boolean = false;
+
 export function setSourcegraphUrl(url: string): void {
 	sourcegraphUrl = url;
 }
@@ -36,6 +38,10 @@ export function isBrowserExtension(): boolean {
 
 export function setSearchEnabled(enabled: boolean): void {
 	searchEnabled = enabled;
+}
+
+export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
+	sourcegraphRepoSearchToggled = enabled;
 }
 
 export function setUseSingleSourcegraphTab(enabled: boolean): void {

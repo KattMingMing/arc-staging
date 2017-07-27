@@ -2,6 +2,7 @@ import { useAccessToken } from "app/backend/xhr";
 import { BlobAnnotator } from "app/components/BlobAnnotator";
 import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
 import { ProjectsOverview } from "app/components/ProjectsOverview";
+import { injectRepositorySearchToggle } from "app/components/SearchToggle";
 import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
 import { fileNavButton } from "app/github/styles";
 import * as github from "app/github/util";
@@ -71,6 +72,7 @@ function injectModules(): void {
 		injectCodeSearch();
 		injectGitHubEditor();
 		injectOpenOnSourcegraphButton();
+		injectRepositorySearchToggle();
 	});
 }
 
