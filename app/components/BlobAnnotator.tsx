@@ -217,8 +217,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
 		}
 		// this is crappy, and only works because we stick in the cache both the repoURI as key as well as the repoURI@revision
 		const resolvedRevs = this.state.resolvedRevs[this.props.repoURI] as backend.ResolvedRevResp;
-		return getSourcegraphButton(this.props.repoURI, this.props.headPath, github.isPrivateRepo() && resolvedRevs.notFound as boolean,
-			this.isDelta ? utils.getSourcegraphBlobUrl(sourcegraphUrl, this.headRepoURI as string, this.props.headPath, this.headCommitID) : utils.getSourcegraphBlobUrl(sourcegraphUrl, this.props.repoURI, this.props.headPath, this.rev),
+		return getSourcegraphButton(github.isPrivateRepo() && resolvedRevs.notFound as boolean,
+			this.isDelta ? utils.getSourcegraphBlobUrl(sourcegraphUrl, this.headRepoURI as string, this.props.headPath, this.headCommitID, this.baseCommitID) : utils.getSourcegraphBlobUrl(sourcegraphUrl, this.props.repoURI, this.props.headPath, this.rev),
 			this.getFileOpenCallback,
 			this.getAuthFileCallback);
 	}
@@ -232,10 +232,10 @@ export class BlobAnnotator extends React.Component<Props, State> {
 	}
 }
 
-function getSourcegraphButton(uri: string, path: string, cantFindPrivateRepo: boolean, blobUrl: string, fileCallack: () => void, authCallback: () => void): JSX.Element {
+function getSourcegraphButton(cantFindPrivateRepo: boolean, blobUrl: string, fileCallack: () => void, authCallback: () => void): JSX.Element {
 	let url = blobUrl;
 	let callback = fileCallack;
-	let ariaLabel = "View on Sourcegraph";
+	let ariaLabel = "View file on Sourcegraph";
 	let customIconStyle = iconStyle;
 
 	// Not signed in or not auth'd for private repos
@@ -246,7 +246,6 @@ function getSourcegraphButton(uri: string, path: string, cantFindPrivateRepo: bo
 		customIconStyle = Object.assign({ WebkitFilter: "grayscale(100%)" }, customIconStyle);
 	}
 	return <div style={{ display: "inline-block" }}>
-		{process.env.NODE_ENV === "development" && <span style={{ marginRight: "5px" }}><EditorApp uri={uri} path={path} /></span>}
-		<OpenOnSourcegraph ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />
+		<OpenOnSourcegraph label="View File" ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />
 	</div>;
 }

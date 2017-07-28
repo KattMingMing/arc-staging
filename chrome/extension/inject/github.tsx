@@ -1,10 +1,9 @@
 import { useAccessToken } from "app/backend/xhr";
 import { BlobAnnotator } from "app/components/BlobAnnotator";
-import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
+import { ContextualSourcegraphButton } from "app/components/ContextualSourcegraphButton";
 import { ProjectsOverview } from "app/components/ProjectsOverview";
 import { injectRepositorySearchToggle } from "app/components/SearchToggle";
 import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
-import { fileNavButton } from "app/github/styles";
 import * as github from "app/github/util";
 import * as tooltips from "app/tooltips/dom";
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
@@ -127,21 +126,16 @@ function injectSourcegraphInternalTools(): void {
  * The button is only rendered on a repo homepage after the "find file" button.
  */
 function injectOpenOnSourcegraphButton(): void {
-	// Only show button inside the file navigation section.
-	if (!document.querySelector(".file-navigation.in-mid-page")) {
+	const container = createOpenOnSourcegraphIfNotExists();
+	const pageheadActions = document.querySelector(".pagehead-actions");
+	if (!pageheadActions || !pageheadActions.children.length) {
 		return;
 	}
-
-	const fileNav = document.querySelector(".BtnGroup.float-right");
-	const container = createOpenOnSourcegraphIfNotExists();
-	if (fileNav && container) {
+	pageheadActions.insertBefore(container, pageheadActions.children[0]);
+	if (container) {
 		const url = openOnSourcegraphURL();
 		if (url) {
-			const findFile = fileNav.lastElementChild as HTMLElement;
-			findFile.className = findFile.className.replace("float-right", "");
-			container.className = "btn btn-sm empty-icon float-right BtnGroup-item";
-			fileNav.appendChild(container);
-			render(<OpenOnSourcegraph ariaLabel="View on Sourcegraph" style={fileNavButton} url={url} onClick={() => openOnSourcegraphClickHandler()} />, container);
+			render(<ContextualSourcegraphButton />, container);
 		}
 	}
 }
@@ -152,7 +146,7 @@ function createOpenOnSourcegraphIfNotExists(): HTMLElement {
 		container.remove();
 	}
 
-	container = document.createElement("div");
+	container = document.createElement("li");
 	container.id = OPEN_ON_SOURCEGRAPH_ID;
 	return container;
 }
@@ -166,9 +160,4 @@ function openOnSourcegraphURL(): string | undefined {
 		}
 		return `${url}?utm_source=${getPlatformName()}`;
 	}
-}
-
-function openOnSourcegraphClickHandler(): void {
-	const { uri } = github.parseURL();
-	eventLogger.logOpenOnSourcegraphButtonClicked(uri && { repo: uri });
 }

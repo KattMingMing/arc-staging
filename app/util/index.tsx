@@ -101,7 +101,11 @@ export function getDomainUsername(domain: string, username: string): string {
 	return `${domain}:${username}`;
 }
 
-export function getSourcegraphBlobUrl(sourcegraphUrl: string, repoUri: string, path: string, commitId?: string): string {
+export function getSourcegraphBlobUrl(sourcegraphUrl: string, repoUri: string, path: string, commitId?: string, baseCommitId?: string): string {
 	const commitString = commitId ? `@${commitId}` : "";
-	return `${sourcegraphUrl}/${repoUri}${commitString}/-/blob/${path}?utm_source=${getPlatformName()}`;
+	let url = `${sourcegraphUrl}/${repoUri}${commitString}/-/blob/${path}`;
+	if (baseCommitId) {
+		url = `${url}?diff=${baseCommitId}&utm_source=${getPlatformName()}`;
+	}
+	return `${url}?utm_source=${getPlatformName()}`;
 }

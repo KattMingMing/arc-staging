@@ -1,5 +1,5 @@
 import { getDomain } from "app/util";
-import { CodeCell, Domain, GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubURL } from "app/util/types";
+import { CodeCell, Domain, GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubRepositoryUrl, GitHubURL } from "app/util/types";
 
 function invariant(cond: any): void {
 	if (!cond) {
@@ -237,9 +237,35 @@ export function getDeltaRevs(): DeltaRevs | null {
 	}
 
 	if (base === "" || head === "") {
-		return null;
+		return getDeltaRevsFromPageSource(document.documentElement.innerHTML);
 	}
 	return { base, head };
+}
+
+export function getDeltaRevsFromPageSource(pageSource: string): DeltaRevs | null {
+	const { isPullRequest } = parseURL();
+	if (!isPullRequest) {
+		return null;
+	}
+	const baseShaComment = "<!-- base sha1: &quot;";
+	const baseIndex = pageSource.indexOf(baseShaComment);
+
+	if (baseIndex === -1) {
+		return null;
+	}
+
+	const headShaComment = "<!-- head sha1: &quot;";
+	const headIndex = pageSource.indexOf(headShaComment, baseIndex);
+	if (headIndex === -1) {
+		return null;
+	}
+
+	const base = pageSource.substr(baseIndex + baseShaComment.length, 40);
+	const head = pageSource.substr(headIndex + headShaComment.length, 40);
+	return {
+		base,
+		head,
+	};
 }
 
 export interface DeltaInfo {
@@ -393,7 +419,7 @@ export function getCodeCellsForAnnotation(table: HTMLTableElement, opt: { isDelt
 const GITHUB_BLOB_REGEX = /^(https?):\/\/(github.com)\/([A-Za-z0-9_]+)\/([A-Za-z0-9-]+)\/blob\/([^#]*)(#L[0-9]+)?/i;
 const GITHUB_PULL_REGEX = /^(https?):\/\/(github.com)\/([A-Za-z0-9_]+)\/([A-Za-z0-9-]+)\/pull\/([0-9]+)(\/(commits|files))?/i;
 const COMMIT_HASH_REGEX = /^([0-9a-f]{40})/i;
-export function getGitHubState(url: string): GitHubBlobUrl | GitHubPullUrl | null {
+export function getGitHubState(url: string): GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl | null {
 	const blobMatch = GITHUB_BLOB_REGEX.exec(url);
 	if (blobMatch) {
 		const match = {
@@ -439,9 +465,20 @@ export function getGitHubState(url: string): GitHubBlobUrl | GitHubPullUrl | nul
 			repo: match.repo,
 			owner: match.org,
 			view: match.view,
+			rev: "",
 			id: numId,
 		};
 	}
+	const parsed = parseURL();
+	if (parsed && parsed.repo && parsed.repoURI && parsed.user) {
+		return {
+			mode: GitHubMode.Repository,
+			owner: parsed.user,
+			repo: parsed.repo,
+			rev: parsed.rev,
+		};
+	}
+
 	return null;
 }
 

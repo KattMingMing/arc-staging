@@ -109,13 +109,22 @@ export interface GitHubPullUrl {
 	owner: string;
 	repo: string;
 	view: string;
+	rev: string;
 	id: number;
+}
+
+export interface GitHubRepositoryUrl {
+	mode: GitHubMode;
+	owner: string;
+	repo: string;
+	rev?: string;
 }
 
 export enum GitHubMode {
 	Blob,
 	Commit,
 	PullRequest,
+	Repository,
 }
 
 export interface BitbucketUrl {
