@@ -14,10 +14,6 @@ export function setEventLogger(logger: EventLogger): void {
 // because the Sourcegraph url is undefined).
 export let sourcegraphUrl: string = "https://sourcegraph.com";
 
-export let searchEnabled: boolean = false;
-
-export let useSingleSourcegraphTab: boolean = false;
-
 export let eventTrackingEnabled: boolean = false;
 
 export let sourcegraphRepoSearchToggled: boolean = false;
@@ -36,16 +32,8 @@ export function isBrowserExtension(): boolean {
 	return !phabricatorInstance;
 }
 
-export function setSearchEnabled(enabled: boolean): void {
-	searchEnabled = enabled;
-}
-
 export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
 	sourcegraphRepoSearchToggled = enabled;
-}
-
-export function setUseSingleSourcegraphTab(enabled: boolean): void {
-	useSingleSourcegraphTab = enabled;
 }
 
 export function setEventTrackingEnabled(enabled: boolean): void {

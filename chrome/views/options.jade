@@ -6,22 +6,6 @@ html
     link(href='/css/options.css', rel='stylesheet', type='text/css')
   body
     div(class="options")
-      p Customize your experience.
-      div(id="sourcegraph-enable-search-container")
-      h4(class="section-header") Search:
-      p(class="section-subheader") Search using Sourcegraph-embedded editor.
-      div(class="option-container")
-        input(type="checkbox", id="sourcegraph-enable-search")
-        label(class="options-label") Add Sourcegraph search to GitHub search menu
-      div(id="reuse-browser-tab")
-        h4(class="section-header") Reuse browser tab:
-        p(class="section-subheader") Load Sourcegraph faster by reusing an existing Sourcegraph browser tab.
-        div(class="option-container")
-          input(type="checkbox", id="sourcegraph-one-tab")
-          label(class="options-label") Reuse Sourcegraph tab for tooltip actions
-        div(class="option-container")
-          input(type="checkbox", id="sourcegraph-open-existing-tab")
-          label(class="options-label") Always reuse Sourcegraph tab
       h4(class="section-header") Advanced options
       p(class="section-subheader") Warning: changing these options may break your Chrome extension.
       form#sourcegraph_url_form

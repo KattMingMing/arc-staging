@@ -6,7 +6,6 @@ import { injectRepositorySearchToggle } from "app/components/SearchToggle";
 import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
 import { fileNavButton } from "app/github/styles";
 import * as github from "app/github/util";
-import { injectCodeSearch } from "app/search/inject";
 import * as tooltips from "app/tooltips/dom";
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
 import { getPlatformName } from "app/util";
@@ -69,7 +68,6 @@ function injectModules(): void {
 		}
 		injectBlobAnnotators();
 		injectSourcegraphInternalTools();
-		injectCodeSearch();
 		injectGitHubEditor();
 		injectOpenOnSourcegraphButton();
 		injectRepositorySearchToggle();
