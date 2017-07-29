@@ -29,9 +29,11 @@ function sourcegraphSearchToggle(toggled: boolean): void {
 	}
 
 	const labelInput = document.querySelector(".form-control.header-search-input") as HTMLInputElement;
-	const wrapper = document.querySelector(".form-control.header-search-wrapper");
+	const wrapper = document.querySelector(".form-control.header-search-wrapper") as HTMLElement;
+
 	if (labelInput) {
-		formContainer.style.minWidth = "340px";
+		formContainer.style.minWidth = "340px !important";
+		labelInput.style.minWidth = "340px !important";
 		labelInput.onfocus = function(): void {
 			if (wrapper) {
 				wrapper.classList.remove("focus");
@@ -62,12 +64,22 @@ function sourcegraphSearchToggle(toggled: boolean): void {
 			icon.style.opacity = toggled ? "1.0" : "0.5";
 		};
 		container.id = SOURCEGRAPH_SEARCH_TOGGLE_ID;
-		container.className = "header-search-scope no-underline";
-
+		container.style.width = "30px";
+		container.style.height = "30px";
+		container.style.display = "inline-block";
+		container.className = "header-search scoped-search site-scoped-search js-site-search";
+		container.style.backgroundColor = "rgba(66, 70, 74, 0.9)";
+		container.style.paddingTop = "4px";
+		container.style.marginLeft = "-8px";
+		container.style.borderTopRightRadius = "3px";
+		container.style.borderBottomRightRadius = "3px";
 		container.appendChild(a);
-		insertAfter(container, labelInput);
+		insertAfter(container, formContainer.parentNode!);
 		const form = document.querySelector(".js-site-search-form") as HTMLFormElement;
 		if (form) {
+			wrapper.style.borderTopRightRadius = "0px";
+			wrapper.style.borderBottomRightRadius = "0px";
+			form.style.minWidth = "340px !important";
 			form.onsubmit = () => {
 				if (toggled && scopedRepoSearchFormContainer()) {
 					const searchQuery =  encodeURIComponent(labelInput.value);
