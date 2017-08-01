@@ -16,9 +16,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://localhost:3443/*",
-        "https://github.com/*",
-        "https://sourcegraph.com/*"
+        "https://github.com/*"
       ],
       "run_at": "document_end",
       "js": [
