@@ -14,7 +14,7 @@ function wrapLSP(req: { method: string, params: any }, repoRevSpec: RepoRevSpec,
 			id: 0,
 			method: "initialize",
 			params: {
-				rootPath: `git://${repoRevSpec.repoURI}?${repoRevSpec.rev}`,
+				rootUri: `git://${repoRevSpec.repoURI}?${repoRevSpec.rev}`,
 				mode: `${utils.getModeFromExtension(utils.getPathExtension(path))}`,
 			},
 		},
