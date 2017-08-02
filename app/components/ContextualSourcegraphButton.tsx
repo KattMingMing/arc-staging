@@ -69,7 +69,7 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 				};
 			default:
 				if (state.rev) {
-					url = `${url}/@${state.rev}`;
+					url = `${url}@${state.rev}`;
 				}
 				return {
 					label: "View Repository",
