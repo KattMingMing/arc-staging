@@ -16,14 +16,20 @@
   "content_scripts": [
     {
       "matches": [
-        "https://localhost:3443/*",
         "https://github.com/*",
-        "https://sourcegraph.com/*"
+        "https://sourcegraph.com/*",
+        "https://localhost:3443/*"
       ],
       "run_at": "document_end",
       "js": [
         "js/inject.bundle.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://github.com/*"
       ],
+      "run_at": "document_end",
       "css": [
         "css/highlight.css",
         "css/options.css"
