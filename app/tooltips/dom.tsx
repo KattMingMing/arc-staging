@@ -90,6 +90,7 @@ export function createTooltips(): void {
 		if (!searchEnabled) {
 			const { data, context } = store.getValue();
 			if (data && context && context.repoRevSpec) {
+				eventLogger.logSourcegraphSearch({repo: context.repoRevSpec.repoURI});
 				const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}?q=${encodeURIComponent(searchText)}&utm_source=${getPlatformName()}`;
 				const withModifierKey = isMouseEventWithModifierKey(e);
 				openSourcegraphTab(url, withModifierKey);
