@@ -6,6 +6,18 @@ html
     link(href='/css/options.css', rel='stylesheet', type='text/css')
   body
     div(class="options")
+      div(id="sourcegraph-repository-search-container")
+        h4(class="section-header") Search:
+        p(class="section-subheader") Display Sourcegraph search toggle in repository search input.
+        div(class="option-container")
+          input(type="checkbox", id="sourcegraph-repository-search")
+          label(class="options-label") Enable Sourcegraph search toggle
+      div(id="sourcegraph-file-tree-container")
+        h4(class="section-header") Navigation:
+        p(class="section-subheader") Display repository file tree navigation (Use "Option + T" to toggle visibility)
+        div(class="option-container")
+          input(type="checkbox", id="sourcegraph-file-tree-navigation")
+          label(class="options-label") Enable repository file tree
       h4(class="section-header") Advanced options
       p(class="section-subheader") Warning: changing these options may break your Chrome extension.
       form#sourcegraph_url_form

@@ -18,6 +18,10 @@ export let eventTrackingEnabled: boolean = false;
 
 export let sourcegraphRepoSearchToggled: boolean = false;
 
+export let repositorySearchEnabled: boolean = false;
+
+export let repositoryFileTreeEnabled: boolean = false;
+
 export function setSourcegraphUrl(url: string): void {
 	sourcegraphUrl = url;
 }
@@ -38,4 +42,12 @@ export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
 
 export function setEventTrackingEnabled(enabled: boolean): void {
 	eventTrackingEnabled = enabled;
+}
+
+export function setRepositorySearchEnabled(enabled: boolean): void {
+	repositorySearchEnabled = enabled;
+}
+
+export function setRepositoryFileTreeEnabled(enabled: boolean): void {
+	repositoryFileTreeEnabled = enabled;
 }

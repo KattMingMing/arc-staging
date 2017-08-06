@@ -1,7 +1,7 @@
 import * as github from "app/github/util";
 import { getPlatformName } from "app/util";
 import { getAssetURL } from "app/util/assets";
-import { eventLogger, sourcegraphUrl } from "app/util/context";
+import { eventLogger, repositorySearchEnabled, sourcegraphUrl } from "app/util/context";
 import { insertAfter } from "app/util/dom";
 
 const SOURCEGRAPH_SEARCH_TOGGLE_ID = "sourcegraph-search-toggle";
@@ -99,7 +99,7 @@ function scopedRepoSearchFormContainer(): HTMLElement | null {
 }
 
 function canRenderRepositorySearch(): boolean {
-	return Boolean(document.querySelector(".header-search-scope"));
+	return Boolean(document.querySelector(".header-search-scope")) && repositorySearchEnabled;
 }
 
 function getSourcegraphURLProps(query: string): { url: string, repo: string, rev: string | undefined } | undefined {

@@ -1,5 +1,5 @@
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
-import { eventLogger, setEventLogger, setEventTrackingEnabled, setPhabricatorInstance, setSourcegraphRepoSearchToggled, setSourcegraphUrl } from "app/util/context";
+import { eventLogger, setEventLogger, setEventTrackingEnabled, setPhabricatorInstance, setRepositoryFileTreeEnabled, setRepositorySearchEnabled, setSourcegraphRepoSearchToggled, setSourcegraphUrl } from "app/util/context";
 
 /**
  * set the event logger before anything else proceeds, to avoid logging events before we have it set.
@@ -32,6 +32,13 @@ function injectApplication(loc: Location): void {
 			chrome.storage.sync.get(items => {
 				const sgurl = items.sourcegraphURL ? items.sourcegraphURL : "https://sourcegraph.com";
 				setSourcegraphUrl(sgurl);
+				// Temp for now if it's undefined and they have octotree then we should default ours to off.
+				if (items.repositoryFileTreeEnabled === undefined && document.querySelector(".octotree")) {
+					setRepositoryFileTreeEnabled(false);
+				} else {
+					setRepositoryFileTreeEnabled(items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled);
+				}
+				setRepositorySearchEnabled(items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled);
 				setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled);
 				setEventTrackingEnabled(items.eventTrackingEnabled);
 				injectGitHubApplication(extensionMarker);

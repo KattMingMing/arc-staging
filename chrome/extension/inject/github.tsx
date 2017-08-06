@@ -1,17 +1,24 @@
+import * as backend from "app/backend";
 import { useAccessToken } from "app/backend/xhr";
 import { BlobAnnotator } from "app/components/BlobAnnotator";
 import { ContextualSourcegraphButton } from "app/components/ContextualSourcegraphButton";
 import { ProjectsOverview } from "app/components/ProjectsOverview";
 import { injectRepositorySearchToggle } from "app/components/SearchToggle";
+import { TreeViewer } from "app/components/tree/TreeViewer";
 import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
 import * as github from "app/github/util";
+import { buildFileTree } from "app/sourcegraph/util";
 import * as tooltips from "app/tooltips/dom";
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
 import { getPlatformName } from "app/util";
-import { eventLogger, sourcegraphUrl } from "app/util/context";
+import { eventLogger, repositoryFileTreeEnabled, sourcegraphUrl } from "app/util/context";
 import { GitHubBlobUrl, GitHubMode } from "app/util/types";
+import * as _ from "lodash";
 import * as React from "react";
 import { render } from "react-dom";
+
+const $ = require("jquery");
+require("jquery-pjax");
 
 const OPEN_ON_SOURCEGRAPH_ID = "open-on-sourcegraph";
 
@@ -46,7 +53,7 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 		}
 	});
 
-	document.addEventListener("pjax:end", () => {
+	$(document).on("pjax:end", () => {
 		(eventLogger as ExtensionEventLogger).updateIdentity();
 
 		// Remove all ".sg-annotated"; this allows tooltip event handlers to be re-registered.
@@ -56,11 +63,22 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 			}
 		});
 		tooltips.hideTooltip();
-		injectStaticModules();
-		// Add file added listener on pjax end incase the listener was removed.
-		initFileContainerListener();
+		injectRepositorySearchToggle();
+		injectOpenOnSourcegraphButton();
+		injectBlobAnnotators();
+		selectTreeNodeForURL();
 	});
 
+	$(document).on("pjax:popstate", () => {
+		selectTreeNodeForURL();
+	});
+
+	window.addEventListener("resize", _.debounce(() => {
+		chrome.storage.sync.get(items => {
+			const toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
+			updateMarginForWidth(toggled);
+		});
+	}, 500, { trailing: true }), true);
 	// Add the file container added listener on first load.
 	initFileContainerListener();
 }
@@ -107,7 +125,134 @@ function injectModules(): void {
 		injectStaticModules();
 		injectSourcegraphInternalTools();
 		injectGitHubEditor();
+		injectFileTree();
 	});
+}
+
+function injectFileTree(): void {
+	if (!repositoryFileTreeEnabled) {
+		return;
+	}
+	const { repoURI } = github.parseURL();
+
+	if (!repoURI) {
+		return;
+	}
+
+	const mount = document.createElement("nav");
+	mount.id = "sourcegraph-file-tree";
+	mount.style.zIndex = "100002";
+	mount.style.position = "fixed";
+	mount.style.top = "0px";
+	mount.style.display = "flex";
+	mount.style.width = "280px";
+	mount.style.height = "100%";
+	mount.style.left = "0px";
+	mount.style.background = "rgb(36, 41, 46)";
+	mount.style.overflow = "scroll";
+
+	const gitHubState = github.getGitHubState(window.location.href);
+	if (!gitHubState) {
+		return;
+	}
+	backend.listAllFiles(repoURI, gitHubState.rev || "").then(resp => {
+		const path = gitHubState["path"];
+		const treeData = buildFileTree(resp, path);
+		chrome.storage.sync.get(items => {
+			const toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
+			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onChanged={handleOnChanged} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);
+			document.body.appendChild(mount);
+			updateTreeViewLayout(toggled);
+		});
+	});
+}
+
+function treeViewToggled(toggled: boolean): void {
+	eventLogger.logFileTreeToggleClicked({toggled: toggled});
+	chrome.storage.sync.set({treeViewToggled: toggled}, () => {
+		updateTreeViewLayout(toggled);
+	});
+}
+
+function updateMarginForWidth(toggled: boolean): void {
+	const fileTree = document.getElementById("sourcegraph-file-tree");
+	if (!fileTree) {
+		return;
+	}
+	const repoContent = document.querySelector(".repository-content") as HTMLElement;
+	if (!repoContent) {
+		document.body.style.marginLeft = "280px";
+		return;
+	}
+	const widthDiff = window.innerWidth - repoContent.clientWidth;
+	document.body.style.marginLeft = (widthDiff > 560 || !toggled) ? "0px" : "280px";
+}
+
+function updateTreeViewLayout(toggled: boolean): void {
+	const parent = document.getElementById("sourcegraph-file-tree");
+	if (!parent) {
+		return;
+	}
+	if (!toggled) {
+		parent.style.height = "54px";
+		parent.style.width = "45px";
+		document.body.style.marginLeft = "0px";
+	} else {
+		parent.style.height = "100%";
+		parent.style.width = "280px";
+		updateMarginForWidth(toggled);
+	}
+}
+
+function handleOnChanged(changedItems: any): void {
+	if (changedItems.length !== 1) {
+		return;
+	}
+	const path = changedItems[0].original.id;
+	if (!path) {
+		return;
+	}
+	const gitHubState = github.getGitHubState(window.location.href);
+	if (!gitHubState) {
+		return;
+	}
+	// Check if the item is already selected and the same path - happens on popstate.
+	const tree = $(".jstree").jstree(true);
+	if (!tree) {
+		return;
+	}
+	// Do not update URL to the same URL if the item is selected and we are on the page.
+	const selected = tree.get_selected();
+	if (selected && selected[0] === gitHubState["path"]) {
+		return;
+	}
+
+	eventLogger.logFileTreeItemClicked({repo: gitHubState.repo});
+	$.pjax.defaults.timeout = 0;
+	$.pjax({
+		url: `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${gitHubState.rev || "master"}/${path}`,
+		container: "#js-repo-pjax-container, .context-loader-container, [data-pjax-container]",
+	});
+}
+
+function selectTreeNodeForURL(): void {
+	const gitHubState = github.getGitHubState(window.location.href);
+	if (!gitHubState || !gitHubState["path"]) {
+		$(".jstree").jstree("deselect_all");
+		return;
+	}
+
+	const tree = $(".jstree").jstree(true);
+	if (!tree) {
+		return;
+	}
+
+	const selected = tree.get_selected();
+	if (selected && (selected[0] === gitHubState["path"])) {
+		return;
+	}
+	$(".jstree").jstree("deselect_all");
+	tree.select_node(gitHubState["path"]);
 }
 
 function injectBlobAnnotators(): void {
@@ -140,7 +285,7 @@ function injectBlobAnnotators(): void {
 		if (!mount) {
 			return;
 		}
-		addBlobAnnotator(file, mount);
+		addBlobAnnotator(file as HTMLElement, mount);
 	}
 }
 

@@ -23,10 +23,20 @@ function getEnableEventTrackingContainer(): HTMLElement {
 	return document.getElementById("sourcegraph-event-tracking-container") as HTMLElement;
 }
 
+function getRepositorySearchCheckbox(): HTMLInputElement {
+	return document.getElementById("sourcegraph-repository-search") as HTMLInputElement;
+}
+
+function getFileTreeNavigationCheckbox(): HTMLInputElement {
+	return document.getElementById("sourcegraph-file-tree-navigation") as HTMLInputElement;
+}
+
 function syncUIToModel(): void {
 	chrome.storage.sync.get((items) => {
 		getSourcegraphURLInput().value = items.sourcegraphURL;
 		getEnableEventTrackingCheckbox().checked = getEnableEventTrackingCheckbox() ? items.eventTrackingEnabled : false;
+		getRepositorySearchCheckbox().checked = items.repositorySearchEnabled;
+		getFileTreeNavigationCheckbox().checked = items.repositoryFileTreeEnabled;
 	});
 }
 
@@ -46,6 +56,12 @@ chrome.storage.sync.get((items) => {
 	}
 	if (!items.eventTrackingEnabled) {
 		chrome.storage.sync.set({ eventTrackingEnabled: !isFirefoxExtension() });
+	}
+	if (!items.repositorySearchEnabled === undefined) {
+		chrome.storage.sync.set({ repositorySearchEnabled: true });
+	}
+	if (items.repositoryFileTreeEnabled === undefined) {
+		chrome.storage.sync.set({ repositoryFileTreeEnabled: true });
 	}
 
 	syncUIToModel();
@@ -87,4 +103,14 @@ getSourcegraphURLInput().addEventListener("keydown", (evt) => {
 getEnableEventTrackingCheckbox().addEventListener("click", () => {
 	const checkbox = getEnableEventTrackingCheckbox();
 	chrome.storage.sync.set({eventTrackingEnabled: checkbox.checked});
+});
+
+getRepositorySearchCheckbox().addEventListener("click", () => {
+	const checkbox = getRepositorySearchCheckbox();
+	chrome.storage.sync.set({repositorySearchEnabled: checkbox.checked});
+});
+
+getFileTreeNavigationCheckbox().addEventListener("click", () => {
+	const checkbox = getFileTreeNavigationCheckbox();
+	chrome.storage.sync.set({repositoryFileTreeEnabled: checkbox.checked});
 });

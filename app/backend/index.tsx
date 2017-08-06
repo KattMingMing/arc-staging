@@ -146,3 +146,51 @@ export function searchText(uri: string, query: string): Promise<ResolvedSearchTe
 	searchPromiseCache.set(key, p);
 	return p;
 }
+
+const fileTreeCache = new Map<string, Promise<any>>();
+
+export function listAllFiles(repo: string, revision: string): Promise<any> {
+	const key = cacheKey(repo, revision);
+	const promiseHit = fileTreeCache.get(key);
+	if (promiseHit) {
+		return promiseHit;
+	}
+
+	const body = {
+		query: `query FileTree($repo: String!, $revision: String!) {
+			root {
+				repository(uri: $repo) {
+					commit(rev: $revision) {
+						commit {
+							tree(recursive: true) {
+								files {
+									name
+								}
+							}
+						}
+					}
+				}
+			}
+		}`,
+		variables: { repo, revision },
+	};
+	const p = fetch(`${sourcegraphUrl}/.api/graphql`, {
+		method: "POST",
+		body: JSON.stringify(body),
+	}).then(resp => resp.json()).then((json: any) => {
+		fileTreeCache.delete(key);
+		if (!json.data) {
+			const error = new Error("invalid response received from graphql endpoint");
+			throw error;
+		}
+		if (!json.data.root.repository || !json.data.root.repository.commit || !json.data.root.repository.commit.commit.tree || !json.data.root.repository.commit.commit.tree.files) {
+			const notFound = {notFound: true};
+			fileTreeCache.set(key, Promise.resolve(notFound));
+			return notFound;
+		}
+		const results = json.data.root.repository.commit.commit.tree.files;
+		fileTreeCache.set(key, p);
+		return results;
+	});
+	return p;
+}

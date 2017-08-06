@@ -62,6 +62,14 @@ export abstract class EventLogger {
 		this.logEventForCategory("BrowserExtension", "Click", "SourcegraphRepoSearchSubmitted", eventProperties);
 	}
 
+	logFileTreeToggleClicked(eventProperties: any = {}): void {
+		this.logEventForCategory("BrowserExtension", "Click", "FileTreeToggled", eventProperties);
+	}
+
+	logFileTreeItemClicked(eventProperties: any = {}): void {
+		this.logEventForCategory("BrowserExtension", "Click", "FileTreeItemSelected", eventProperties);
+	}
+
 	protected abstract sendEvent(eventAction: string, eventProps: any): void;
 
 	private defaultProperties(): any {

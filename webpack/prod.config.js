@@ -42,14 +42,23 @@ module.exports = {
 		}
 	},
 	module: {
-		loaders: [{
-			test: /\.tsx?$/,
-			loader: 'ts-loader?' + JSON.stringify({
-				compilerOptions: {
-					noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
-				},
-				transpileOnly: true, // type checking is only done as part of linting or testing
-			}),
-		}]
+		loaders: [
+			{
+				test: /\.tsx?$/,
+				loader: 'ts-loader?' + JSON.stringify({
+					compilerOptions: {
+						noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
+					},
+					transpileOnly: true, // type checking is only done as part of linting or testing
+				}),
+			},
+			{
+				test: /\.css$/,
+				loaders: [
+				  'style-loader',
+				  'css-loader',
+				]
+			  },
+		]
 	}
 };
