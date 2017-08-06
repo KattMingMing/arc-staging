@@ -56,8 +56,47 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 			}
 		});
 		tooltips.hideTooltip();
-		injectModules();
+		injectStaticModules();
+		// Add file added listener on pjax end incase the listener was removed.
+		initFileContainerListener();
 	});
+
+	// Add the file container added listener on first load.
+	initFileContainerListener();
+}
+
+function initFileContainerListener(): void {
+	const fileContainer = document.getElementById("files") as HTMLElement;
+	if (!fileContainer) {
+		return;
+	}
+	fileContainer.removeEventListener("DOMNodeInserted", () => addFileContainerListener(fileContainer));
+	addFileContainerListener(fileContainer);
+}
+
+/**
+ * Adds a listener to detect when additional blob file containers are added to the page.
+ * This happens when large diffs are loaded with pagination instead of as a single fetch.
+ */
+function addFileContainerListener(fileContainer: HTMLElement): void {
+	fileContainer.addEventListener("DOMNodeInserted", (mutation: MutationEvent) => {
+		const relatedNode = mutation.relatedNode as HTMLElement;
+		if (relatedNode && relatedNode.classList.contains("js-diff-progressive-container")) {
+			injectBlobAnnotators();
+		}
+	}, false);
+}
+
+/**
+ * injectStaticModules injects elements onto the DOM that are stateless
+ * and do not fetch from our graphql endpoint on load. This should be called after
+ * pjax ajax calls are performed so that content is always re-rendered when
+ * the GitHub page is re-rendered.
+ */
+function injectStaticModules(): void {
+	injectRepositorySearchToggle();
+	injectOpenOnSourcegraphButton();
+	injectBlobAnnotators();
 }
 
 function injectModules(): void {
@@ -65,11 +104,9 @@ function injectModules(): void {
 		if (token) {
 			useAccessToken(token);
 		}
-		injectBlobAnnotators();
+		injectStaticModules();
 		injectSourcegraphInternalTools();
 		injectGitHubEditor();
-		injectOpenOnSourcegraphButton();
-		injectRepositorySearchToggle();
 	});
 }
 

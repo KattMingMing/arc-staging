@@ -7,7 +7,7 @@ module.exports = {
 		options: path.join(__dirname, '../chrome/extension/options.tsx'),
 		inject: path.join(__dirname, '../chrome/extension/inject/index.tsx'),
 		sgdev: path.join(__dirname, '../phabricator/sgdev/sgdev.tsx'),
-		umami: path.join(__dirname, '../phabricator/umami/umami.tsx')
+		umami: path.join(__dirname, '../phabricator/umami/umami.tsx'),
 	},
 	output: {
 		path: path.join(__dirname, '../dist/js'),
@@ -21,7 +21,12 @@ module.exports = {
 			'process.env': {
 				NODE_ENV: JSON.stringify('development')
 			}
-		})
+		}),
+		new webpack.ProvidePlugin({
+			$: 'jquery',
+			jQuery: 'jquery',
+			'$.fn.pjax': 'jquery-pjax',
+		}),
 	],
 	resolve: {
 		extensions: ['.ts', '.tsx', '.js'],
