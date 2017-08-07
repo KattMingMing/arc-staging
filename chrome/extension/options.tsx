@@ -57,7 +57,7 @@ chrome.storage.sync.get((items) => {
 	if (!items.eventTrackingEnabled) {
 		chrome.storage.sync.set({ eventTrackingEnabled: !isFirefoxExtension() });
 	}
-	if (!items.repositorySearchEnabled === undefined) {
+	if (items.repositorySearchEnabled === undefined) {
 		chrome.storage.sync.set({ repositorySearchEnabled: true });
 	}
 	if (items.repositoryFileTreeEnabled === undefined) {

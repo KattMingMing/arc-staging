@@ -553,6 +553,7 @@ export function parseURL(loc: Location = window.location): GitHubURL {
 	const isPullRequest = urlsplit[2] === "pull";
 	const isCommit = urlsplit[2] === "commit";
 	const isDelta = isPullRequest || isCommit;
+	const isCodePage = urlsplit[2] === "blob" || urlsplit[2] === "tree";
 
-	return { user, repo, rev, path, repoURI, uri: repoURI, isDelta, isPullRequest, isCommit };
+	return { user, repo, rev, path, repoURI, uri: repoURI, isDelta, isPullRequest, isCommit, isCodePage };
 }

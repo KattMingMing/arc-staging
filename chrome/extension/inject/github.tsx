@@ -25,7 +25,7 @@ const OPEN_ON_SOURCEGRAPH_ID = "open-on-sourcegraph";
 export function injectGitHubApplication(marker: HTMLElement): void {
 	window.addEventListener("load", () => {
 		document.body.appendChild(marker);
-		injectModules();
+		injectModules(true);
 		chrome.runtime.sendMessage({ type: "getIdentity" }, (identity) => {
 			if (identity) {
 				(eventLogger as ExtensionEventLogger).updatePropsForUser(identity);
@@ -63,14 +63,11 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 			}
 		});
 		tooltips.hideTooltip();
-		injectRepositorySearchToggle();
-		injectOpenOnSourcegraphButton();
-		injectBlobAnnotators();
-		selectTreeNodeForURL();
+		injectModules();
 	});
 
 	$(document).on("pjax:popstate", () => {
-		selectTreeNodeForURL();
+		injectModules();
 	});
 
 	window.addEventListener("resize", _.debounce(() => {
@@ -105,41 +102,55 @@ function addFileContainerListener(fileContainer: HTMLElement): void {
 	}, false);
 }
 
-/**
- * injectStaticModules injects elements onto the DOM that are stateless
- * and do not fetch from our graphql endpoint on load. This should be called after
- * pjax ajax calls are performed so that content is always re-rendered when
- * the GitHub page is re-rendered.
- */
-function injectStaticModules(): void {
-	injectRepositorySearchToggle();
-	injectOpenOnSourcegraphButton();
-	injectBlobAnnotators();
-}
+function injectModules(refreshSessionToken?: boolean): void {
+	if (!refreshSessionToken) {
+		inject();
+		return;
+	}
 
-function injectModules(): void {
 	chrome.runtime.sendMessage({ type: "getSessionToken" }, (token) => {
 		if (token) {
 			useAccessToken(token);
 		}
-		injectStaticModules();
-		injectSourcegraphInternalTools();
-		injectGitHubEditor();
-		injectFileTree();
+		inject();
 	});
+}
+
+function inject(): void {
+	injectRepositorySearchToggle();
+	injectOpenOnSourcegraphButton();
+	injectBlobAnnotators();
+	injectSourcegraphInternalTools();
+	injectGitHubEditor();
+	injectFileTree();
+	selectTreeNodeForURL();
+}
+
+function hideFileTree(): void {
+	const tree = document.getElementById("sourcegraph-file-tree");
+	if (!tree || !tree.parentNode) {
+		return;
+	}
+
+	tree.parentNode.removeChild(tree);
 }
 
 function injectFileTree(): void {
 	if (!repositoryFileTreeEnabled) {
 		return;
 	}
-	const { repoURI } = github.parseURL();
+	const { repoURI, isCodePage } = github.parseURL();
 
-	if (!repoURI) {
+	if (!repoURI || !isCodePage) {
+		hideFileTree();
+		return;
+	}
+	let mount = document.getElementById("sourcegraph-file-tree") as HTMLElement;
+	if (mount) {
 		return;
 	}
 
-	const mount = document.createElement("nav");
+	mount = document.createElement("nav");
 	mount.id = "sourcegraph-file-tree";
 	mount.style.zIndex = "100002";
 	mount.style.position = "fixed";

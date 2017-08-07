@@ -90,6 +90,7 @@ export interface GitHubURL extends ParsedURL {
 	isDelta?: boolean;
 	isPullRequest?: boolean;
 	isCommit?: boolean;
+	isCodePage?: boolean;
 }
 
 export interface SourcegraphURL extends ParsedURL { }
