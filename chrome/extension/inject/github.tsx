@@ -128,6 +128,7 @@ function inject(): void {
 
 function hideFileTree(): void {
 	const tree = document.getElementById("sourcegraph-file-tree");
+	document.body.style.marginLeft = "0px";
 	if (!tree || !tree.parentNode) {
 		return;
 	}
@@ -188,6 +189,7 @@ function treeViewToggled(toggled: boolean): void {
 function updateMarginForWidth(toggled: boolean): void {
 	const fileTree = document.getElementById("sourcegraph-file-tree");
 	if (!fileTree) {
+		document.body.style.marginLeft = "0px";
 		return;
 	}
 	const repoContent = document.querySelector(".repository-content") as HTMLElement;
@@ -213,6 +215,7 @@ function updateTreeViewLayout(toggled: boolean): void {
 		parent.style.width = "280px";
 		updateMarginForWidth(toggled);
 	}
+	selectTreeNodeForURL();
 }
 
 function handleOnChanged(changedItems: any): void {

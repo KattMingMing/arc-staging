@@ -88,10 +88,6 @@ export function buildFileTree(data: FileData[], selectedPath?: string): any[] {
 					const newNode = currentNode![k] = { text: wantedNode, children: undefined, id: input[i], state: {} };
 					if (selectedPath && input[i] === selectedPath) {
 						cursor = newNode;
-						currentNode![k].state = {
-							selected: true,
-							opened: true,
-						};
 					}
 					currentNode = newNode.children;
 				} else {
