@@ -19,6 +19,7 @@ import { render } from "react-dom";
 
 const $ = require("jquery");
 require("jquery-pjax");
+require("jquery-resizable-dom");
 
 const OPEN_ON_SOURCEGRAPH_ID = "open-on-sourcegraph";
 
@@ -165,12 +166,6 @@ function injectFileTree(): void {
 	mount.style.height = "100%";
 	mount.style.left = "0px";
 	mount.style.background = "rgb(36, 41, 46)";
-	mount.onmouseenter = () => {
-		disableScrolling();
-	};
-	mount.onmouseleave = () => {
-		enableScrolling();
-	};
 
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
@@ -183,22 +178,23 @@ function injectFileTree(): void {
 			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);
 			document.body.appendChild(mount);
 			updateTreeViewLayout(toggled);
+			const opt = {
+				onDrag: function (__: any, $el: any, newWidth: number): boolean {
+					if (newWidth < 280) {
+						newWidth = 280;
+					}
+					$el.width(newWidth);
+					updateMarginForWidth(true);
+					return false;
+				},
+				resizeWidth: true,
+				resizeHeight: false,
+				resizeWidthFrom: "right",
+				handleSelector: ".splitter",
+			};
+			$(mount).resizable(opt);
 		});
 	});
-}
-
-function disableScrolling(): void {
-	const x = window.scrollX;
-	const y = window.scrollY;
-	window.onscroll = () => {
-		window.scrollTo(x, y);
-	};
-}
-
-function enableScrolling(): void {
-	window.onscroll = () => {
-		return;
-	};
 }
 
 function treeViewToggled(toggled: boolean): void {
@@ -219,7 +215,7 @@ function updateMarginForWidth(toggled: boolean): void {
 		return;
 	}
 	const widthDiff = window.innerWidth - repoContent.clientWidth;
-	document.body.style.marginLeft = (widthDiff > 560 || !toggled) ? "0px" : "280px";
+	document.body.style.marginLeft = (widthDiff / 2 > fileTree.clientWidth || !toggled) ? "0px" : `${fileTree.clientWidth}px`;
 }
 
 function updateTreeViewLayout(toggled: boolean): void {

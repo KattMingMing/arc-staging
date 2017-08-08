@@ -35,3 +35,12 @@ export const headerNavLink = {
 	marginTop: 0,
 	marginBottom: 2,
 };
+
+export const splitter = {
+	zIndex: 100005,
+	width: "5px",
+	height: "100%",
+	position: "absolute",
+	right: "0px",
+	cursor: "col-resize",
+};
