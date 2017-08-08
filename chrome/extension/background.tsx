@@ -1,5 +1,5 @@
 import { TelligentWrapper } from "app/tracking/TelligentWrapper";
-import { isFirefoxExtension } from "app/util";
+import { getPlatformName, isFirefoxExtension } from "app/util";
 import { sourcegraphUrl } from "app/util/context";
 import * as bluebird from "bluebird";
 
@@ -112,3 +112,11 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 			return;
 	}
 });
+
+if (chrome.runtime.setUninstallURL) {
+	chrome.runtime.setUninstallURL("https://about.sourcegraph.com/uninstall/", () => {
+		if (telligentWrapper) {
+			telligentWrapper.track("Click", {eventLabel: "UninstallExtClicked", platform: getPlatformName(), eventCategory: "BrowserExtension", eventAction: "Click"});
+		}
+	});
+}
