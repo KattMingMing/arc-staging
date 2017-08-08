@@ -77,30 +77,6 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 			updateMarginForWidth(toggled);
 		});
 	}, 500, { trailing: true }), true);
-	// Add the file container added listener on first load.
-	initFileContainerListener();
-}
-
-function initFileContainerListener(): void {
-	const fileContainer = document.getElementById("files") as HTMLElement;
-	if (!fileContainer) {
-		return;
-	}
-	fileContainer.removeEventListener("DOMNodeInserted", () => addFileContainerListener(fileContainer));
-	addFileContainerListener(fileContainer);
-}
-
-/**
- * Adds a listener to detect when additional blob file containers are added to the page.
- * This happens when large diffs are loaded with pagination instead of as a single fetch.
- */
-function addFileContainerListener(fileContainer: HTMLElement): void {
-	fileContainer.addEventListener("DOMNodeInserted", (mutation: MutationEvent) => {
-		const relatedNode = mutation.relatedNode as HTMLElement;
-		if (relatedNode && relatedNode.classList.contains("js-diff-progressive-container")) {
-			injectBlobAnnotators();
-		}
-	}, false);
 }
 
 function injectModules(refreshSessionToken?: boolean): void {
@@ -140,10 +116,6 @@ function hideFileTree(): void {
 function injectFileTree(): void {
 	if (!repositoryFileTreeEnabled) {
 		return;
-	} else if (document.querySelector(".octotree")) {
-		chrome.storage.sync.set({ repositoryFileTreeEnabled: false });
-		hideFileTree();
-		return;
 	}
 	const { repoURI, isCodePage } = github.parseURL();
 
@@ -173,6 +145,11 @@ function injectFileTree(): void {
 	}
 	backend.listAllFiles(repoURI, gitHubState.rev || "").then(resp => {
 		const treeData = buildFileTree(resp);
+		if (document.querySelector(".octotree")) {
+			chrome.storage.sync.set({ repositoryFileTreeEnabled: false });
+			hideFileTree();
+			return;
+		}
 		chrome.storage.sync.get(items => {
 			const toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
 			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);

@@ -43,7 +43,7 @@ export class TreeViewer extends React.Component<Props, State> {
 
 	render(): JSX.Element | null {
 		const gitHubState = github.getGitHubState(window.location.href);
-		if (!gitHubState || !this.props.treeData) {
+		if (!gitHubState || !this.props.treeData || document.querySelector(".octotree")) {
 			return null;
 		}
 

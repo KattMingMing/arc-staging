@@ -114,9 +114,5 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 });
 
 if (chrome.runtime.setUninstallURL) {
-	chrome.runtime.setUninstallURL("https://about.sourcegraph.com/uninstall/", () => {
-		if (telligentWrapper) {
-			telligentWrapper.track("Click", {eventLabel: "UninstallExtClicked", platform: getPlatformName(), eventCategory: "BrowserExtension", eventAction: "Click"});
-		}
-	});
+	chrome.runtime.setUninstallURL("https://about.sourcegraph.com/uninstall/");
 }

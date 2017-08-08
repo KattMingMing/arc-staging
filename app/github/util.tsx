@@ -476,6 +476,7 @@ export function getGitHubState(url: string): GitHubBlobUrl | GitHubPullUrl | Git
 			owner: parsed.user,
 			repo: parsed.repo,
 			rev: parsed.rev,
+			path: parsed.path,
 		};
 	}
 
