@@ -139,6 +139,10 @@ function hideFileTree(): void {
 function injectFileTree(): void {
 	if (!repositoryFileTreeEnabled) {
 		return;
+	} else if (document.querySelector(".octotree")) {
+		chrome.storage.sync.set({ repositoryFileTreeEnabled: false });
+		hideFileTree();
+		return;
 	}
 	const { repoURI, isCodePage } = github.parseURL();
 
@@ -161,29 +165,46 @@ function injectFileTree(): void {
 	mount.style.height = "100%";
 	mount.style.left = "0px";
 	mount.style.background = "rgb(36, 41, 46)";
-	mount.style.overflow = "scroll";
+	mount.onmouseenter = () => {
+		disableScrolling();
+	};
+	mount.onmouseleave = () => {
+		enableScrolling();
+	};
 
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
 		return;
 	}
 	backend.listAllFiles(repoURI, gitHubState.rev || "").then(resp => {
-		const path = gitHubState["path"];
-		const treeData = buildFileTree(resp, path);
+		const treeData = buildFileTree(resp);
 		chrome.storage.sync.get(items => {
 			const toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
-			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onChanged={handleOnChanged} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);
+			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);
 			document.body.appendChild(mount);
 			updateTreeViewLayout(toggled);
 		});
 	});
 }
 
+function disableScrolling(): void {
+	const x = window.scrollX;
+	const y = window.scrollY;
+	window.onscroll = () => {
+		window.scrollTo(x, y);
+	};
+}
+
+function enableScrolling(): void {
+	window.onscroll = () => {
+		return;
+	};
+}
+
 function treeViewToggled(toggled: boolean): void {
 	eventLogger.logFileTreeToggleClicked({toggled: toggled});
-	chrome.storage.sync.set({treeViewToggled: toggled}, () => {
-		updateTreeViewLayout(toggled);
-	});
+	updateTreeViewLayout(toggled);
+	chrome.storage.sync.set({treeViewToggled: toggled});
 }
 
 function updateMarginForWidth(toggled: boolean): void {
@@ -218,14 +239,7 @@ function updateTreeViewLayout(toggled: boolean): void {
 	selectTreeNodeForURL();
 }
 
-function handleOnChanged(changedItems: any): void {
-	if (changedItems.length !== 1) {
-		return;
-	}
-	const path = changedItems[0].original.id;
-	if (!path) {
-		return;
-	}
+function handleSelected(path: string, newTab: boolean): void {
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
 		return;
@@ -242,9 +256,16 @@ function handleOnChanged(changedItems: any): void {
 	}
 
 	eventLogger.logFileTreeItemClicked({repo: gitHubState.repo});
+	const url = `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${gitHubState.rev || "master"}/${path}`;
+	if (newTab) {
+		window.open(url, "_blank");
+		selectTreeNodeForURL();
+		return;
+	}
+
 	$.pjax.defaults.timeout = 0;
 	$.pjax({
-		url: `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${gitHubState.rev || "master"}/${path}`,
+		url,
 		container: "#js-repo-pjax-container, .context-loader-container, [data-pjax-container]",
 	});
 }

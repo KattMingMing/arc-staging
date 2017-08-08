@@ -1,6 +1,8 @@
 export const container = {
-	display: "flex",
+	width: "100%",
 	height: "100%",
+	overflow: "auto",
+	userSelect: "none",
 };
 
 export const header = {
@@ -20,13 +22,16 @@ export const headerBox = {
 
 export const headerToggle = {
 	display: "inline-block",
+	marginBottom: "2px",
 };
 
 export const headerNavLink = {
 	paddingLeft: 5,
+	paddingBottom: 0,
 	color: "white",
 	alignItems: "center",
 	alignContent: "center",
 	display: "inline-block",
 	marginTop: 0,
+	marginBottom: 2,
 };

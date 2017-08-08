@@ -15,27 +15,40 @@ interface Props {
 		"dblclick_toggle": boolean,
 	};
 	plugins?: string[];
-	onChanged: (items: any[]) => void;
+	onSelected: (url: string, tab: boolean) => void;
 }
 
 // based off of: https://github.com/hckhanh/react-tree-es6/blob/master/src/react-tree.js
 export class ReactTree extends React.Component<Props, {}> {
 	componentDidMount(): void {
 		$(ReactDOM.findDOMNode(this))
-			.on("changed.jstree", (_: any, data: any): any => {
-				if (this.props.onChanged) {
-					this.props.onChanged(data.selected.map(
-						item => data.instance.get_node(item),
-					));
-				}
-			})
 			.on("click", ".jstree-anchor", function (e: any): any {
 				$(".jstree").jstree(true).toggle_node(e.target);
 			})
+			.on("click", this.onClick.bind(this))
 			.jstree({
 				core: this.props.core,
 				plugins: this.props.plugins,
 			});
+	}
+
+	onClick(e: any): void {
+		const target = e.target as HTMLElement;
+		if (!target || e.which === 2) {
+			return;
+		}
+		// Check parent element because we use whole row selection.
+		const parentElement = target.parentElement;
+		if (!parentElement || !parentElement.classList.contains("jstree-leaf")) {
+			return;
+		}
+		if (!parentElement.id) {
+			return;
+		}
+		const newTab = e.shiftKey || e.ctrlKey || e.metaKey;
+		if (this.props.onSelected) {
+			this.props.onSelected(parentElement.id, newTab);
+		}
 	}
 
 	render(): JSX.Element | null {

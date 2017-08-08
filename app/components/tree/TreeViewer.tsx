@@ -4,13 +4,12 @@ import { TreeHeader } from "app/components/tree/TreeHeader";
 import * as github from "app/github/util";
 import { TreeNode } from "app/sourcegraph/util";
 import * as React from "react";
-import Resizable from "react-resizable-box";
 
 interface Props {
 	uri: string;
 	parentRef: HTMLElement;
 	treeData: TreeNode[];
-	onChanged: (items: any[]) => void;
+	onSelected: (url: string, tab: boolean) => void;
 	onToggled?: (toggled: boolean) => void;
 	toggled: boolean;
 }
@@ -26,15 +25,11 @@ export class TreeViewer extends React.Component<Props, State> {
 			toggled: this.props.toggled,
 		};
 
-		document.addEventListener ("keydown", (event: any) => {
+		document.addEventListener("keydown", (event: any) => {
 			if (event.altKey && event.code === "KeyT") {
 				this.toggleTreeViewer();
 			}
 		});
-	}
-
-	onResize(_: () => void, __: string, element: HTMLElement): void {
-		this.props.parentRef.style.width = element.style.width;
 	}
 
 	toggleTreeViewer(): void {
@@ -51,17 +46,11 @@ export class TreeViewer extends React.Component<Props, State> {
 		if (!gitHubState || !this.props.treeData) {
 			return null;
 		}
-		if (!this.state.toggled) {
-			return (
-				<TreeHeader toggled={this.state.toggled} uri={this.props.uri} repo={gitHubState.repo} rev={gitHubState.rev} onClick={this.toggleTreeViewer.bind(this)}/>
-			);
-		}
+
 		return (
-			<div style={styles.container}>
-				<Resizable onResize={this.onResize.bind(this)} className="item" width="280" height="100%" minWidth={280}>
-					<TreeHeader toggled={this.state.toggled} uri={this.props.uri} repo={gitHubState.repo} rev={gitHubState.rev} onClick={this.toggleTreeViewer.bind(this)}/>
-					<ReactTree onChanged={this.props.onChanged} plugins={["wholerow"]} core={{ dblclick_toggle: false, multiple: false,  worker: false, data: this.props.treeData }} />
-				</Resizable>
+			<div style={{...styles.container, overflow: this.state.toggled ? "auto" : "hidden"}}>
+				<TreeHeader toggled={this.state.toggled} uri={this.props.uri} repo={gitHubState.repo} rev={gitHubState.rev} onClick={this.toggleTreeViewer.bind(this)} />
+				<ReactTree onSelected={this.props.onSelected} plugins={["wholerow"]} core={{ dblclick_toggle: false, multiple: false, worker: false, data: this.props.treeData }} />
 			</div>
 		);
 	}

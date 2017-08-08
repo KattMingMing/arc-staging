@@ -25,7 +25,7 @@ export class TreeHeader extends React.Component<Props, {}> {
 		return <div style={styles.header} >
 			<div style={styles.headerBox}>
 				{this.props.toggled ? <ToggleFileTree style={styles.headerToggle} onClick={this.props.onClick}/> : <ShowFileTree style={styles.headerToggle} onClick={this.props.onClick}/>}
-				{this.props.toggled && <div className="js-selected-navigation-item header-navlink" style={styles.headerNavLink} onClick={() => window.open(url, "_blank")}>{`${repo}`}</div>}}
+				{this.props.toggled && <div className="header-navlink" style={styles.headerNavLink} onClick={() => window.open(url, "_blank")}>{repo}</div>}
 			</div>
 		</div>;
 	}

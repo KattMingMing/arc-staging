@@ -38,6 +38,9 @@ export interface TreeNode {
 	children: any[] | undefined;
 	state: NodeState | undefined;
 	id?: string;
+	a_attr?: {
+		href: string,
+	};
 }
 
 interface NodeState {
@@ -53,9 +56,8 @@ interface FileData {
  * buildFileTree is responsible for taking the graphql response from listFiles and building it into
  * the tree structure. It takes an optional parameter of a path that should be the selected node.
  * @param data Array of file names in the form of {name: "path/to/file" }
- * @param selectedPath The path to the current selected file
  */
-export function buildFileTree(data: FileData[], selectedPath?: string): any[] {
+export function buildFileTree(data: FileData[]): any[] {
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
 		return [];
@@ -66,7 +68,7 @@ export function buildFileTree(data: FileData[], selectedPath?: string): any[] {
 
 	const output = [];
 	let k: number = 0;
-	let cursor: any | undefined;
+	const baseURL = `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${gitHubState.rev || "master"}/`;
 	for (let i = 0; i < input.length; i++) {
 		const chain: any[] = input[i].split("/");
 		let currentNode: TreeNode[] | undefined = output;
@@ -85,10 +87,7 @@ export function buildFileTree(data: FileData[], selectedPath?: string): any[] {
 			// that has the right name, create one:
 			if (lastNode === currentNode) {
 				if (chain[chain.length - 1] === wantedNode) {
-					const newNode = currentNode![k] = { text: wantedNode, children: undefined, id: input[i], state: {} };
-					if (selectedPath && input[i] === selectedPath) {
-						cursor = newNode;
-					}
+					const newNode = currentNode![k] = { text: wantedNode, children: undefined, id: input[i], state: {}, a_attr: { href: `${baseURL}${input[i]}` }};
 					currentNode = newNode.children;
 				} else {
 					const newNode = currentNode![k] = { text: wantedNode, children: [], state: {} };
