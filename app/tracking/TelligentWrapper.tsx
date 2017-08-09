@@ -5,7 +5,7 @@ export class TelligentWrapper {
 	private t: any;
 	constructor(appId: string, platform: string, forceSecure: boolean, installedChromeExtension: boolean, url?: string) {
 		// Create the initializing function
-		window[telligentFunctionName] = function (): void {
+		window[telligentFunctionName] = function(): void {
 			(window[telligentFunctionName].q = window[telligentFunctionName].q || []).push(arguments);
 		};
 

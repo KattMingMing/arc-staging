@@ -102,15 +102,15 @@ getSourcegraphURLInput().addEventListener("keydown", (evt) => {
 
 getEnableEventTrackingCheckbox().addEventListener("click", () => {
 	const checkbox = getEnableEventTrackingCheckbox();
-	chrome.storage.sync.set({eventTrackingEnabled: checkbox.checked});
+	chrome.storage.sync.set({ eventTrackingEnabled: checkbox.checked });
 });
 
 getRepositorySearchCheckbox().addEventListener("click", () => {
 	const checkbox = getRepositorySearchCheckbox();
-	chrome.storage.sync.set({repositorySearchEnabled: checkbox.checked});
+	chrome.storage.sync.set({ repositorySearchEnabled: checkbox.checked });
 });
 
 getFileTreeNavigationCheckbox().addEventListener("click", () => {
 	const checkbox = getFileTreeNavigationCheckbox();
-	chrome.storage.sync.set({repositoryFileTreeEnabled: checkbox.checked});
+	chrome.storage.sync.set({ repositoryFileTreeEnabled: checkbox.checked });
 });

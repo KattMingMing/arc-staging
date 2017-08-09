@@ -128,7 +128,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 				// Non-empty is checked to determine if Sourcegraph.com is sync'd.
 				repoStat = { [repo]: resp };
 			}
-			this.setState({ resolvedRevs: Object.assign({}, this.state.resolvedRevs, { [key]: resp }, repoStat) });
+			this.setState({ resolvedRevs: { ...this.state.resolvedRevs, [key]: resp, ...repoStat } });
 		}).catch(() => {
 			// NO-OP
 		});
@@ -162,7 +162,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 		if (!table) {
 			return [];
 		}
-		return github.getCodeCellsForAnnotation(table, Object.assign({ isSplitDiff }, repoRevSpec));
+		return github.getCodeCellsForAnnotation(table, { isSplitDiff, ...repoRevSpec });
 	}
 
 	addAnnotations = (): void => {
@@ -242,7 +242,7 @@ function getSourcegraphButton(cantFindPrivateRepo: boolean, blobUrl: string, fil
 		url = `${sourcegraphUrl}/login?private=true&utm_source=${utils.getPlatformName()}`;
 		callback = authCallback;
 		ariaLabel = "Authorize Sourcegraph";
-		customIconStyle = Object.assign({ WebkitFilter: "grayscale(100%)" }, customIconStyle);
+		customIconStyle = { WebkitFilter: "grayscale(100%)", ...customIconStyle };
 	}
 	return <div style={{ display: "inline-block" }}>
 		<OpenOnSourcegraph label="View File" ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />

@@ -87,7 +87,7 @@ export function buildFileTree(data: FileData[]): any[] {
 			// that has the right name, create one:
 			if (lastNode === currentNode) {
 				if (chain[chain.length - 1] === wantedNode) {
-					const newNode = currentNode![k] = { text: wantedNode, children: undefined, id: input[i], state: {}, a_attr: { href: `${baseURL}${input[i]}` }};
+					const newNode = currentNode![k] = { text: wantedNode, children: undefined, id: input[i], state: {}, a_attr: { href: `${baseURL}${input[i]}` } };
 					currentNode = newNode.children;
 				} else {
 					const newNode = currentNode![k] = { text: wantedNode, children: [], state: {} };

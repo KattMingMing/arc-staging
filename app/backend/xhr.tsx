@@ -57,7 +57,7 @@ function getExtensionVersion(): string {
 
 export function doFetch(url: string, opt?: any): Promise<Response> {
 	const defaults = defaultOptions();
-	const fetchOptions = Object.assign({}, defaults, opt);
+	const fetchOptions = { ...defaults, ...opt };
 	if (opt.headers && defaults) {
 		// the above object merge might override the auth headers. add those back in.
 		fetchOptions.headers = combineHeaders(opt.headers, defaults.headers);

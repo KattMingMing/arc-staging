@@ -71,7 +71,7 @@ export function createTooltips(): void {
 		e.preventDefault();
 		const { data, context } = store.getValue();
 		if (data && context && context.coords && context.path && context.repoRevSpec) {
-			eventLogger.logFindRefs( {...getTooltipEventProperties(data, context) });
+			eventLogger.logFindRefs({ ...getTooltipEventProperties(data, context) });
 			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}/-/blob/${context.path}?utm_source=${getPlatformName()}#L${context.coords.line}:${context.coords.char}$references`;
 			const withModifierKey = isMouseEventWithModifierKey(e);
 			openSourcegraphTab(url, withModifierKey);
@@ -89,7 +89,7 @@ export function createTooltips(): void {
 			store.getValue().target!.textContent!;
 		const { data, context } = store.getValue();
 		if (data && context && context.repoRevSpec) {
-			eventLogger.logSourcegraphSearch({repo: context.repoRevSpec.repoURI});
+			eventLogger.logSourcegraphSearch({ repo: context.repoRevSpec.repoURI });
 			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}?q=${encodeURIComponent(searchText)}&utm_source=${getPlatformName()}`;
 			const withModifierKey = isMouseEventWithModifierKey(e);
 			openSourcegraphTab(url, withModifierKey);

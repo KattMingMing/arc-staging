@@ -94,7 +94,7 @@ export class BitbucketBlobAnnotator extends React.Component<BitbucketBrowseProps
 				// Non-empty is checked to determine if Sourcegraph.com is sync'd.
 				repoStat = { [repo]: resp };
 			}
-			this.setState({ resolvedRevs: Object.assign({}, this.state.resolvedRevs, { [key]: resp }, repoStat) });
+			this.setState({ resolvedRevs: { ...this.state.resolvedRevs, [key]: resp, ...repoStat } });
 		});
 	}
 

@@ -22,7 +22,7 @@ interface Props {
 export class ReactTree extends React.Component<Props, {}> {
 	componentDidMount(): void {
 		$(ReactDOM.findDOMNode(this))
-			.on("click", ".jstree-anchor", function (e: any): any {
+			.on("click", ".jstree-anchor", function(e: any): any {
 				$(".jstree").jstree(true).toggle_node(e.target);
 			})
 			.on("click", this.onClick.bind(this))
@@ -52,6 +52,6 @@ export class ReactTree extends React.Component<Props, {}> {
 	}
 
 	render(): JSX.Element | null {
-		return <div/>;
+		return <div />;
 	}
 }

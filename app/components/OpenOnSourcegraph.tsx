@@ -25,7 +25,7 @@ export class OpenOnSourcegraph extends React.Component<Props, {}> {
 	render(): JSX.Element {
 		return <a aria-label={this.props.ariaLabel} className={this.props.className} style={this.props.style} onClick={(e) => this.open(e)}>
 			<SourcegraphIcon style={this.props.iconStyle || { marginTop: "-1px", paddingRight: "4px", fontSize: "19px" }} />
-				{this.props.label}
-				</a>;
+			{this.props.label}
+		</a>;
 	}
 }

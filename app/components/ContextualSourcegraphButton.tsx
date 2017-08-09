@@ -21,7 +21,7 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 
 	open(url: string, mode: GitHubMode): void {
 		const { uri, rev } = github.parseURL();
-		const props = {repo: uri, mode: rev, url};
+		const props = { repo: uri, mode: rev, url };
 		if (!url || !url.length && mode === GitHubMode.PullRequest) {
 			this.getPullRequestMergeBaseFromSource();
 		}
@@ -49,7 +49,7 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 						resolvedRevs,
 					});
 				}
-		});
+			});
 	}
 
 	openOnSourcegraphProps(state: GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl): { label: string, url: string, ariaLabel?: string } {

@@ -184,7 +184,7 @@ export function listAllFiles(repo: string, revision: string): Promise<any> {
 			throw error;
 		}
 		if (!json.data.root.repository || !json.data.root.repository.commit || !json.data.root.repository.commit.commit.tree || !json.data.root.repository.commit.commit.tree.files) {
-			const notFound = {notFound: true};
+			const notFound = { notFound: true };
 			fileTreeCache.set(key, Promise.resolve(notFound));
 			return notFound;
 		}

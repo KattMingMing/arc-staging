@@ -84,13 +84,13 @@ export abstract class EventLogger {
 			return;
 		}
 
-		const decoratedEventProps = Object.assign({}, eventProperties, this.defaultProperties(),
-			{
-				eventLabel,
-				eventCategory,
-				eventAction,
-			},
-		);
+		const decoratedEventProps = {
+			...eventProperties, ...this.defaultProperties(),
+
+			eventLabel,
+			eventCategory,
+			eventAction,
+		};
 
 		this.sendEvent(eventAction, decoratedEventProps);
 	}

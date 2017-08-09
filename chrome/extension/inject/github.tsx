@@ -154,7 +154,7 @@ function injectFileTree(): void {
 			document.body.appendChild(mount);
 			updateTreeViewLayout(toggled);
 			const opt = {
-				onDrag: function (__: any, $el: any, newWidth: number): boolean {
+				onDrag: function(__: any, $el: any, newWidth: number): boolean {
 					if (newWidth < 280) {
 						newWidth = 280;
 					}
@@ -173,9 +173,9 @@ function injectFileTree(): void {
 }
 
 function treeViewToggled(toggled: boolean): void {
-	eventLogger.logFileTreeToggleClicked({toggled: toggled});
+	eventLogger.logFileTreeToggleClicked({ toggled: toggled });
 	updateTreeViewLayout(toggled);
-	chrome.storage.sync.set({treeViewToggled: toggled});
+	chrome.storage.sync.set({ treeViewToggled: toggled });
 }
 
 function updateMarginForWidth(toggled: boolean): void {
@@ -226,7 +226,7 @@ function handleSelected(path: string, newTab: boolean): void {
 		return;
 	}
 
-	eventLogger.logFileTreeItemClicked({repo: gitHubState.repo});
+	eventLogger.logFileTreeItemClicked({ repo: gitHubState.repo });
 	const url = `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${gitHubState.rev || "master"}/${path}`;
 	if (newTab) {
 		window.open(url, "_blank");
