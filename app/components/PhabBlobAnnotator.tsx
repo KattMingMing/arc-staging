@@ -29,11 +29,11 @@ interface State {
 }
 
 export abstract class PhabBlobAnnotator<P extends Props> extends React.Component<P, State> {
-	revisionChecker: number;
+	revisionChecker: any;
 	fileExtension: string;
 	expandListenerAdded: boolean = false;
 
-	constructor(props: Props) {
+	constructor(props: P) {
 		super(props);
 		this.state = {
 			resolvedRevs: {},
@@ -104,6 +104,7 @@ export abstract class PhabBlobAnnotator<P extends Props> extends React.Component
 				// Non-empty is checked to determine if Sourcegraph.com is sync'd.
 				repoStat = { [repo]: resp };
 			}
+			// tslint:disable-next-line
 			this.setState({ resolvedRevs: Object.assign({}, this.state.resolvedRevs, { [key]: resp }, repoStat) });
 		}).catch(() => {
 			// no-op. we only want to print errors once, they are printed during promise creations

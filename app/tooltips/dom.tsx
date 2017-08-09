@@ -3,7 +3,7 @@ import { openSourcegraphTab } from "app/sourcegraph/util";
 import { clearTooltip, getTooltipEventProperties, store, TooltipState } from "app/tooltips/store";
 import { getModeFromExtension, getPlatformName } from "app/util";
 import { getAssetURL } from "app/util/assets";
-import { eventLogger, searchEnabled, sourcegraphUrl } from "app/util/context";
+import { eventLogger, sourcegraphUrl } from "app/util/context";
 import { isMouseEventWithModifierKey } from "app/util/dom";
 import { fetchJumpURL } from "app/util/lsp";
 import { highlightBlock } from "highlight.js";
@@ -87,29 +87,14 @@ export function createTooltips(): void {
 		const searchText = store.getValue().context && store.getValue().context!.selectedText ?
 			store.getValue().context!.selectedText! :
 			store.getValue().target!.textContent!;
-		if (!searchEnabled) {
-			const { data, context } = store.getValue();
-			if (data && context && context.repoRevSpec) {
-				eventLogger.logSourcegraphSearch({repo: context.repoRevSpec.repoURI});
-				const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}?q=${encodeURIComponent(searchText)}&utm_source=${getPlatformName()}`;
-				const withModifierKey = isMouseEventWithModifierKey(e);
-				openSourcegraphTab(url, withModifierKey);
-				return;
-			}
-		}
-
-		const searchForm = document.querySelector(".js-site-search-form") as HTMLFormElement;
-		const searchInput = document.querySelector(".js-site-search-field") as HTMLInputElement;
-		scroll(0, 0);
-		searchInput.value = ""; // just in case
-		searchInput.style.color = "black";
-		searchInput.style.backgroundColor = "rgba(239, 232, 147, 0.84)";
 		const { data, context } = store.getValue();
-		if (data && context) {
-			eventLogger.logSearch(getTooltipEventProperties(data, context));
+		if (data && context && context.repoRevSpec) {
+			eventLogger.logSourcegraphSearch({repo: context.repoRevSpec.repoURI});
+			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}?q=${encodeURIComponent(searchText)}&utm_source=${getPlatformName()}`;
+			const withModifierKey = isMouseEventWithModifierKey(e);
+			openSourcegraphTab(url, withModifierKey);
+			return;
 		}
-		searchInput.value = searchText;
-		searchForm.submit();
 	};
 
 	tooltipActions.appendChild(j2dAction);

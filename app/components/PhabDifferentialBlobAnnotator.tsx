@@ -6,7 +6,7 @@ import { sourcegraphUrl } from "app/util/context";
 import { CodeCell } from "app/util/types";
 
 export class PhabDifferentialBlobAnnotator extends PhabBlobAnnotator<DifferentialProps> {
-	private viewChangedChecker: number;
+	private viewChangedChecker: any;
 
 	constructor(props: DifferentialProps) {
 		super(props);

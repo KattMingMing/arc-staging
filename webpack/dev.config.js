@@ -16,7 +16,7 @@ module.exports = {
 	},
 	devtool: "cheap-module-source-map",
 	plugins: [
-		new webpack.NoErrorsPlugin(),
+		new webpack.NoEmitOnErrorsPlugin(),
 		new webpack.DefinePlugin({
 			'process.env': {
 				NODE_ENV: JSON.stringify('development')
@@ -38,12 +38,19 @@ module.exports = {
 	module: {
 		loaders: [
 			{
-				test: /\.tsx?$/,
+				test: /\.tsx?/,
+				// exclude: /node_modules\/(?!(@types\/chrome)\/).*/,
+				// exclude: /node_modules/,
+				// include: [
+				// 	path.resolve(__dirname, "..", "/phabricator"),
+				// 	path.resolve(__dirname, "..", "/chrome"),
+				// 	path.resolve(__dirname, "..", "/app"),
+				// 	path.resolve(__dirname, "..", "/node_modules/@types/chrome)"
+				// ],
 				loader: 'ts-loader?' + JSON.stringify({
 					compilerOptions: {
 						noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
 					},
-					transpileOnly: true, // type checking is only done as part of linting or testing
 				}),
 			},
 			{

@@ -59,7 +59,8 @@
 		"prefer-for-of": false,
 		"space-before-function-paren": false,
 		"no-var-requires": false,
-		"no-reference": false
+		"no-reference": false,
+		"prefer-conditional-expression": false
 	},
 	"rulesDirectory": []
 }

@@ -1,6 +1,5 @@
 import * as backend from "app/backend";
 import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
-import { EditorApp } from "app/editor/EditorApp";
 import * as github from "app/github/util";
 import { addAnnotations, RepoRevSpec } from "app/tooltips";
 import * as utils from "app/util";
@@ -24,7 +23,7 @@ interface State {
 }
 
 export class BlobAnnotator extends React.Component<Props, State> {
-	revisionChecker: number;
+	revisionChecker: any;
 
 	// language is determined by the path extension
 	fileExtension: string;

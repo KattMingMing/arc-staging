@@ -5,7 +5,7 @@ import * as utils from "app/util";
 import { sourcegraphUrl } from "app/util/context";
 import { TooltipData } from "app/util/types";
 
-const tooltipCache: { [key: string]: TooltipData | null } = {};
+const tooltipCache: { [key: string]: TooltipData } = {};
 const j2dCache = {};
 
 function wrapLSP(req: { method: string, params: any }, repoRevSpec: RepoRevSpec, path: string): any[] {

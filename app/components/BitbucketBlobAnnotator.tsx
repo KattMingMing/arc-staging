@@ -27,7 +27,7 @@ export class BitbucketBlobAnnotator extends React.Component<BitbucketBrowseProps
 	/**
 	 * revisionChecker is a timer used to sync the current repo/revision to this component
 	 */
-	revisionChecker: number;
+	revisionChecker: any;
 
 	scrollCallback?: () => void;
 

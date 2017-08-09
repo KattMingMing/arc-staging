@@ -17,8 +17,10 @@
       "dom"
     ],
     "types": [
-      "mocha",
-      "chrome"
+      "chrome",
+      "filesystem",
+      "filewriter",
+      "node"
     ],
     "jsx": "react",
     "allowJs": true,
@@ -29,8 +31,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "exclude": [
-    "node_modules",
-    "scripts"
+  "include": [
+    "app/**/*.tsx",
+    "chrome/**/*.tsx",
+    "phabricator/**/*.tsx",
+    "node_modules/@types/chrome/index.d.ts",
+    "node_modules/@types/filesystem/index.d.ts",
+    "node_modules/@types/filewriter/index.d.ts",
+    "node_modules/@types/node/index.d.ts"
   ]
 }

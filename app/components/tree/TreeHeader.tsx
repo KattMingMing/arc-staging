@@ -22,10 +22,10 @@ export class TreeHeader extends React.Component<Props, {}> {
 		}
 		url = `${url}?utm_source=${getPlatformName()}`;
 
-		return <div style={styles.header} >
-			<div style={styles.headerBox}>
+		return <div style={styles.header as any} >
+			<div style={styles.headerBox as any}>
 				{this.props.toggled ? <ToggleFileTree style={styles.headerToggle} onClick={this.props.onClick}/> : <ShowFileTree style={styles.headerToggle} onClick={this.props.onClick}/>}
-				{this.props.toggled && <div className="header-navlink" style={styles.headerNavLink} onClick={() => window.open(url, "_blank")}>{repo}</div>}
+				{this.props.toggled && <div className="header-navlink" style={styles.headerNavLink as any} onClick={() => window.open(url, "_blank")}>{repo}</div>}
 			</div>
 		</div>;
 	}

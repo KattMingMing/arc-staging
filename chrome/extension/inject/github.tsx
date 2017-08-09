@@ -2,7 +2,6 @@ import * as backend from "app/backend";
 import { useAccessToken } from "app/backend/xhr";
 import { BlobAnnotator } from "app/components/BlobAnnotator";
 import { ContextualSourcegraphButton } from "app/components/ContextualSourcegraphButton";
-import { ProjectsOverview } from "app/components/ProjectsOverview";
 import { injectRepositorySearchToggle } from "app/components/SearchToggle";
 import { TreeViewer } from "app/components/tree/TreeViewer";
 import { injectGitHub as injectGitHubEditor } from "app/editor/inject";
@@ -97,7 +96,6 @@ function inject(): void {
 	injectRepositorySearchToggle();
 	injectOpenOnSourcegraphButton();
 	injectBlobAnnotators();
-	injectSourcegraphInternalTools();
 	injectGitHubEditor();
 	injectFileTree();
 	selectTreeNodeForURL();
@@ -294,20 +292,6 @@ function injectBlobAnnotators(): void {
 			return;
 		}
 		addBlobAnnotator(file as HTMLElement, mount);
-	}
-}
-
-function injectSourcegraphInternalTools(): void {
-	if (document.getElementById("sourcegraph-projet-overview")) {
-		return;
-	}
-
-	if (window.location.href === "https://github.com/orgs/sourcegraph/projects") {
-		const container = document.querySelector("#projects-results")!.parentElement!.children[0];
-		const mount = document.createElement("span");
-		mount.id = "sourcegraph-projet-overview";
-		(container as Element).insertBefore(mount, (container as Element).firstChild);
-		render(<ProjectsOverview />, mount);
 	}
 }
 

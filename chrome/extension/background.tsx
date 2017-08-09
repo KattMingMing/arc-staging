@@ -1,5 +1,5 @@
 import { TelligentWrapper } from "app/tracking/TelligentWrapper";
-import { getPlatformName, isFirefoxExtension } from "app/util";
+import { isFirefoxExtension } from "app/util";
 import { sourcegraphUrl } from "app/util/context";
 import * as bluebird from "bluebird";
 
