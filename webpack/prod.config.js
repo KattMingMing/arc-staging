@@ -49,7 +49,6 @@ module.exports = {
 					compilerOptions: {
 						noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
 					},
-					transpileOnly: true, // type checking is only done as part of linting or testing
 				}),
 			},
 			{

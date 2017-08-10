@@ -162,7 +162,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 		if (!table) {
 			return [];
 		}
-		return github.getCodeCellsForAnnotation(table, { isSplitDiff, ...repoRevSpec });
+		return github.getCodeCellsForAnnotation(table, { isSplitDiff, ...repoRevSpec } as any);
 	}
 
 	addAnnotations = (): void => {
@@ -242,7 +242,7 @@ function getSourcegraphButton(cantFindPrivateRepo: boolean, blobUrl: string, fil
 		url = `${sourcegraphUrl}/login?private=true&utm_source=${utils.getPlatformName()}`;
 		callback = authCallback;
 		ariaLabel = "Authorize Sourcegraph";
-		customIconStyle = { WebkitFilter: "grayscale(100%)", ...customIconStyle };
+		customIconStyle = { WebkitFilter: "grayscale(100%)", ...customIconStyle } as any;
 	}
 	return <div style={{ display: "inline-block" }}>
 		<OpenOnSourcegraph label="View File" ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />

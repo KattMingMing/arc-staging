@@ -39,14 +39,6 @@ module.exports = {
 		loaders: [
 			{
 				test: /\.tsx?/,
-				// exclude: /node_modules\/(?!(@types\/chrome)\/).*/,
-				// exclude: /node_modules/,
-				// include: [
-				// 	path.resolve(__dirname, "..", "/phabricator"),
-				// 	path.resolve(__dirname, "..", "/chrome"),
-				// 	path.resolve(__dirname, "..", "/app"),
-				// 	path.resolve(__dirname, "..", "/node_modules/@types/chrome)"
-				// ],
 				loader: 'ts-loader?' + JSON.stringify({
 					compilerOptions: {
 						noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
