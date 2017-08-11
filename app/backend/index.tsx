@@ -147,9 +147,14 @@ export function searchText(uri: string, query: string): Promise<ResolvedSearchTe
 	return p;
 }
 
-const fileTreeCache = new Map<string, Promise<any>>();
+export interface FileTreeResp {
+	results?: [{ name: string }];
+	notFound?: boolean;
+}
 
-export function listAllFiles(repo: string, revision: string): Promise<any> {
+const fileTreeCache = new Map<string, Promise<FileTreeResp>>();
+
+export function listAllFiles(repo: string, revision: string): Promise<FileTreeResp> {
 	const key = cacheKey(repo, revision);
 	const promiseHit = fileTreeCache.get(key);
 	if (promiseHit) {
@@ -183,14 +188,16 @@ export function listAllFiles(repo: string, revision: string): Promise<any> {
 			const error = new Error("invalid response received from graphql endpoint");
 			throw error;
 		}
-		if (!json.data.root.repository || !json.data.root.repository.commit || !json.data.root.repository.commit.commit.tree || !json.data.root.repository.commit.commit.tree.files) {
+		if (!json.data.root.repository || !json.data.root.repository.commit || !json.data.root.repository.commit.commit || !json.data.root.repository.commit.commit.tree || !json.data.root.repository.commit.commit.tree.files) {
 			const notFound = { notFound: true };
 			fileTreeCache.set(key, Promise.resolve(notFound));
 			return notFound;
 		}
-		const results = json.data.root.repository.commit.commit.tree.files;
-		fileTreeCache.set(key, p);
+		const results = { results: json.data.root.repository.commit.commit.tree.files };
+		fileTreeCache.set(key, Promise.resolve(results));
 		return results;
 	});
+
+	fileTreeCache.set(key, p);
 	return p;
 }

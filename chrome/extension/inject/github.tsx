@@ -53,7 +53,16 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 		}
 	});
 
-	$(document).on("pjax:end", () => {
+	// Add page mutation observer to detect URL changes instead of using pjax:popstate.
+	const pageChangeMutationObserver = new (window as any).MutationObserver(_.debounce(() => updateModulesForPageNavigation(), 200, { leading: true, trailing: true }));
+	const container = document.getElementById("js-repo-pjax-container");
+	if (container) {
+		pageChangeMutationObserver.observe(container, {
+			childList: true,
+		});
+	}
+
+	$(document).one("ready pjax:success page:load", (): void => {
 		(eventLogger as ExtensionEventLogger).updateIdentity();
 
 		// Remove all ".sg-annotated"; this allows tooltip event handlers to be re-registered.
@@ -63,11 +72,7 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 			}
 		});
 		tooltips.hideTooltip();
-		injectModules();
-	});
-
-	$(document).on("pjax:popstate", () => {
-		injectModules();
+		updateModulesForPageNavigation();
 	});
 
 	window.addEventListener("resize", _.debounce(() => {
@@ -76,6 +81,11 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 			updateMarginForWidth(toggled);
 		});
 	}, 500, { trailing: true }), true);
+}
+
+function updateModulesForPageNavigation(): void {
+	injectModules();
+	selectTreeNodeForURL();
 }
 
 function injectModules(refreshSessionToken?: boolean): void {
@@ -98,7 +108,6 @@ function inject(): void {
 	injectBlobAnnotators();
 	injectGitHubEditor();
 	injectFileTree();
-	selectTreeNodeForURL();
 }
 
 function hideFileTree(): void {
@@ -107,7 +116,6 @@ function hideFileTree(): void {
 	if (!tree || !tree.parentNode) {
 		return;
 	}
-
 	tree.parentNode.removeChild(tree);
 }
 
@@ -123,6 +131,7 @@ function injectFileTree(): void {
 	}
 	let mount = document.getElementById("sourcegraph-file-tree") as HTMLElement;
 	if (mount) {
+		selectTreeNodeForURL();
 		return;
 	}
 
@@ -142,7 +151,10 @@ function injectFileTree(): void {
 		return;
 	}
 	backend.listAllFiles(repoURI, gitHubState.rev || "").then(resp => {
-		const treeData = buildFileTree(resp);
+		if (resp.notFound || !resp.results) {
+			return;
+		}
+		const treeData = buildFileTree(resp.results);
 		if (document.querySelector(".octotree")) {
 			chrome.storage.sync.set({ repositoryFileTreeEnabled: false });
 			hideFileTree();
@@ -153,8 +165,9 @@ function injectFileTree(): void {
 			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);
 			document.body.appendChild(mount);
 			updateTreeViewLayout(toggled);
+			selectTreeNodeForURL();
 			const opt = {
-				onDrag: function(__: any, $el: any, newWidth: number): boolean {
+				onDrag: function (__: any, $el: any, newWidth: number): boolean {
 					if (newWidth < 280) {
 						newWidth = 280;
 					}
@@ -175,6 +188,7 @@ function injectFileTree(): void {
 function treeViewToggled(toggled: boolean): void {
 	eventLogger.logFileTreeToggleClicked({ toggled: toggled });
 	updateTreeViewLayout(toggled);
+	selectTreeNodeForURL();
 	chrome.storage.sync.set({ treeViewToggled: toggled });
 }
 
@@ -202,15 +216,20 @@ function updateTreeViewLayout(toggled: boolean): void {
 		parent.style.height = "54px";
 		parent.style.width = "45px";
 		document.body.style.marginLeft = "0px";
-	} else {
-		parent.style.height = "100%";
-		parent.style.width = "280px";
-		updateMarginForWidth(toggled);
+		return;
 	}
-	selectTreeNodeForURL();
+	parent.style.height = "100%";
+	parent.style.width = "280px";
+	updateMarginForWidth(toggled);
 }
 
 function handleSelected(path: string, newTab: boolean): void {
+	const { isCodePage } = github.parseURL();
+	if (!isCodePage) {
+		hideFileTree();
+		return;
+	}
+
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
 		return;
@@ -242,14 +261,20 @@ function handleSelected(path: string, newTab: boolean): void {
 }
 
 function selectTreeNodeForURL(): void {
-	const gitHubState = github.getGitHubState(window.location.href);
-	if (!gitHubState || !gitHubState["path"]) {
-		$(".jstree").jstree("deselect_all");
+	const { isCodePage } = github.parseURL();
+	if (!isCodePage) {
+		hideFileTree();
 		return;
 	}
 
 	const tree = $(".jstree").jstree(true);
 	if (!tree) {
+		return;
+	}
+
+	const gitHubState = github.getGitHubState(window.location.href);
+	if (!gitHubState || !gitHubState["path"]) {
+		$(".jstree").jstree("deselect_all");
 		return;
 	}
 
@@ -264,6 +289,9 @@ function selectTreeNodeForURL(): void {
 function injectBlobAnnotators(): void {
 	const { repoURI, isDelta } = github.parseURL();
 	let { path } = github.parseURL();
+	if (!path && !isDelta) {
+		return;
+	}
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (gitHubState && gitHubState.mode === GitHubMode.Blob && (gitHubState as GitHubBlobUrl).rev.indexOf("/") > 0) {
 		// correct in case branch has slash in it
