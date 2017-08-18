@@ -22,6 +22,8 @@ require("jquery-resizable-dom");
 
 const OPEN_ON_SOURCEGRAPH_ID = "open-on-sourcegraph";
 
+let toggled = false;
+
 export function injectGitHubApplication(marker: HTMLElement): void {
 	window.addEventListener("load", () => {
 		document.body.appendChild(marker);
@@ -76,10 +78,7 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 	});
 
 	window.addEventListener("resize", _.debounce(() => {
-		chrome.storage.sync.get(items => {
-			const toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
-			updateMarginForWidth(toggled);
-		});
+		updateMarginForWidth();
 	}, 500, { trailing: true }), true);
 }
 
@@ -125,8 +124,7 @@ function injectFileTree(): void {
 	}
 	const { repoURI, isCodePage } = github.parseURL();
 
-	if (!repoURI || !isCodePage) {
-		hideFileTree();
+	if (!repoURI) {
 		return;
 	}
 	let mount = document.getElementById("sourcegraph-file-tree") as HTMLElement;
@@ -161,10 +159,13 @@ function injectFileTree(): void {
 			return;
 		}
 		chrome.storage.sync.get(items => {
-			const toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
+			toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
+			if (!isCodePage) {
+				toggled = false;
+			}
 			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);
 			document.body.appendChild(mount);
-			updateTreeViewLayout(toggled);
+			updateTreeViewLayout();
 			selectTreeNodeForURL();
 			const opt = {
 				onDrag: function (__: any, $el: any, newWidth: number): boolean {
@@ -172,7 +173,7 @@ function injectFileTree(): void {
 						newWidth = 280;
 					}
 					$el.width(newWidth);
-					updateMarginForWidth(true);
+					updateMarginForWidth();
 					return false;
 				},
 				resizeWidth: true,
@@ -185,14 +186,15 @@ function injectFileTree(): void {
 	});
 }
 
-function treeViewToggled(toggled: boolean): void {
+function treeViewToggled(): void {
+	toggled = !toggled;
 	eventLogger.logFileTreeToggleClicked({ toggled: toggled });
-	updateTreeViewLayout(toggled);
+	updateTreeViewLayout();
 	selectTreeNodeForURL();
 	chrome.storage.sync.set({ treeViewToggled: toggled });
 }
 
-function updateMarginForWidth(toggled: boolean): void {
+function updateMarginForWidth(): void {
 	const fileTree = document.getElementById("sourcegraph-file-tree");
 	if (!fileTree) {
 		document.body.style.marginLeft = "0px";
@@ -207,7 +209,7 @@ function updateMarginForWidth(toggled: boolean): void {
 	document.body.style.marginLeft = (widthDiff / 2 > fileTree.clientWidth || !toggled) ? "0px" : `${fileTree.clientWidth}px`;
 }
 
-function updateTreeViewLayout(toggled: boolean): void {
+function updateTreeViewLayout(): void {
 	const parent = document.getElementById("sourcegraph-file-tree");
 	if (!parent) {
 		return;
@@ -220,16 +222,10 @@ function updateTreeViewLayout(toggled: boolean): void {
 	}
 	parent.style.height = "100%";
 	parent.style.width = "280px";
-	updateMarginForWidth(toggled);
+	updateMarginForWidth();
 }
 
 function handleSelected(path: string, newTab: boolean): void {
-	const { isCodePage } = github.parseURL();
-	if (!isCodePage) {
-		hideFileTree();
-		return;
-	}
-
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
 		return;
@@ -261,12 +257,6 @@ function handleSelected(path: string, newTab: boolean): void {
 }
 
 function selectTreeNodeForURL(): void {
-	const { isCodePage } = github.parseURL();
-	if (!isCodePage) {
-		hideFileTree();
-		return;
-	}
-
 	const tree = $(".jstree").jstree(true);
 	if (!tree) {
 		return;
