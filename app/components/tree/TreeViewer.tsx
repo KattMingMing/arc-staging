@@ -7,6 +7,7 @@ import * as React from "react";
 
 interface Props {
 	uri: string;
+	rev: string;
 	parentRef: HTMLElement;
 	treeData: TreeNode[];
 	onSelected: (url: string, tab: boolean) => void;
@@ -41,6 +42,11 @@ export class TreeViewer extends React.Component<Props, State> {
 		});
 	}
 
+	handleSelection(path: string, tab: boolean): void {
+		const url = `https://${this.props.uri}/blob/${this.props.rev}/${path}`;
+		this.props.onSelected(url, tab);
+	}
+
 	render(): JSX.Element | null {
 		const gitHubState = github.getGitHubState(window.location.href);
 		if (!gitHubState || !this.props.treeData || document.querySelector(".octotree")) {
@@ -50,8 +56,8 @@ export class TreeViewer extends React.Component<Props, State> {
 		return (
 			<div style={{ ...styles.container, overflow: this.state.toggled ? "auto" : "hidden" }}>
 				<div className="splitter" style={styles.splitter as any} />
-				<TreeHeader toggled={this.state.toggled} uri={this.props.uri} repo={gitHubState.repo} rev={gitHubState.rev} onClick={this.toggleTreeViewer.bind(this)} />
-				<ReactTree onSelected={this.props.onSelected} plugins={["wholerow"]} core={{ force_text: true, dblclick_toggle: false, multiple: false, worker: false, data: this.props.treeData }} />
+				<TreeHeader toggled={this.state.toggled} uri={this.props.uri} repo={gitHubState.repo} rev={this.props.rev} onClick={this.toggleTreeViewer.bind(this)} />
+				<ReactTree onSelected={this.handleSelection.bind(this)} plugins={["wholerow"]} core={{ force_text: true, dblclick_toggle: false, multiple: false, worker: false, data: this.props.treeData }} />
 			</div>
 		);
 	}

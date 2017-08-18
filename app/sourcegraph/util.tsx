@@ -57,7 +57,7 @@ interface FileData {
  * the tree structure. It takes an optional parameter of a path that should be the selected node.
  * @param data Array of file names in the form of {name: "path/to/file" }
  */
-export function buildFileTree(data: FileData[]): any[] {
+export function buildFileTree(data: FileData[], commit: string): any[] {
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
 		return [];
@@ -68,7 +68,7 @@ export function buildFileTree(data: FileData[]): any[] {
 
 	const output = [];
 	let k: number = 0;
-	const baseURL = `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${gitHubState.rev || "master"}/`;
+	const baseURL = `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${commit}/`;
 	for (let i = 0; i < input.length; i++) {
 		const chain: any[] = input[i].split("/");
 		let currentNode: TreeNode[] | undefined = output;

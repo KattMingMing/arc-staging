@@ -148,40 +148,46 @@ function injectFileTree(): void {
 	if (!gitHubState) {
 		return;
 	}
-	backend.listAllFiles(repoURI, gitHubState.rev || "").then(resp => {
-		if (resp.notFound || !resp.results) {
-			return;
+	backend.resolveRev(repoURI, gitHubState.rev || "").then(rev => {
+		let commit = gitHubState.rev;
+		if (!commit && !rev.notFound) {
+			commit = rev.commitID;
 		}
-		const treeData = buildFileTree(resp.results);
-		if (document.querySelector(".octotree")) {
-			chrome.storage.sync.set({ repositoryFileTreeEnabled: false });
-			hideFileTree();
-			return;
-		}
-		chrome.storage.sync.get(items => {
-			toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
-			if (!isCodePage) {
-				toggled = false;
+		backend.listAllFiles(repoURI, commit || "").then(resp => {
+			if (resp.notFound || !resp.results) {
+				return;
 			}
-			render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} />, mount);
-			document.body.appendChild(mount);
-			updateTreeViewLayout();
-			selectTreeNodeForURL();
-			const opt = {
-				onDrag: function (__: any, $el: any, newWidth: number): boolean {
-					if (newWidth < 280) {
-						newWidth = 280;
-					}
-					$el.width(newWidth);
-					updateMarginForWidth();
-					return false;
-				},
-				resizeWidth: true,
-				resizeHeight: false,
-				resizeWidthFrom: "right",
-				handleSelector: ".splitter",
-			};
-			$(mount).resizable(opt);
+			const treeData = buildFileTree(resp.results, commit!);
+			if (document.querySelector(".octotree")) {
+				chrome.storage.sync.set({ repositoryFileTreeEnabled: false });
+				hideFileTree();
+				return;
+			}
+			chrome.storage.sync.get(items => {
+				toggled = items.treeViewToggled === undefined ? true : items.treeViewToggled;
+				if (!isCodePage) {
+					toggled = false;
+				}
+				render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} rev={commit!} />, mount);
+				document.body.appendChild(mount);
+				updateTreeViewLayout();
+				selectTreeNodeForURL();
+				const opt = {
+					onDrag: function (__: any, $el: any, newWidth: number): boolean {
+						if (newWidth < 280) {
+							newWidth = 280;
+						}
+						$el.width(newWidth);
+						updateMarginForWidth();
+						return false;
+					},
+					resizeWidth: true,
+					resizeHeight: false,
+					resizeWidthFrom: "right",
+					handleSelector: ".splitter",
+				};
+				$(mount).resizable(opt);
+			});
 		});
 	});
 }
@@ -225,7 +231,7 @@ function updateTreeViewLayout(): void {
 	updateMarginForWidth();
 }
 
-function handleSelected(path: string, newTab: boolean): void {
+function handleSelected(url: string, newTab: boolean): void {
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
 		return;
@@ -240,15 +246,12 @@ function handleSelected(path: string, newTab: boolean): void {
 	if (selected && selected[0] === gitHubState["path"]) {
 		return;
 	}
-
 	eventLogger.logFileTreeItemClicked({ repo: gitHubState.repo });
-	const url = `https://github.com/${gitHubState.owner}/${gitHubState.repo}/blob/${gitHubState.rev || "master"}/${path}`;
 	if (newTab) {
 		window.open(url, "_blank");
 		selectTreeNodeForURL();
 		return;
 	}
-
 	$.pjax.defaults.timeout = 0;
 	$.pjax({
 		url,
