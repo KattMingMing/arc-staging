@@ -148,10 +148,10 @@ function injectFileTree(): void {
 	if (!gitHubState) {
 		return;
 	}
-	backend.resolveRev(repoURI, gitHubState.rev || "").then(rev => {
+	backend.resolveRev(repoURI, gitHubState.rev || "").then(resolvedRev => {
 		let commit = gitHubState.rev;
-		if (!commit && !rev.notFound) {
-			commit = rev.commitID;
+		if (!commit && !resolvedRev.notFound) {
+			commit = resolvedRev.defaultBranch || resolvedRev.commitID;
 		}
 		backend.listAllFiles(repoURI, commit || "").then(resp => {
 			if (resp.notFound || !resp.results) {

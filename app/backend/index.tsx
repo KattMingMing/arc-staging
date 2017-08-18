@@ -7,6 +7,7 @@ export interface ResolvedRevResp {
 	notFound?: boolean;
 	cloneInProgress?: boolean;
 	commitID?: string;
+	defaultBranch?: string;
 }
 
 const promiseCache = new Map<string, Promise<ResolvedRevResp>>();
@@ -21,6 +22,7 @@ export function resolveRev(repo: string, rev?: string): Promise<ResolvedRevResp>
 		query: `query Content($repo: String, $rev: String) {
 					root {
 						repository(uri: $repo) {
+							defaultBranch
 							commit(rev: $rev) {
 								cloneInProgress,
 								commit {
@@ -56,7 +58,7 @@ export function resolveRev(repo: string, rev?: string): Promise<ResolvedRevResp>
 			promiseCache.set(key, Promise.reject(error));
 			throw error;
 		}
-		const found = { commitID: json.data.root.repository.commit.commit.sha1 };
+		const found = { commitID: json.data.root.repository.commit.commit.sha1, defaultBranch: json.data.root.repository.defaultBranch };
 		promiseCache.set(key, Promise.resolve(found));
 		return found;
 	});
