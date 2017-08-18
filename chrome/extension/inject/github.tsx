@@ -85,6 +85,7 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 function updateModulesForPageNavigation(): void {
 	injectModules();
 	selectTreeNodeForURL();
+	tooltips.hideTooltip();
 }
 
 function injectModules(refreshSessionToken?: boolean): void {
