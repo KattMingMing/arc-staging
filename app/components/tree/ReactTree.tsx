@@ -12,6 +12,7 @@ interface Props {
 		data: any[],
 		worker: boolean,
 		multiple: boolean,
+		force_text: boolean,
 		"dblclick_toggle": boolean,
 	};
 	plugins?: string[];

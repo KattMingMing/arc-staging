@@ -51,7 +51,7 @@ export class TreeViewer extends React.Component<Props, State> {
 			<div style={{ ...styles.container, overflow: this.state.toggled ? "auto" : "hidden" }}>
 				<div className="splitter" style={styles.splitter as any} />
 				<TreeHeader toggled={this.state.toggled} uri={this.props.uri} repo={gitHubState.repo} rev={gitHubState.rev} onClick={this.toggleTreeViewer.bind(this)} />
-				<ReactTree onSelected={this.props.onSelected} plugins={["wholerow"]} core={{ dblclick_toggle: false, multiple: false, worker: false, data: this.props.treeData }} />
+				<ReactTree onSelected={this.props.onSelected} plugins={["wholerow"]} core={{ force_text: true, dblclick_toggle: false, multiple: false, worker: false, data: this.props.treeData }} />
 			</div>
 		);
 	}
