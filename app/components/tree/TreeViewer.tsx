@@ -52,7 +52,9 @@ export class TreeViewer extends React.Component<Props, State> {
 		if (!gitHubState || !this.props.treeData || document.querySelector(".octotree")) {
 			return null;
 		}
-
+		if (this.props.onToggled) {
+			this.props.onToggled(this.state.toggled);
+		}
 		return (
 			<div style={{ ...styles.container, overflow: this.state.toggled ? "auto" : "hidden" }}>
 				<div className="splitter" style={styles.splitter as any} />
