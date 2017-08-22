@@ -3,6 +3,7 @@ import * as styles from "app/components/tree/styles/style";
 import { TreeHeader } from "app/components/tree/TreeHeader";
 import * as github from "app/github/util";
 import { TreeNode } from "app/sourcegraph/util";
+import { eventLogger } from "app/util/context";
 import * as React from "react";
 
 interface Props {
@@ -34,6 +35,7 @@ export class TreeViewer extends React.Component<Props, State> {
 	}
 
 	toggleTreeViewer(): void {
+		eventLogger.logFileTreeToggleClicked({ toggled: !this.state.toggled });
 		if (this.props.onToggled) {
 			this.props.onToggled(!this.state.toggled);
 		}

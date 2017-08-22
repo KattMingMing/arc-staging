@@ -187,7 +187,6 @@ function injectFileTree(): void {
 
 function treeViewToggled(toggleState: boolean): void {
 	toggled = toggleState;
-	eventLogger.logFileTreeToggleClicked({ toggled: toggled });
 	updateTreeViewLayout();
 	selectTreeNodeForURL();
 	chrome.storage.sync.set({ treeViewToggled: toggled });
