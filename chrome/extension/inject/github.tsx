@@ -136,14 +136,7 @@ function injectFileTree(): void {
 
 	mount = document.createElement("nav");
 	mount.id = "sourcegraph-file-tree";
-	mount.style.zIndex = "100002";
-	mount.style.position = "fixed";
-	mount.style.top = "0px";
-	mount.style.display = "flex";
-	mount.style.width = "280px";
-	mount.style.height = "100%";
-	mount.style.left = "0px";
-	mount.style.background = "rgb(36, 41, 46)";
+	document.body.appendChild(mount);
 
 	const gitHubState = github.getGitHubState(window.location.href);
 	if (!gitHubState) {
@@ -170,7 +163,6 @@ function injectFileTree(): void {
 					toggled = false;
 				}
 				render(<TreeViewer onToggled={treeViewToggled} toggled={toggled} onSelected={handleSelected} treeData={treeData} parentRef={mount} uri={repoURI} rev={commit!} />, mount);
-				document.body.appendChild(mount);
 				updateTreeViewLayout();
 				selectTreeNodeForURL();
 				const opt = {
@@ -221,14 +213,20 @@ function updateTreeViewLayout(): void {
 	if (!parent) {
 		return;
 	}
+	parent.style.zIndex = "100002";
+	parent.style.position = "fixed";
+	parent.style.top = "0px";
+	parent.style.display = "flex";
+	parent.style.width = "280px";
+	parent.style.height = "100%";
+	parent.style.left = "0px";
+	parent.style.background = "rgb(36, 41, 46)";
 	if (!toggled) {
 		parent.style.height = "54px";
 		parent.style.width = "45px";
 		document.body.style.marginLeft = "0px";
 		return;
 	}
-	parent.style.height = "100%";
-	parent.style.width = "280px";
 	updateMarginForWidth();
 }
 
