@@ -16,6 +16,7 @@ interface Props {
 	basePath: string | null;
 	repoURI: string;
 	fileElement: HTMLElement;
+	rev?: string;
 }
 
 interface State {
@@ -32,6 +33,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 	isCommit?: boolean;
 	isPullRequest?: boolean;
 	isSplitDiff?: boolean;
+	isCodePage?: boolean;
 
 	// rev is defined for blob view
 	rev?: string;
@@ -50,7 +52,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 
 		this.fileExtension = utils.getPathExtension(props.headPath);
 
-		const { isDelta, isPullRequest, isCommit } = github.parseURL(window.location);
+		const { isDelta, isPullRequest, isCommit, isCodePage } = github.parseURL(window.location);
 		let { rev } = github.parseURL(window.location);
 		const gitHubState = github.getGitHubState(window.location.href);
 		// TODO(uforic): Eventually, use gitHubState for everything, but for now, only use it when the branch should have a
@@ -62,7 +64,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
 		this.isDelta = isDelta;
 		this.isPullRequest = isPullRequest;
 		this.isCommit = isCommit;
-		this.rev = rev;
+		this.isCodePage = isCodePage;
+		this.rev = this.props.rev || rev;
 
 		if (this.isDelta) {
 			this.isSplitDiff = github.isSplitDiff();
@@ -208,6 +211,9 @@ export class BlobAnnotator extends React.Component<Props, State> {
 	}
 
 	render(): JSX.Element | null {
+		if (!this.isCodePage) {
+			return null;
+		}
 		if (!this.isDelta && !Boolean(this.state.resolvedRevs[this.props.repoURI])) {
 			return null;
 		}

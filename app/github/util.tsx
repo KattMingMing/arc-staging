@@ -558,3 +558,8 @@ export function parseURL(loc: Location = window.location): GitHubURL {
 
 	return { user, repo, rev, path, repoURI, uri: repoURI, isDelta, isPullRequest, isCommit, isCodePage };
 }
+
+// Code Comments
+export function getCodeCommentContainers(): HTMLCollectionOf<HTMLElement> {
+	return document.getElementsByClassName("js-comment-body") as HTMLCollectionOf<HTMLElement>;
+}

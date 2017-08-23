@@ -106,6 +106,7 @@ function inject(): void {
 	injectRepositorySearchToggle();
 	injectOpenOnSourcegraphButton();
 	injectBlobAnnotators();
+	injectCodeSnippetAnnotator();
 	injectGitHubEditor();
 	injectFileTree();
 }
@@ -275,6 +276,31 @@ function selectTreeNodeForURL(): void {
 	}
 	$(".jstree").jstree("deselect_all");
 	tree.select_node(gitHubState["path"]);
+}
+
+function injectCodeSnippetAnnotator(): void {
+	const codeComments = github.getCodeCommentContainers();
+
+	for (const file of Array.from(codeComments)) {
+		const mountEl = document.createElement("div");
+		mountEl.style.display = "none";
+		mountEl.className = "sourcegraph-app-annotator";
+		file.appendChild(mountEl);
+		const code = file.querySelector(".border.rounded-1.my-2");
+		const filePathContainer = file.querySelector(".mb-0.text-bold");
+		if (!filePathContainer) {
+			continue;
+		}
+		const href = filePathContainer.firstElementChild ? (filePathContainer.firstElementChild as any).href : undefined;
+		if (!href) {
+			continue;
+		}
+		const gitHubState = github.getGitHubState(href);
+		if (!gitHubState || !gitHubState.repo || !gitHubState.rev || !gitHubState["path"]) {
+			continue;
+		}
+		render(<BlobAnnotator headPath={gitHubState["path"]} repoURI={`github.com/${gitHubState.owner}/${gitHubState.repo}`} fileElement={code as HTMLElement} basePath={null} rev={gitHubState.rev} />, mountEl);
+	}
 }
 
 function injectBlobAnnotators(): void {
