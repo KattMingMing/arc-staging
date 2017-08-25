@@ -106,7 +106,8 @@ function inject(): void {
 	injectRepositorySearchToggle();
 	injectOpenOnSourcegraphButton();
 	injectBlobAnnotators();
-	injectCodeSnippetAnnotator();
+	injectCodeSnippetAnnotator(github.getCodeCommentContainers(), ".border.rounded-1.my-2");
+	injectCodeSnippetAnnotator(github.getRepoCodeSearchContainers(), ".d-inline-block");
 	injectGitHubEditor();
 	injectFileTree();
 }
@@ -278,20 +279,26 @@ function selectTreeNodeForURL(): void {
 	tree.select_node(gitHubState["path"]);
 }
 
-function injectCodeSnippetAnnotator(): void {
-	const codeComments = github.getCodeCommentContainers();
-
-	for (const file of Array.from(codeComments)) {
-		const code = file.querySelector(".border.rounded-1.my-2");
-		const filePathContainer = file.querySelector(".mb-0.text-bold");
+/**
+ * injectCodeSnippetAnnotator annotates the given containers and adds a view file button.
+ * @param containers The blob containers that holds the code snippet ot be annotated.
+ * @param selector The selector of the element to append a "View File" button.
+ */
+function injectCodeSnippetAnnotator(containers: HTMLCollectionOf<HTMLElement>, selector: string): void {
+	for (const file of Array.from(containers)) {
+		const filePathContainer = file.querySelector(selector);
 		if (!filePathContainer) {
 			continue;
 		}
-		const href = filePathContainer.firstElementChild ? (filePathContainer.firstElementChild as any).href : undefined;
-		if (!href) {
-			continue;
+		const anchors = file.getElementsByTagName("a");
+		let gitHubState;
+		for (const anchor of Array.from(anchors)) {
+			const anchorState = github.getGitHubState(anchor.href);
+			if (anchorState) {
+				gitHubState = anchorState;
+				break;
+			}
 		}
-		const gitHubState = github.getGitHubState(href);
 		if (!gitHubState || !gitHubState.repo || !gitHubState.rev || !gitHubState["path"]) {
 			continue;
 		}
@@ -299,7 +306,7 @@ function injectCodeSnippetAnnotator(): void {
 		mountEl.style.display = "none";
 		mountEl.className = "sourcegraph-app-annotator";
 		filePathContainer.appendChild(mountEl);
-		render(<BlobAnnotator headPath={gitHubState["path"]} repoURI={`github.com/${gitHubState.owner}/${gitHubState.repo}`} fileElement={code as HTMLElement} basePath={null} rev={gitHubState.rev} />, mountEl);
+		render(<BlobAnnotator headPath={gitHubState["path"]} repoURI={`github.com/${gitHubState.owner}/${gitHubState.repo}`} fileElement={file as HTMLElement} basePath={null} rev={gitHubState.rev} />, mountEl);
 	}
 }
 

@@ -211,7 +211,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 	}
 
 	render(): JSX.Element | null {
-		if (!this.isCodePage) {
+		if (!this.isCodePage && !this.isPullRequest) {
 			return null;
 		}
 		if (!this.isDelta && !Boolean(this.state.resolvedRevs[this.props.repoURI])) {

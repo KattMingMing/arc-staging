@@ -399,7 +399,13 @@ export function getCodeCellsForAnnotation(table: HTMLTableElement, opt: { isDelt
 
 			line = parseInt(lineData, 10);
 		} else {
-			line = parseInt(row.cells[0].getAttribute("data-line-number") as string, 10);
+			const lineCell = row.cells[0];
+			// Some blob views do not user the data-line-number attribute and instead use a specific class.
+			if (lineCell.className === "blob-num") {
+				line = parseInt(lineCell.innerText, 10);
+			} else {
+				line = parseInt(lineCell.getAttribute("data-line-number") as string, 10);
+			}
 			codeCell = row.cells[1];
 		}
 
@@ -562,4 +568,9 @@ export function parseURL(loc: Location = window.location): GitHubURL {
 // Code Comments
 export function getCodeCommentContainers(): HTMLCollectionOf<HTMLElement> {
 	return document.getElementsByClassName("js-comment-body") as HTMLCollectionOf<HTMLElement>;
+}
+
+// Repository search
+export function getRepoCodeSearchContainers(): HTMLCollectionOf<HTMLElement> {
+	return document.getElementsByClassName("code-list-item") as HTMLCollectionOf<HTMLElement>;
 }
