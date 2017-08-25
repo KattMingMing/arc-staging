@@ -282,10 +282,6 @@ function injectCodeSnippetAnnotator(): void {
 	const codeComments = github.getCodeCommentContainers();
 
 	for (const file of Array.from(codeComments)) {
-		const mountEl = document.createElement("div");
-		mountEl.style.display = "none";
-		mountEl.className = "sourcegraph-app-annotator";
-		file.appendChild(mountEl);
 		const code = file.querySelector(".border.rounded-1.my-2");
 		const filePathContainer = file.querySelector(".mb-0.text-bold");
 		if (!filePathContainer) {
@@ -299,6 +295,10 @@ function injectCodeSnippetAnnotator(): void {
 		if (!gitHubState || !gitHubState.repo || !gitHubState.rev || !gitHubState["path"]) {
 			continue;
 		}
+		const mountEl = document.createElement("div");
+		mountEl.style.display = "none";
+		mountEl.className = "sourcegraph-app-annotator";
+		filePathContainer.appendChild(mountEl);
 		render(<BlobAnnotator headPath={gitHubState["path"]} repoURI={`github.com/${gitHubState.owner}/${gitHubState.repo}`} fileElement={code as HTMLElement} basePath={null} rev={gitHubState.rev} />, mountEl);
 	}
 }
