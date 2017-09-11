@@ -1,5 +1,5 @@
-import { isBrowserExtension } from "./context";
-import { Domain } from "./types";
+import { isBrowserExtension, openInEditorEnabled, sourcegraphUrl } from "app/util/context";
+import { Domain, OpenInSourcegraphProps } from "app/util/types";
 
 /**
  * supportedExtensions are the file extensions
@@ -101,11 +101,42 @@ export function getDomainUsername(domain: string, username: string): string {
 	return `${domain}:${username}`;
 }
 
-export function getSourcegraphBlobUrl(sourcegraphUrl: string, repoUri: string, path: string, commitId?: string, baseCommitId?: string): string {
-	const commitString = commitId ? `@${commitId}` : "";
-	let url = `${sourcegraphUrl}/${repoUri}${commitString}/-/blob/${path}`;
-	if (baseCommitId) {
-		url = `${url}?diff=${baseCommitId}&utm_source=${getPlatformName()}`;
+export function getOpenInSourcegraphUrl(props: OpenInSourcegraphProps): string {
+	// Build URL to open in editor
+	if (openInEditorEnabled) {
+		let openUrl = `src-insiders://open?repo=${props.repoUri}&vcs=git`;
+		if (props.rev) {
+			openUrl = `${openUrl}&revision=${props.rev}`;
+		}
+		if (props.path) {
+			openUrl = `${openUrl}&path=${props.path}`;
+		}
+		if (props.coords) {
+			openUrl = `${openUrl}:${props.coords.line}:${props.coords.char}`;
+		}
+		return openUrl;
 	}
-	return `${url}?utm_source=${getPlatformName()}`;
+
+	// Build URL for Web
+	let url = `${sourcegraphUrl}/${props.repoUri}`;
+	if (props.rev) {
+		url = `${url}@${props.rev}`;
+	}
+	if (props.path) {
+		url = `${url}/-/blob/${props.path}`;
+	}
+	if (props.query) {
+		if (props.query.diff) {
+			url = `${url}?diff=${props.query.diff.rev}&utm_source=${getPlatformName()}`;
+		} else if (props.query.search) {
+			url = `${url}?q=${props.query.search}&utm_source=${getPlatformName()}`;
+		}
+	}
+	if (props.coords) {
+		url = `${url}#L${props.coords.line}:${props.coords.char}`;
+	}
+	if (props.fragment) {
+		url = `${url}$${props.fragment}`;
+	}
+	return url;
 }

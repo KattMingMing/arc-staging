@@ -1,7 +1,7 @@
 import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
 import * as github from "app/github/util";
-import { eventLogger, sourcegraphUrl } from "app/util/context";
-import { GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubRepositoryUrl } from "app/util/types";
+import { eventLogger } from "app/util/context";
+import { GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubRepositoryUrl, OpenInSourcegraphProps } from "app/util/types";
 import * as React from "react";
 
 interface State {
@@ -19,12 +19,9 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 		};
 	}
 
-	open(url: string, mode: GitHubMode): void {
+	open(mode: GitHubMode): void {
 		const { uri, rev } = github.parseURL();
-		const props = { repo: uri, mode: rev, url };
-		if (!url || !url.length && mode === GitHubMode.PullRequest) {
-			this.getPullRequestMergeBaseFromSource();
-		}
+		const props = { repo: uri, mode: rev };
 
 		switch (mode) {
 			case GitHubMode.Repository:
@@ -52,29 +49,34 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 			});
 	}
 
-	openOnSourcegraphProps(state: GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl): { label: string, url: string, ariaLabel?: string } {
-		let url = `${sourcegraphUrl}/github.com/${state.owner}/${state.repo}`;
+	openOnSourcegraphProps(state: GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl): { label: string, openProps: OpenInSourcegraphProps, ariaLabel?: string } {
+		const props: OpenInSourcegraphProps = {
+			repoUri: `github.com/${state.owner}/${state.repo}`,
+			rev: state.rev || "",
+		};
 		switch (state.mode) {
 			case GitHubMode.PullRequest:
 				const deltaRevs = this.state.resolvedRevs || github.getDeltaRevs();
 				if (!deltaRevs) {
 					this.getPullRequestMergeBaseFromSource();
 				} else {
-					url = `${url}@${deltaRevs.head}?diff=${deltaRevs.base}&utm_source=chrome-extension`;
+					props.query = {
+						diff: {
+							rev: deltaRevs.base,
+						},
+					};
+					props.rev = deltaRevs.head;
 				}
 				return {
 					label: "View Pull Request",
 					ariaLabel: "View pull request on Sourcegraph",
-					url: url,
+					openProps: props,
 				};
 			default:
-				if (state.rev) {
-					url = `${url}@${state.rev}`;
-				}
 				return {
 					label: "View Repository",
 					ariaLabel: "View repository on Sourcegraph",
-					url: url,
+					openProps: props,
 				};
 		}
 	}
@@ -85,8 +87,8 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 			return null;
 		}
 
-		const { label, url, ariaLabel } = this.openOnSourcegraphProps(gitHubState);
+		const { label, openProps, ariaLabel } = this.openOnSourcegraphProps(gitHubState);
 		const className = ariaLabel ? "btn btn-sm tooltipped tooltipped-s" : "btn btn-sm";
-		return <OpenOnSourcegraph url={url} ariaLabel={ariaLabel} label={label} className={className} onClick={() => this.open(url, gitHubState.mode)} />;
+		return <OpenOnSourcegraph openProps={openProps} ariaLabel={ariaLabel} label={label} className={className} onClick={() => this.open(gitHubState.mode)} />;
 	}
 }

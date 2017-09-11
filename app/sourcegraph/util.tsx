@@ -1,6 +1,6 @@
 import * as github from "app/github/util";
-import { getDomain } from "app/util";
-import { Domain, SourcegraphURL } from "app/util/types";
+import { getDomain, getOpenInSourcegraphUrl } from "app/util";
+import { Domain, OpenInSourcegraphProps, SourcegraphURL } from "app/util/types";
 
 export function parseURL(loc: Location = window.location): SourcegraphURL {
 	const domain = getDomain(loc);
@@ -29,7 +29,8 @@ export function parseURL(loc: Location = window.location): SourcegraphURL {
 	return { uri, rev, path };
 }
 
-export function openSourcegraphTab(url: string, withModifierKey: boolean): void {
+export function openSourcegraphTab(props: OpenInSourcegraphProps, withModifierKey: boolean): void {
+	const url = getOpenInSourcegraphUrl(props);
 	chrome.runtime.sendMessage({ type: "openSourcegraphTab", url: url, withModifierKey: withModifierKey });
 }
 

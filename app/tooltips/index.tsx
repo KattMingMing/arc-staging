@@ -3,7 +3,7 @@ import * as tooltips from "app/tooltips/dom";
 import { clearTooltip, getTooltipEventProperties, setTooltip, store, TooltipContext } from "app/tooltips/store";
 import { eventLogger } from "app/util/context";
 import { fetchJumpURL, getTooltip } from "app/util/lsp";
-import { CodeCell, TooltipData } from "app/util/types";
+import { CodeCell, OpenInSourcegraphProps, TooltipData } from "app/util/types";
 import * as _ from "lodash";
 
 export interface RepoRevSpec { // TODO(john): move to types.
@@ -186,7 +186,7 @@ function getTooltipObservable(target: HTMLElement, context: TooltipContext): Rx.
  * @param target The element tooltip is being requested for.
  * @param context The parameters for fetching tooltip data for `target`.
  */
-function getJ2DObservable(context: TooltipContext): Rx.Observable<string | null> {
+function getJ2DObservable(context: TooltipContext): Rx.Observable<OpenInSourcegraphProps | null> {
 	if (!context.coords) {
 		throw new Error("cannot get j2d without line/char");
 	}

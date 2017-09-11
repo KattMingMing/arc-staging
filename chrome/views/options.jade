@@ -25,6 +25,12 @@ html
           label(class="advanced-options-label") Sourcegraph URL:
           input(id="sourcegraph_url", class="url-input")
           input(type="submit", value="Save", class="save-button")
+      div(id="sourcegraph-editor-container")
+        h4(class="section-header") Editor Beta
+        p(class="section-subheader") Configure Sourcegraph editor beta options.
+        div(class="option-container")
+          input(type="checkbox", id="sourcegraph-open-in-editor")
+          label(class="options-label") Enable open in Sourcegraph editor
       div(id="sourcegraph-event-tracking-container")
         h4(class="section-header") Data collection:
         p(class="section-subheader") Allow data collection for an improved user experience and personalization.

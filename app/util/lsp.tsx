@@ -3,7 +3,7 @@ import { RepoRevSpec } from "app/tooltips";
 import { supportedExtensions } from "app/util";
 import * as utils from "app/util";
 import { sourcegraphUrl } from "app/util/context";
-import { TooltipData } from "app/util/types";
+import { OpenInSourcegraphProps, TooltipData } from "app/util/types";
 
 const tooltipCache: { [key: string]: TooltipData } = {};
 const j2dCache = {};
@@ -78,7 +78,7 @@ export function getTooltip(path: string, line: number, char: number, repoRevSpec
 		});
 }
 
-export function fetchJumpURL(col: number, path: string, line: number, repoRevSpec: RepoRevSpec): Promise<string | null> {
+export function fetchJumpURL(col: number, path: string, line: number, repoRevSpec: RepoRevSpec): Promise<OpenInSourcegraphProps | null> {
 	const ext = utils.getPathExtension(path);
 	if (!supportedExtensions.has(ext)) {
 		return Promise.resolve(null);
@@ -112,7 +112,7 @@ export function fetchJumpURL(col: number, path: string, line: number, repoRevSpe
 			const prt1Uri = prt0Uri[1].split("#");
 
 			const repoUri = prt0Uri[0];
-			const frevUri = (repoUri === repoRevSpec.repoURI ? repoRevSpec.rev : prt1Uri[0]) || "master"; // TODO(john): preserve rev branch
+			const revUri = (repoUri === repoRevSpec.repoURI ? repoRevSpec.rev : prt1Uri[0]) || "master"; // TODO(john): preserve rev branch
 			const pathUri = prt1Uri[1];
 			const startLine = parseInt(json[1].result[0].range.start.line, 10) + 1;
 			const startChar = parseInt(json[1].result[0].range.start.character, 10) + 1;
@@ -124,7 +124,17 @@ export function fetchJumpURL(col: number, path: string, line: number, repoRevSpe
 				lineAndCharEnding = `#L${startLine}`;
 			}
 
-			j2dCache[cacheKey] = `${sourcegraphUrl}/${repoUri}@${frevUri}/-/blob/${pathUri}?utm_source=${utils.getPlatformName()}${lineAndCharEnding}`;
+			const urlProps: OpenInSourcegraphProps = {
+				repoUri,
+				rev: revUri,
+				path: pathUri,
+				coords: {
+					line: startLine,
+					char: startChar || 0,
+				},
+			};
+
+			j2dCache[cacheKey] = urlProps;
 			return j2dCache[cacheKey];
 		});
 }

@@ -1,10 +1,11 @@
 import { SourcegraphIcon } from "app/components/Icons";
 import { openSourcegraphTab } from "app/sourcegraph/util";
 import { isMouseEventWithModifierKey } from "app/util/dom";
+import { OpenInSourcegraphProps } from "app/util/types";
 import * as React from "react";
 
 export interface Props {
-	url: string;
+	openProps: OpenInSourcegraphProps;
 	style?: React.CSSProperties;
 	iconStyle?: React.CSSProperties;
 	className?: string;
@@ -16,7 +17,7 @@ export interface Props {
 export class OpenOnSourcegraph extends React.Component<Props, {}> {
 
 	open(e: any): void {
-		openSourcegraphTab(this.props.url, isMouseEventWithModifierKey(e));
+		openSourcegraphTab(this.props.openProps, isMouseEventWithModifierKey(e));
 		if (this.props.onClick) {
 			this.props.onClick(e);
 		}

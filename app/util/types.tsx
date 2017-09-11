@@ -2,7 +2,7 @@ export interface TooltipData {
 	loading?: boolean;
 	title?: string;
 	doc?: string;
-	j2dUrl?: string;
+	j2dUrl?: OpenInSourcegraphProps;
 }
 
 export interface RepoRevSpec {
@@ -141,4 +141,22 @@ export interface BitbucketBrowseUrl extends BitbucketUrl {
 	repo: string;
 	path: string;
 	rev: string;
+}
+
+export interface OpenInSourcegraphProps {
+	repoUri: string;
+	rev: string;
+	path?: string;
+	coords?: {
+		line: number;
+		char: number;
+	};
+	fragment?: "references";
+	query?: {
+		search?: string,
+		diff?: {
+			rev: string,
+		};
+	};
+	withModifierKey?: boolean;
 }

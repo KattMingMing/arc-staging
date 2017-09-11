@@ -2,8 +2,7 @@ import * as backend from "app/backend";
 import { DiffusionProps, PhabBlobAnnotator, SourcegraphButton } from "app/components/PhabBlobAnnotator";
 import * as phabricator from "app/phabricator/util";
 import * as utils from "app/util";
-import { sourcegraphUrl } from "app/util/context";
-import { CodeCell } from "app/util/types";
+import { CodeCell, OpenInSourcegraphProps } from "app/util/types";
 
 export class PhabDiffusionBlobAnnotator extends PhabBlobAnnotator<DiffusionProps> {
 	constructor(props: DiffusionProps) {
@@ -39,8 +38,13 @@ export class PhabDiffusionBlobAnnotator extends PhabBlobAnnotator<DiffusionProps
 		if (!this.state.resolvedRevs[backend.cacheKey(this.props.repoURI, this.props.rev)]) {
 			return null;
 		}
+		const props: OpenInSourcegraphProps = {
+			repoUri: this.props.repoURI,
+			rev: this.props.rev,
+			path: this.props.path,
+		};
 		return SourcegraphButton(
-			utils.getSourcegraphBlobUrl(sourcegraphUrl, this.props.repoURI, this.props.path, this.props.rev),
+			utils.getOpenInSourcegraphUrl(props),
 			DIFFUSION_CLASSES,
 			this.getFileOpenCallback,
 		);

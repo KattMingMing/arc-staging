@@ -3,8 +3,8 @@ import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
 import * as github from "app/github/util";
 import { addAnnotations, RepoRevSpec } from "app/tooltips";
 import * as utils from "app/util";
-import { eventLogger, sourcegraphUrl } from "app/util/context";
-import { CodeCell, GitHubBlobUrl, GitHubMode } from "app/util/types";
+import { eventLogger } from "app/util/context";
+import { CodeCell, GitHubBlobUrl, GitHubMode, OpenInSourcegraphProps } from "app/util/types";
 import * as React from "react";
 
 const className = "btn btn-sm tooltipped tooltipped-n";
@@ -220,12 +220,33 @@ export class BlobAnnotator extends React.Component<Props, State> {
 		if (this.isDelta && !Boolean(this.state.resolvedRevs[this.baseRepoURI as string])) {
 			return null;
 		}
-		// this is crappy, and only works because we stick in the cache both the repoURI as key as well as the repoURI@revision
 		const resolvedRevs = this.state.resolvedRevs[this.props.repoURI] as backend.ResolvedRevResp;
-		return getSourcegraphButton(github.isPrivateRepo() && resolvedRevs.notFound as boolean,
-			this.isDelta ? utils.getSourcegraphBlobUrl(sourcegraphUrl, this.headRepoURI as string, this.props.headPath, this.headCommitID, this.baseCommitID) : utils.getSourcegraphBlobUrl(sourcegraphUrl, this.props.repoURI, this.props.headPath, this.rev),
-			this.getFileOpenCallback,
-			this.getAuthFileCallback);
+		// We currently do not support private auth.
+		if (resolvedRevs.notFound) {
+			return null;
+		}
+
+		let props: OpenInSourcegraphProps;
+		if (this.isDelta) {
+			props = {
+				repoUri: this.headRepoURI!,
+				path: this.props.headPath,
+				rev: this.headCommitID!,
+				query: {
+					diff: {
+						rev: this.baseCommitID || "",
+					},
+				},
+			};
+		} else {
+			props = {
+				repoUri: this.props.repoURI,
+				path: this.props.headPath,
+				rev: this.rev!,
+			};
+		}
+
+		return getSourcegraphButton(props, this.getFileOpenCallback);
 	}
 
 	getFileOpenCallback = (): void => {
@@ -237,20 +258,11 @@ export class BlobAnnotator extends React.Component<Props, State> {
 	}
 }
 
-function getSourcegraphButton(cantFindPrivateRepo: boolean, blobUrl: string, fileCallack: () => void, authCallback: () => void): JSX.Element {
-	let url = blobUrl;
-	let callback = fileCallack;
-	let ariaLabel = "View file on Sourcegraph";
-	let customIconStyle = iconStyle;
-
-	// Not signed in or not auth'd for private repos
-	if (cantFindPrivateRepo) {
-		url = `${sourcegraphUrl}/login?private=true&utm_source=${utils.getPlatformName()}`;
-		callback = authCallback;
-		ariaLabel = "Authorize Sourcegraph";
-		customIconStyle = { WebkitFilter: "grayscale(100%)", ...customIconStyle } as any;
-	}
+function getSourcegraphButton(openProps: OpenInSourcegraphProps, fileCallack: () => void): JSX.Element {
+	const callback = fileCallack;
+	const ariaLabel = "View file on Sourcegraph";
+	const customIconStyle = iconStyle;
 	return <div style={{ display: "inline-block" }}>
-		<OpenOnSourcegraph label="View File" ariaLabel={ariaLabel} url={url} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />
+		<OpenOnSourcegraph label="View File" ariaLabel={ariaLabel} openProps={openProps} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />
 	</div>;
 }

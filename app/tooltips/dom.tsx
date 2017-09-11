@@ -1,11 +1,12 @@
 import * as styles from "app/github/styles";
 import { openSourcegraphTab } from "app/sourcegraph/util";
 import { clearTooltip, getTooltipEventProperties, store, TooltipState } from "app/tooltips/store";
-import { getModeFromExtension, getPlatformName } from "app/util";
+import { getModeFromExtension, getOpenInSourcegraphUrl, getPlatformName } from "app/util";
 import { getAssetURL } from "app/util/assets";
 import { eventLogger, sourcegraphUrl } from "app/util/context";
 import { isMouseEventWithModifierKey } from "app/util/dom";
 import { fetchJumpURL } from "app/util/lsp";
+import { OpenInSourcegraphProps } from "app/util/types";
 import { highlightBlock } from "highlight.js";
 import * as marked from "marked";
 
@@ -56,8 +57,7 @@ export function createTooltips(): void {
 				.then((defUrl) => {
 					eventLogger.logJumpToDef({ ...getTooltipEventProperties(data, context), hasResolvedJ2D: Boolean(defUrl) });
 					if (defUrl) {
-						const withModifierKey = isMouseEventWithModifierKey(e);
-						openSourcegraphTab(defUrl, withModifierKey);
+						openSourcegraphTab(defUrl, isMouseEventWithModifierKey(e));
 					}
 				});
 		}
@@ -72,9 +72,17 @@ export function createTooltips(): void {
 		const { data, context } = store.getValue();
 		if (data && context && context.coords && context.path && context.repoRevSpec) {
 			eventLogger.logFindRefs({ ...getTooltipEventProperties(data, context) });
-			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}/-/blob/${context.path}?utm_source=${getPlatformName()}#L${context.coords.line}:${context.coords.char}$references`;
-			const withModifierKey = isMouseEventWithModifierKey(e);
-			openSourcegraphTab(url, withModifierKey);
+			const props: OpenInSourcegraphProps = {
+				repoUri: context.repoRevSpec.repoURI,
+				rev: context.repoRevSpec.rev,
+				path: context.path,
+				coords: {
+					line: context.coords.line,
+					char: context.coords.char,
+				},
+				fragment: "references",
+			};
+			openSourcegraphTab(props, isMouseEventWithModifierKey(e));
 		}
 	};
 
@@ -90,9 +98,15 @@ export function createTooltips(): void {
 		const { data, context } = store.getValue();
 		if (data && context && context.repoRevSpec) {
 			eventLogger.logSourcegraphSearch({ repo: context.repoRevSpec.repoURI });
-			const url = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}?q=${encodeURIComponent(searchText)}&utm_source=${getPlatformName()}`;
-			const withModifierKey = isMouseEventWithModifierKey(e);
-			openSourcegraphTab(url, withModifierKey);
+			const props: OpenInSourcegraphProps = {
+				repoUri: context.repoRevSpec.repoURI,
+				rev: context.repoRevSpec.rev,
+				path: context.path,
+				query: {
+					search: encodeURIComponent(searchText),
+				},
+			};
+			openSourcegraphTab(props, isMouseEventWithModifierKey(e));
 			return;
 		}
 	};
@@ -157,7 +171,7 @@ function updateTooltip(state: TooltipState): void {
 		findRefsAction.style.display = "block";
 	}
 
-	j2dAction.href = data.j2dUrl ? data.j2dUrl : "";
+	j2dAction.href = data.j2dUrl ? getOpenInSourcegraphUrl(data.j2dUrl) : "";
 
 	if (data && context && context.coords && context.path && context.repoRevSpec) {
 		findRefsAction.href = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}/-/blob/${context.path}?utm_source=${getPlatformName()}#L${context.coords.line}:${context.coords.char}$references`;

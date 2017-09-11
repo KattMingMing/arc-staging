@@ -22,6 +22,8 @@ export let repositorySearchEnabled: boolean = false;
 
 export let repositoryFileTreeEnabled: boolean = false;
 
+export let openInEditorEnabled: boolean = false;
+
 export function setSourcegraphUrl(url: string): void {
 	sourcegraphUrl = url;
 }
@@ -50,4 +52,8 @@ export function setRepositorySearchEnabled(enabled: boolean): void {
 
 export function setRepositoryFileTreeEnabled(enabled: boolean): void {
 	repositoryFileTreeEnabled = enabled;
+}
+
+export function setOpenInEditorEnabled(enabled: boolean): void {
+	openInEditorEnabled = enabled;
 }

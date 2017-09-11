@@ -2,8 +2,7 @@ import * as backend from "app/backend";
 import { DifferentialProps, PhabBlobAnnotator, SourcegraphButton } from "app/components/PhabBlobAnnotator";
 import * as phabricator from "app/phabricator/util";
 import * as utils from "app/util";
-import { sourcegraphUrl } from "app/util/context";
-import { CodeCell } from "app/util/types";
+import { CodeCell, OpenInSourcegraphProps } from "app/util/types";
 
 export class PhabDifferentialBlobAnnotator extends PhabBlobAnnotator<DifferentialProps> {
 	private viewChangedChecker: any;
@@ -84,8 +83,13 @@ export class PhabDifferentialBlobAnnotator extends PhabBlobAnnotator<Differentia
 		if (!this.state.resolvedRevs[backend.cacheKey(this.props.baseRepoURI, this.props.baseBranch)]) {
 			return null;
 		}
+		const props: OpenInSourcegraphProps = {
+			repoUri: this.props.headRepoURI,
+			rev: this.props.headBranch,
+			path: this.props.headBranch,
+		};
 		return SourcegraphButton(
-			utils.getSourcegraphBlobUrl(sourcegraphUrl, this.props.headRepoURI, this.props.path, this.props.headBranch),
+			utils.getOpenInSourcegraphUrl(props),
 			DIFFERENTIAL_CLASSES,
 			this.getFileOpenCallback,
 		);

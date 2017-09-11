@@ -1,5 +1,5 @@
 import { ExtensionEventLogger } from "app/tracking/ExtensionEventLogger";
-import { eventLogger, setEventLogger, setEventTrackingEnabled, setPhabricatorInstance, setRepositoryFileTreeEnabled, setRepositorySearchEnabled, setSourcegraphRepoSearchToggled, setSourcegraphUrl } from "app/util/context";
+import { eventLogger, setEventLogger, setEventTrackingEnabled, setOpenInEditorEnabled, setPhabricatorInstance, setRepositoryFileTreeEnabled, setRepositorySearchEnabled, setSourcegraphRepoSearchToggled, setSourcegraphUrl } from "app/util/context";
 
 /**
  * set the event logger before anything else proceeds, to avoid logging events before we have it set.
@@ -36,6 +36,7 @@ function injectApplication(loc: Location): void {
 				setRepositorySearchEnabled(items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled);
 				setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled);
 				setEventTrackingEnabled(items.eventTrackingEnabled);
+				setOpenInEditorEnabled(items.openInEditorEnabled);
 				injectGitHubApplication(extensionMarker);
 			});
 			break;
