@@ -32,9 +32,9 @@ function defaultOptions(): FetchOptions | undefined {
 	}
 	return {
 		headers,
-		// we only need to include cookies when running in-page
-		// the chrome extension uses the Authorization field
-		credentials: isBrowserExtension() ? "omit" : "include",
+		// include cookies so requests are authenticated
+		// (e.g. add the _ooauth2_proxy token for dogfood cluster)
+		credentials: "include",
 	};
 }
 
