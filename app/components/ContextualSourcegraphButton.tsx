@@ -54,31 +54,11 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 			repoUri: `github.com/${state.owner}/${state.repo}`,
 			rev: state.rev || "",
 		};
-		switch (state.mode) {
-			case GitHubMode.PullRequest:
-				const deltaRevs = this.state.resolvedRevs || github.getDeltaRevs();
-				if (!deltaRevs) {
-					this.getPullRequestMergeBaseFromSource();
-				} else {
-					props.query = {
-						diff: {
-							rev: deltaRevs.base,
-						},
-					};
-					props.rev = deltaRevs.head;
-				}
-				return {
-					label: "View Pull Request",
-					ariaLabel: "View pull request on Sourcegraph",
-					openProps: props,
-				};
-			default:
-				return {
-					label: "View Repository",
-					ariaLabel: "View repository on Sourcegraph",
-					openProps: props,
-				};
-		}
+		return {
+			label: "View Repository",
+			ariaLabel: "View repository on Sourcegraph",
+			openProps: props,
+		};
 	}
 
 	render(): JSX.Element | null {
