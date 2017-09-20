@@ -6,7 +6,6 @@ import * as React from "react";
 
 interface Props {
 	uri: string;
-	repo: string;
 	rev: string | undefined;
 	onClick: () => void;
 	toggled: boolean;
@@ -15,7 +14,7 @@ interface Props {
 export class TreeHeader extends React.Component<Props, {}> {
 
 	render(): JSX.Element | null {
-		const { uri, repo, rev } = this.props;
+		const { uri, rev } = this.props;
 		let url = `${sourcegraphUrl}/${uri}`;
 		if (rev) {
 			url = `${url}@${rev}`;
@@ -25,7 +24,6 @@ export class TreeHeader extends React.Component<Props, {}> {
 		return <div style={styles.header as any} >
 			<div style={styles.headerBox as any}>
 				{this.props.toggled ? <ToggleFileTree style={styles.headerToggle} onClick={this.props.onClick} /> : <ShowFileTree style={styles.headerToggle} onClick={this.props.onClick} />}
-				{this.props.toggled && <div className="header-navlink" style={styles.headerNavLink as any} onClick={() => window.open(url, "_blank")}>{repo}</div>}
 			</div>
 		</div>;
 	}
