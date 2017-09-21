@@ -154,7 +154,6 @@ function consumeNextToken(txt: string): string {
 enum TooltipEventType {
 	HOVER,
 	CLICK,
-	SELECT_TEXT,
 }
 
 /**
@@ -229,17 +228,12 @@ function tooltipEvent(ev: { target: HTMLElement, data: TooltipData }, context: T
 				case TooltipEventType.CLICK:
 					eventLogger.logClick(eventProperties);
 					break;
-
-				case TooltipEventType.SELECT_TEXT:
-					eventLogger.logSelectText(eventProperties);
-					break;
-
 			}
 		}
 		setTooltip({
 			target: ev.target,
 			data: ev.data,
-			docked: type === TooltipEventType.CLICK || type === TooltipEventType.SELECT_TEXT,
+			docked: type === TooltipEventType.CLICK,
 			context,
 		});
 	}
@@ -324,7 +318,6 @@ export function addAnnotations(path: string, repoRevSpec: RepoRevSpec, cells: Co
 		loadingTooltipObservable.subscribe((ev) => tooltipEvent(ev, context, TooltipEventType.HOVER));
 	}));
 
-	let lastSelectedText: string = "";
 
 	domObservables.forEach(observable => observable.mouseout.subscribe((() => {
 		if (!store.getValue().docked) {
@@ -338,28 +331,6 @@ export function addAnnotations(path: string, repoRevSpec: RepoRevSpec, cells: Co
 		const clickedActiveTarget = t === activeTarget;
 		activeTarget = t;
 
-		if (lastSelectedText !== "") {
-			clearTooltip(t);
-		}
-
-		const selectedText = getSelectedText();
-		if (selectedText !== "") {
-			const shortCircuitTooltip = lastSelectedText === selectedText;
-			lastSelectedText = selectedText;
-
-			if (!shortCircuitTooltip) {
-				const target = getSelectedTextTarget();
-				activeTarget = target;
-
-				const ctx = { path, repoRevSpec, selectedText };
-				tooltipEvent({ target, data: { title: selectedText } }, ctx, TooltipEventType.SELECT_TEXT);
-				return;
-			} else {
-				lastSelectedText = "";
-			}
-		} else {
-			lastSelectedText = "";
-		}
 
 		const coords = getTargetLineAndOffset(e.target as HTMLElement, ignoreFirstChar);
 		if (!coords) {
@@ -447,18 +418,4 @@ function getTargetLineAndOffset(target: HTMLElement, ignoreFirstChar: boolean = 
 	if (findOrigTarget(target)) {
 		return { line, char };
 	}
-}
-
-function getSelectedText(): string {
-	let text = "";
-	if (typeof window.getSelection !== "undefined") {
-		text = window.getSelection().toString();
-	} else if (typeof (document as any).selection !== "undefined" && (document as any).selection.type === "Text") {
-		text = (document as any).selection.createRange().text;
-	}
-	return text;
-}
-
-function getSelectedTextTarget(): HTMLElement {
-	return window.getSelection().getRangeAt(0).startContainer.parentElement!;
 }

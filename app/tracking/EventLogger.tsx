@@ -10,10 +10,6 @@ export abstract class EventLogger {
 		this.logEventForCategory("BrowserExtension", "Click", "TooltipDocked", eventProperties);
 	}
 
-	logSelectText(eventProperties: any = {}): void {
-		this.logEventForCategory("BrowserExtension", "Select", "TextSelected", eventProperties);
-	}
-
 	logJumpToDef(eventProperties: any = {}): void {
 		this.logEventForCategory("BrowserExtension", "Click", "GoToDefClicked", eventProperties);
 	}

@@ -12,7 +12,6 @@ export interface TooltipContext {
 		line: number;
 		char: number;
 	};
-	selectedText?: string;
 }
 
 export interface TooltipState {

@@ -92,9 +92,7 @@ export function createTooltips(): void {
 	searchAction.className = `btn btn-sm BtnGroup-item`;
 	searchAction.onclick = (e) => {
 		e.preventDefault();
-		const searchText = store.getValue().context && store.getValue().context!.selectedText ?
-			store.getValue().context!.selectedText! :
-			store.getValue().target!.textContent!;
+		const searchText = store.getValue().target!.textContent!;
 		const { data, context } = store.getValue();
 		if (data && context && context.repoRevSpec) {
 			eventLogger.logSourcegraphSearch({ repo: context.repoRevSpec.repoURI });
@@ -153,8 +151,8 @@ function updateTooltip(state: TooltipState): void {
 		// no data; bail
 		return;
 	}
-	if (!context || (context.selectedText && context.selectedText.trim()) === "") {
-		// no context or selected text is only whitespace; bail
+	if (!context) {
+		// no context is only whitespace; bail
 		return;
 	}
 
@@ -163,13 +161,8 @@ function updateTooltip(state: TooltipState): void {
 	moreContext.style.display = docked || data.loading ? "none" : "flex";
 	tooltipActions.style.display = docked ? "flex" : "none";
 
-	if (context && context.selectedText) {
-		j2dAction.style.display = "none";
-		findRefsAction.style.display = "none";
-	} else {
-		j2dAction.style.display = "block";
-		findRefsAction.style.display = "block";
-	}
+	j2dAction.style.display = "block";
+	findRefsAction.style.display = "block";
 
 	j2dAction.href = data.j2dUrl ? getOpenInSourcegraphUrl(data.j2dUrl) : "";
 
@@ -179,7 +172,7 @@ function updateTooltip(state: TooltipState): void {
 		findRefsAction.href = "";
 	}
 
-	const searchText = context!.selectedText ? context!.selectedText! : target!.textContent!;
+	const searchText = target!.textContent!;
 	if (searchText) {
 		searchAction.href = `${sourcegraphUrl}/${context.repoRevSpec.repoURI}@${context.repoRevSpec.rev}/-/blob/${context.path}?utm_source=${getPlatformName()}&q=${searchText}`;
 	} else {
