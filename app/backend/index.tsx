@@ -50,15 +50,20 @@ export function resolveRev(repo: string, rev?: string): Promise<ResolvedRevResp>
 			promiseCache.set(key, Promise.resolve(notFound));
 			return notFound;
 		}
-		if (json.data.root.repository.commit.cloneInProgress) {
+		let commitID;
+		if (json.data.root.repository.commit && json.data.root.repository.commit.cloneInProgress) {
 			// don't store this promise, we want to make a new query, holmes.
 			return { cloneInProgress: true };
-		} else if (!json.data.root.repository.commit.commit) {
-			const error = new Error("not able to resolve sha1");
-			promiseCache.set(key, Promise.reject(error));
-			throw error;
+		} else if (!json.data.root.repository.commit || !json.data.root.repository.commit.commit) {
+			if (!json.data.root.repository.defaultBranch) {
+				const error = new Error("not able to resolve sha1");
+				promiseCache.set(key, Promise.reject(error));
+				throw error;
+			}
+		} else {
+			commitID = json.data.root.repository.commit.commit.sha1;
 		}
-		const found = { commitID: json.data.root.repository.commit.commit.sha1, defaultBranch: json.data.root.repository.defaultBranch };
+		const found = { commitID, defaultBranch: json.data.root.repository.defaultBranch };
 		promiseCache.set(key, Promise.resolve(found));
 		return found;
 	});

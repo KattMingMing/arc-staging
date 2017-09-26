@@ -1,3 +1,4 @@
+import * as backend from "app/backend";
 import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
 import * as github from "app/github/util";
 import { eventLogger } from "app/util/context";
@@ -5,18 +6,17 @@ import { GitHubBlobUrl, GitHubMode, GitHubPullUrl, GitHubRepositoryUrl, OpenInSo
 import * as React from "react";
 
 interface State {
-	resolvedRevs?: {
-		head: string,
-		base: string,
-	};
+	resolvedRevs: { [key: string]: backend.ResolvedRevResp };
 }
 
 export class ContextualSourcegraphButton extends React.Component<{}, State> {
 	constructor() {
 		super();
 		this.state = {
-			resolvedRevs: undefined,
+			resolvedRevs: {},
 		};
+
+		this.resolveRevs();
 	}
 
 	open(mode: GitHubMode): void {
@@ -36,17 +36,26 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 		}
 	}
 
-	getPullRequestMergeBaseFromSource(): void {
-		fetch(`${window.location.origin}${window.location.pathname}?_pjax=%23js-repo-pjax-container`, { method: "GET" })
-			.then(resp => resp.text())
-			.then(blob => {
-				const resolvedRevs = github.getDeltaRevsFromPageSource(blob);
-				if (resolvedRevs) {
-					this.setState({
-						resolvedRevs,
-					});
-				}
-			});
+	resolveRevs(): void {
+		const { uri, rev } = github.parseURL();
+		if (!uri) {
+			return;
+		}
+		const key = backend.cacheKey(uri, rev);
+		if (this.state.resolvedRevs[key] && this.state.resolvedRevs[key].commitID) {
+			return; // nothing to do
+		}
+		backend.resolveRev(uri, rev).then((resp) => {
+			let repoStat;
+			if (rev) {
+				// Empty rev is checked to determine if the user has access to the repo.
+				// Non-empty is checked to determine if Sourcegraph.com is sync'd.
+				repoStat = { [uri]: resp };
+			}
+			this.setState({ resolvedRevs: { ...this.state.resolvedRevs, [key]: resp, ...repoStat } });
+		}).catch(() => {
+			// NO-OP
+		});
 	}
 
 	openOnSourcegraphProps(state: GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl): { label: string, openProps: OpenInSourcegraphProps, ariaLabel?: string } {
@@ -64,6 +73,14 @@ export class ContextualSourcegraphButton extends React.Component<{}, State> {
 	render(): JSX.Element | null {
 		const gitHubState = github.getGitHubState(window.location.href);
 		if (!gitHubState) {
+			return null;
+		}
+		const { uri, rev } = github.parseURL();
+		if (!uri) {
+			return null;
+		}
+		const key = backend.cacheKey(uri, rev);
+		if (!this.state.resolvedRevs[key] || this.state.resolvedRevs[key].notFound) {
 			return null;
 		}
 

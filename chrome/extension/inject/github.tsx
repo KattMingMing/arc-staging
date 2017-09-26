@@ -26,6 +26,9 @@ let toggled = false;
 
 export function injectGitHubApplication(marker: HTMLElement): void {
 	window.addEventListener("load", () => {
+		$.pjax.defaults.maxCacheLength = 0;
+		$.pjax.defaults.timeout = 0;
+
 		document.body.appendChild(marker);
 		injectModules(true);
 		chrome.runtime.sendMessage({ type: "getIdentity" }, (identity) => {
@@ -77,9 +80,54 @@ export function injectGitHubApplication(marker: HTMLElement): void {
 		updateModulesForPageNavigation();
 	});
 
+	progressiveContainerObserver();
+
 	window.addEventListener("resize", _.debounce(() => {
 		updateMarginForWidth();
 	}, 500, { trailing: true }), true);
+}
+
+function progressiveContainerObserver(): void {
+	const progressiveLoaders = document.getElementsByClassName("diff-progressive-loader");
+	// Check that there is a progressive loader that will be removed.
+	if (progressiveLoaders.length === 0) {
+		return;
+	}
+	const loaders: Element[] = [];
+	for (let i = 0; i < progressiveLoaders.length; i++) {
+		const element = progressiveLoaders[i];
+		loaders.push(element);
+	}
+
+	const observer = new MutationObserver((mutations) => {
+		mutations.forEach((mutation) => {
+			const nodes = Array.prototype.slice.call(mutation.removedNodes);
+			nodes.forEach((node) => {
+				loaders.forEach(loader => {
+					if (loader === node) {
+						const index = loaders.indexOf(loader);
+						loaders.splice(index);
+						injectBlobAnnotators();
+						if (loaders.length === 0) {
+							observer.disconnect();
+							return;
+						}
+					}
+				});
+			});
+		});
+	});
+
+	const filebucket = document.getElementById("files_bucket");
+	if (!filebucket) {
+		return;
+	}
+	observer.observe(filebucket, {
+		childList: true,
+		subtree: true,
+		attributes: false,
+		characterData: false,
+	});
 }
 
 function updateModulesForPageNavigation(): void {
@@ -202,7 +250,7 @@ function updateMarginForWidth(): void {
 	}
 	const repoContent = document.querySelector(".repository-content") as HTMLElement;
 	if (!repoContent) {
-		document.body.style.marginLeft = "280px";
+		document.body.style.marginLeft = "0px";
 		return;
 	}
 	const widthDiff = window.innerWidth - repoContent.clientWidth;
@@ -252,7 +300,7 @@ function handleSelected(url: string, newTab: boolean): void {
 		selectTreeNodeForURL();
 		return;
 	}
-	$.pjax.defaults.timeout = 0;
+
 	$.pjax({
 		url,
 		container: "#js-repo-pjax-container, .context-loader-container, [data-pjax-container]",
@@ -327,24 +375,24 @@ function injectBlobAnnotators(): void {
 	}
 
 	const uri = repoURI;
-	function addBlobAnnotator(file: HTMLElement, mount: HTMLElement): void {
-		const { headFilePath, baseFilePath } = isDelta ? github.getDeltaFileName(file) : { headFilePath: path, baseFilePath: null };
-		if (!headFilePath) {
-			console.error("cannot determine file path");
-			return;
-		}
-
-		render(<BlobAnnotator headPath={headFilePath} repoURI={uri} fileElement={file} basePath={baseFilePath} />, mount);
-	}
-
 	const files = github.getFileContainers();
 	for (const file of Array.from(files)) {
 		const mount = github.createBlobAnnotatorMount(file);
 		if (!mount) {
 			return;
 		}
-		addBlobAnnotator(file as HTMLElement, mount);
+		addBlobAnnotator(file as HTMLElement, mount, uri, isDelta, path);
 	}
+}
+
+function addBlobAnnotator(file: HTMLElement, mount: HTMLElement, uri: string, isDelta: boolean | undefined, path: string | undefined): void {
+	const { headFilePath, baseFilePath } = isDelta ? github.getDeltaFileName(file) : { headFilePath: path, baseFilePath: null };
+	if (!headFilePath) {
+		console.error("cannot determine file path");
+		return;
+	}
+
+	render(<BlobAnnotator headPath={headFilePath} repoURI={uri} fileElement={file} basePath={baseFilePath} />, mount);
 }
 
 /**
