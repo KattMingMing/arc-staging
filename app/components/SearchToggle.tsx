@@ -64,6 +64,7 @@ function sourcegraphSearchToggle(toggled: boolean): void {
 			icon.style.opacity = toggled ? "1.0" : "0.5";
 		};
 		container.id = SOURCEGRAPH_SEARCH_TOGGLE_ID;
+		container.style.minWidth = "30px";
 		container.style.width = "30px";
 		container.style.height = "30px";
 		container.style.display = "inline-block";
@@ -74,7 +75,13 @@ function sourcegraphSearchToggle(toggled: boolean): void {
 		container.style.borderTopRightRadius = "3px";
 		container.style.borderBottomRightRadius = "3px";
 		container.appendChild(a);
-		insertAfter(container, formContainer.parentNode!);
+		if (formContainer.parentElement) {
+			if (formContainer.parentElement.classList.contains("flex-items-center") || formContainer.parentElement.className === "d-lg-flex flex-items-center mr-3") {
+				insertAfter(container, formContainer);
+			} else {
+				insertAfter(container, formContainer.parentNode!);
+			}
+		}
 		const form = document.querySelector(".js-site-search-form") as HTMLFormElement;
 		if (form) {
 			wrapper.style.borderTopRightRadius = "0px";
