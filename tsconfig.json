@@ -1,43 +1,31 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "outDir": "./out",
+    "target": "es2015",
     "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "baseUrl": ".",
-    "paths": {
-      "app/*": [
-        "app/*"
-      ],
-      "chrome/*": [
-        "chrome/*"
-      ]
-    },
     "lib": [
-      "es2016",
-      "dom"
-    ],
-    "types": [
-      "chrome",
-      "filesystem",
-      "filewriter",
-      "node"
+      "es2017",
+      "dom",
+      "dom.iterable",
+      "es2017.object"
     ],
     "jsx": "react",
     "allowJs": true,
     "sourceMap": true,
     "strictNullChecks": true,
     "experimentalDecorators": true,
-    "noEmit": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
-  },
-  "include": [
-    "app/**/*.tsx",
-    "chrome/**/*.tsx",
-    "phabricator/**/*.tsx",
-    "node_modules/@types/chrome/index.d.ts",
-    "node_modules/@types/filesystem/index.d.ts",
-    "node_modules/@types/filewriter/index.d.ts",
-    "node_modules/@types/node/index.d.ts"
-  ]
+    "noUnusedParameters": false,
+    "downlevelIteration": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitThis": true,
+    "plugins": [
+      {
+        "name": "tslint-language-service",
+        "configFile": "./tslint.json"
+      }
+    ]
+  }
 }

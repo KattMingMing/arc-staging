@@ -3,38 +3,38 @@ doctype html
 html
   head
     title Sourcegraph extension
-    link(href='/css/options.css', rel='stylesheet', type='text/css')
+    link(href='/css/style.bundle.css', rel='stylesheet', type='text/css')
   body
-    div(class="options")
-      div(id="sourcegraph-repository-search-container")
-        h4(class="section-header") Search:
-        p(class="section-subheader") Display Sourcegraph search toggle in repository search input.
-        div(class="option-container")
-          input(type="checkbox", id="sourcegraph-repository-search")
-          label(class="options-label") Enable Sourcegraph search toggle
-      div(id="sourcegraph-file-tree-container")
-        h4(class="section-header") Navigation:
-        p(class="section-subheader") Display repository file tree navigation (Use "Option + T" to toggle visibility)
-        div(class="option-container")
-          input(type="checkbox", id="sourcegraph-file-tree-navigation")
-          label(class="options-label") Enable repository file tree
-      h4(class="section-header") Advanced options
-      p(class="section-subheader") Warning: changing these options may break your Chrome extension.
-      form#sourcegraph_url_form
-        div(class="option-container")
-          label(class="advanced-options-label") Sourcegraph URL:
-          input(id="sourcegraph_url", class="url-input")
-          input(type="submit", value="Save", class="save-button")
-      div(id="sourcegraph-editor-container")
-        h4(class="section-header") Editor Beta
-        p(class="section-subheader") Configure Sourcegraph editor beta options.
-        div(class="option-container")
-          input(type="checkbox", id="sourcegraph-open-in-editor")
-          label(class="options-label") Enable open in Sourcegraph editor
-      div(id="sourcegraph-event-tracking-container")
-        h4(class="section-header") Data collection:
-        p(class="section-subheader") Allow data collection for an improved user experience and personalization.
-        div(class="option-container")
-          input(type="checkbox", id="sourcegraph-enable-event-tracking")
-          label(class="options-label") Enable event logging
+    div(class="sg-options")
+      div(id="sg-repository-search-container")
+        h4(class="sg-section-header") Search:
+        p(class="sg-section-subheader") Display Sourcegraph search toggle in repository search input.
+        div(class="sg-option-container")
+          input(type="checkbox", id="sg-repository-search")
+          label(class="sg-options-label") Enable Sourcegraph search toggle
+      div(id="sg-file-tree-container")
+        h4(class="sg-section-header") Navigation:
+        p(class="sg-section-subheader") Display repository file tree navigation (Use "Option + T" to toggle visibility)
+        div(class="sg-option-container")
+          input(type="checkbox", id="sg-file-tree-navigation")
+          label(class="sg-options-label") Enable repository file tree
+      h4(class="sg-section-header") Advanced options
+      p(class="sg-section-subheader") Warning: changing these options may break your Chrome extension.
+      form#sg-url-form
+        div(class="sg-option-container")
+          label(class="sg-advanced-options-label") Sourcegraph URL:
+          input(id="sg-url", class="sg-url-input")
+          input(type="submit", value="Save", class="sg-save-button")
+      div(id="sg-editor-container")
+        h4(class="sg-section-header") Editor Beta
+        p(class="sg-section-subheader") Configure Sourcegraph editor beta options.
+        div(class="sg-option-container")
+          input(type="checkbox", id="sg-open-in-editor")
+          label(class="sg-options-label") Enable open in Sourcegraph editor
+      div(id="sg-event-tracking-container")
+        h4(class="sg-section-header") Data collection:
+        p(class="sg-section-subheader") Allow data collection for an improved user experience and personalization.
+        div(class="sg-option-container")
+          input(type="checkbox", id="sg-enable-event-tracking")
+          label(class="sg-options-label") Enable event logging
       script(src='/js/options.bundle.js')

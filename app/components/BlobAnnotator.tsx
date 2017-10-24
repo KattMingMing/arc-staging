@@ -1,268 +1,481 @@
-import * as backend from "app/backend";
-import { OpenOnSourcegraph } from "app/components/OpenOnSourcegraph";
-import * as github from "app/github/util";
-import { addAnnotations, RepoRevSpec } from "app/tooltips";
-import * as utils from "app/util";
-import { eventLogger } from "app/util/context";
-import { CodeCell, GitHubBlobUrl, GitHubMode, OpenInSourcegraphProps } from "app/util/types";
-import * as React from "react";
+import * as React from 'react'
+import 'rxjs/add/observable/fromEvent'
+import 'rxjs/add/observable/fromPromise'
+import 'rxjs/add/observable/interval'
+import 'rxjs/add/observable/merge'
+import 'rxjs/add/operator/catch'
+import 'rxjs/add/operator/debounceTime'
+import 'rxjs/add/operator/do'
+import 'rxjs/add/operator/filter'
+import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/switchMap'
+import 'rxjs/add/operator/take'
+import 'rxjs/add/operator/takeUntil'
+import 'rxjs/add/operator/zip'
+import { Observable } from 'rxjs/Observable'
+import { Subject } from 'rxjs/Subject'
+import { Subscription } from 'rxjs/Subscription'
+import { fetchHover, fetchJumpURL, isEmptyHover } from '../backend/lsp'
+import { OpenOnSourcegraph } from '../components/OpenOnSourcegraph'
+import * as github from '../github/util'
+import { AbsoluteRepoFile, AbsoluteRepoFilePosition, CodeCell, MaybeDiffSpec, OpenInSourcegraphProps, PositionSpec } from '../repo/index'
+import {
+    convertNode,
+    createTooltips,
+    getTableDataCell,
+    hideTooltip,
+    isOtherFileTooltipVisible,
+    isTooltipVisible,
+    TooltipData,
+    updateTooltip,
+} from '../repo/tooltips'
+import { eventLogger, getPathExtension } from '../util/context'
+import { parseHash } from '../util/url'
 
-const className = "btn btn-sm tooltipped tooltipped-n";
-const buttonStyle = { marginRight: "5px", textDecoration: "none", color: "inherit" };
-const iconStyle = { marginTop: "-1px", paddingRight: "4px", fontSize: "18px" };
+export interface ButtonProps {
+    className: string
+    style: React.CSSProperties
+    iconStyle?: React.CSSProperties
+}
 
-interface Props {
-	headPath: string;
-	basePath: string | null;
-	repoURI: string;
-	fileElement: HTMLElement;
-	rev?: string;
+interface Props extends AbsoluteRepoFile, Partial<PositionSpec> {
+    fileElement: HTMLElement
+    getTableElement: () => HTMLTableElement
+    getCodeCells: () => CodeCell[]
+    getTargetLineAndOffset: (target: HTMLElement, opt: MaybeDiffSpec) => { line: number, character: number, word: string } | undefined
+    findElementWithOffset: (cell: HTMLElement, line: number, offset: number, opt: MaybeDiffSpec) => HTMLElement | undefined
+    filterTarget: (target: HTMLElement) => boolean
+    getNodeToConvert: (td: HTMLTableDataCellElement) => HTMLElement
+    isCommit: boolean
+    isPullRequest: boolean
+    isSplitDiff: boolean
+    isBase: boolean
+    buttonProps: ButtonProps
 }
 
 interface State {
-	resolvedRevs: { [key: string]: backend.ResolvedRevResp };
+    fixedTooltip?: TooltipData
 }
 
 export class BlobAnnotator extends React.Component<Props, State> {
-	revisionChecker: any;
+    public state: State = {}
+    public fileExtension: string
+    public isDelta: boolean
+    private fixedTooltip = new Subject<Props>()
+    private subscriptions = new Subscription()
+    private cells = new Map<number, CodeCell>()
 
-	// language is determined by the path extension
-	fileExtension: string;
+    constructor(props: Props) {
+        super(props)
+        this.fileExtension = getPathExtension(this.props.filePath)
+        this.isDelta = this.props.isCommit || this.props.isPullRequest
+        this.updateCodeCells()
+    }
 
-	isDelta?: boolean;
-	isCommit?: boolean;
-	isPullRequest?: boolean;
-	isSplitDiff?: boolean;
-	isCodePage?: boolean;
+    public componentDidMount(): void {
+        createTooltips()
+        this.addTooltipEventListeners(this.props.getTableElement())
 
-	// rev is defined for blob view
-	rev?: string;
+        if (this.props.position) {
+            const cell = this.getCodeCell(this.props.position.line)
+            if (this.props.position.character) {
+                const el = this.props.findElementWithOffset(cell, this.props.position.line, this.props.position.character, this.diffSpec())
+                if (el) {
+                    el.classList.add('selection-highlight-sticky')
+                }
+            }
+        }
 
-	// base/head properties are defined for diff views (commit + pull request)
-	baseCommitID?: string;
-	headCommitID?: string;
-	baseRepoURI?: string;
-	headRepoURI?: string;
+        document.addEventListener('sourcegraph:dismissTooltip', this.onTooltipDismissed)
+        window.addEventListener('hashchange', this.handleHashChange)
+    }
 
-	constructor(props: Props) {
-		super(props);
-		this.state = {
-			resolvedRevs: {},
-		};
+    public componentWillUnmount(): void {
+        this.subscriptions.unsubscribe()
+        document.removeEventListener('sourcegraph:dismissTooltip', this.onTooltipDismissed)
+        window.removeEventListener('hashchange', this.handleHashChange)
+    }
 
-		this.fileExtension = utils.getPathExtension(props.headPath);
+    public componentDidUpdate(): void {
+        createTooltips()
+    }
 
-		const { isDelta, isPullRequest, isCommit, isCodePage } = github.parseURL(window.location);
-		let { rev } = github.parseURL(window.location);
-		const gitHubState = github.getGitHubState(window.location.href);
-		// TODO(uforic): Eventually, use gitHubState for everything, but for now, only use it when the branch should have a
-		// slash in it to fix that bug
-		if (gitHubState && gitHubState.mode === GitHubMode.Blob && (gitHubState as GitHubBlobUrl).rev.indexOf("/") > 0) {
-			// correct in case branch has slash in it
-			rev = (gitHubState as GitHubBlobUrl).rev;
-		}
-		this.isDelta = isDelta;
-		this.isPullRequest = isPullRequest;
-		this.isCommit = isCommit;
-		this.isCodePage = isCodePage;
-		this.rev = this.props.rev || rev;
+    public getEventLoggerProps(): any {
+        return {
+            repo: this.props.repoPath,
+            path: this.props.filePath,
+            isPullRequest: this.props.isPullRequest,
+            isCommit: this.props.isCommit,
+            language: this.fileExtension,
+            isPrivateRepo: github.isPrivateRepo(),
+        }
+    }
 
-		if (this.isDelta) {
-			this.isSplitDiff = github.isSplitDiff();
-			const deltaRevs = github.getDeltaRevs();
-			if (!deltaRevs) {
-				console.error("cannot determine deltaRevs");
-				return;
-			}
+    public render(): JSX.Element | null {
+        let props: OpenInSourcegraphProps
+        if (this.isDelta) {
+            props = {
+                repoPath: this.props.repoPath!,
+                filePath: this.props.filePath,
+                rev: this.props.commitID!,
+                query: {
+                    diff: {
+                        rev: this.props.commitID,
+                    },
+                },
+            }
+        } else {
+            props = {
+                repoPath: this.props.repoPath,
+                filePath: this.props.filePath,
+                rev: this.props.rev!,
+            }
+        }
 
-			this.baseCommitID = deltaRevs.base;
-			this.headCommitID = deltaRevs.head;
+        let label = 'View File'
+        if (this.isDelta) {
+            label += this.props.isBase ? ' (base)' : ' (diff)'
+        }
 
-			const deltaInfo = github.getDeltaInfo();
-			if (!deltaInfo) {
-				console.error("cannot determine deltaInfo");
-				return;
-			}
+        return (
+            <div style={{ display: 'inline-block' }}>
+                <OpenOnSourcegraph
+                    label={label}
+                    ariaLabel='View file on Sourcegraph'
+                    openProps={props}
+                    className={this.props.buttonProps.className}
+                    style={this.props.buttonProps.style}
+                    iconStyle={this.props.buttonProps.iconStyle}
+                    onClick={this.onClickOpenFile}
+                />
+            </div>
+        )
+    }
 
-			this.baseRepoURI = deltaInfo.baseURI;
-			this.headRepoURI = deltaInfo.headURI;
-		}
+    private addTooltipEventListeners = (ref: HTMLElement): void => {
+        this.subscriptions.add(
+            this.fixedTooltip
+                .do(() => {
+                    // always hide any existing tooltip when change
+                    hideTooltip()
+                })
+                .filter(props => {
+                    const position = props.position
+                    if (!position) {
+                        this.setFixedTooltip()
+                        return false
+                    }
+                    if (position.line && position.character) {
+                        const cell = this.getCodeCell(position.line)
+                        const el = this.props.findElementWithOffset(cell, position.line, position.character!, this.diffSpec())
+                        if (el) {
+                            el.classList.add('selection-highlight-sticky')
+                            return true
+                        }
+                    }
+                    this.setFixedTooltip()
+                    return false
+                })
+                .map(props => props.position!)
+                .map(pos => this.props.findElementWithOffset(this.getCodeCell(pos.line), pos.line, pos.character, this.diffSpec()))
+                .filter(el => !!el)
+                .map((target: HTMLElement) => {
+                    const loc = this.props.getTargetLineAndOffset(target!, this.diffSpec())
+                    const data = { target, loc }
+                    if (!data.loc) {
+                        return null
+                    }
+                    const ctx = { ...this.props, position: data.loc! }
+                    return { target: data.target, ctx }
+                })
+                .switchMap(data => {
+                    if (data === null) {
+                        return [null]
+                    }
+                    const { target, ctx } = data
+                    return this.getTooltip(target, ctx)
+                        .zip(this.getDefinition(ctx))
+                        .map(([tooltip, defUrl]) => ({ ...tooltip, defUrl: defUrl || undefined } as TooltipData))
+                        .catch(e => {
+                            const data: TooltipData = { target, ctx }
+                            return [data]
+                        })
+                })
+                .subscribe(data => {
+                    if (!data) {
+                        this.setFixedTooltip()
+                        return
+                    }
 
-		this.resolveRevs();
-		this.addAnnotations();
-	}
+                    const contents = data.contents
+                    if (!contents || isEmptyHover({ contents })) {
+                        this.setFixedTooltip()
+                        return
+                    }
 
-	componentDidMount(): void {
-		this.props.fileElement.addEventListener("click", this.clickRefresh);
-		// Set a timer to re-check revision data every 10 seconds, for repos that haven't been
-		// cloned and revs that haven't been sync'd to Sourcegraph.com.
-		// Single-flighted requests / caching prevents spamming the API.
-		this.revisionChecker = setInterval(() => this.resolveRevs(), 5000);
-	}
+                    this.setFixedTooltip(data)
+                    updateTooltip(data, true, this.tooltipActions(data.ctx), this.props.isBase)
+                })
+        )
 
-	componentWillUnmount(): void {
-		if (this.revisionChecker) {
-			clearInterval(this.revisionChecker);
-		}
-		this.props.fileElement.removeEventListener("click", this.clickRefresh);
-	}
+        this.subscriptions.add(
+            Observable.fromEvent<MouseEvent>(ref, 'mouseover')
+                .debounceTime(10)
+                .map(e => e.target as HTMLElement)
+                .filter(this.props.filterTarget)
+                .do(target => {
+                    const td = getTableDataCell(target)
+                    if (!td) {
+                        return
+                    }
+                    const cell = this.props.getNodeToConvert(td)
+                    if (cell && !cell.classList.contains('annotated')) {
+                        cell.classList.add('annotated')
+                        convertNode(cell)
+                        return
+                    }
+                })
+                .map(target => ({ target, loc: this.props.getTargetLineAndOffset(target, this.diffSpec()) }))
+                .filter(data => Boolean(data.loc))
+                .map(data => ({ target: data.target, ctx: { ...this.props, position: data.loc! } }))
+                .switchMap(({ target, ctx }) => {
+                    const tooltip = this.getTooltip(target, ctx)
+                    const tooltipWithJ2D: Observable<TooltipData> = tooltip.zip(this.getDefinition(ctx))
+                        .map(([tooltip, defUrl]) => ({ ...tooltip, defUrl: defUrl || undefined }))
+                    const loading = this.getLoadingTooltip(target, ctx, tooltip)
+                    return Observable.merge(loading, tooltip, tooltipWithJ2D).catch(e => {
+                        const data: TooltipData = { target, ctx }
+                        return [data]
+                    })
+                })
+                .subscribe(data => {
+                    if (isTooltipVisible(this.props, !this.props.isBase) || isOtherFileTooltipVisible(this.props)) {
+                        // If another tooltip is visible for the diff, ignore this mouseover.
+                        return
+                    }
+                    if (!this.state.fixedTooltip) {
+                        updateTooltip(data, false, this.tooltipActions(data.ctx), this.props.isBase)
+                    }
+                })
+        )
+        this.subscriptions.add(
+            Observable.fromEvent<MouseEvent>(ref, 'mouseout')
+                .subscribe(e => {
+                    for (const el of this.props.fileElement.querySelectorAll('.selection-highlight')) {
+                        el.classList.remove('selection-highlight')
+                    }
+                    if (isTooltipVisible(this.props, !this.props.isBase)) {
+                        // If another tooltip is visible for the diff, ignore this mouseover.
+                        return
+                    }
+                    if (!this.state.fixedTooltip) {
+                        if (isTooltipVisible(this.props, this.props.isBase)) {
+                            hideTooltip()
+                        }
+                    }
+                })
+        )
+        this.subscriptions.add(
+            Observable.fromEvent<MouseEvent>(ref, 'click')
+                .map(e => e.target as HTMLElement)
+                .filter(this.props.filterTarget)
+                .filter(target => {
+                    if (!target) {
+                        return false
+                    }
+                    const tooltip = document.querySelector('.sg-tooltip')
+                    if (tooltip && tooltip.contains(target)) {
+                        return false
+                    }
+                    return true
+                })
+                .subscribe(target => {
+                    const row = (target as Element).closest('tr') as HTMLTableRowElement | null
+                    if (!row) {
+                        return
+                    }
+                    for (const el of document.querySelectorAll('.highlighted')) {
+                        el.classList.remove('highlighted')
+                    }
+                    const td = row.lastElementChild as HTMLElement
+                    if (td) {
+                        td.classList.add('highlighted')
+                    }
+                    const position = this.props.getTargetLineAndOffset(target, this.diffSpec())
+                    if (position && !this.isDelta) {
+                        const hash = '#L' + position.line + (position.character ? (':' + position.character) : '')
+                        const url = new URL(window.location.href)
+                        url.hash = hash
+                        if (url.href !== window.location.href && !window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
+                            history.pushState(history.state, '', url.href)
+                        }
+                    }
+                    const nextProps = { ...this.props, position }
+                    this.fixedTooltip.next(nextProps)
+                })
+        )
+    }
 
-	componentDidUpdate(): void {
-		// Reapply annotations after reducer state changes.
-		this.addAnnotations();
-	}
+    private diffSpec = () => {
+        const spec: MaybeDiffSpec = {
+            isDelta: this.isDelta,
+            isBase: this.props.isBase,
+            isSplitDiff: this.props.isSplitDiff,
+        }
+        return spec
+    }
 
-	clickRefresh = (): void => {
-		// Diff expansion is not synchronous, so we must wait for
-		// elements to get added to the DOM before calling into the
-		// annotations code. 500ms is arbitrary but seems to work well.
-		setTimeout(() => this.addAnnotations(), 500);
-	}
+    private handleHashChange = (e: HashChangeEvent): void => {
+        if (e.newURL) {
+            const hashIndex = e.newURL.indexOf('#')
+            const parsed = parseHash(e.newURL.substr(hashIndex))
 
-	updateResolvedRevs(repo: string, rev?: string): void {
-		const key = backend.cacheKey(repo, rev);
-		if (this.state.resolvedRevs[key] && this.state.resolvedRevs[key].commitID) {
-			return; // nothing to do
-		}
-		backend.resolveRev(repo, rev).then((resp) => {
-			let repoStat;
-			if (rev) {
-				// Empty rev is checked to determine if the user has access to the repo.
-				// Non-empty is checked to determine if Sourcegraph.com is sync'd.
-				repoStat = { [repo]: resp };
-			}
-			this.setState({ resolvedRevs: { ...this.state.resolvedRevs, [key]: resp, ...repoStat } });
-		}).catch(() => {
-			// NO-OP
-		});
-	}
+            if (!parsed.line) {
+                return
+            }
 
-	resolveRevs(): void {
-		const repoStat = this.state.resolvedRevs[this.props.repoURI];
-		if (repoStat && repoStat.notFound) {
-			// User doesn't have permission to view repo; no need to fetch.
-			return;
-		}
+            for (const el of document.querySelectorAll('.highlighted')) {
+                el.classList.remove('highlighted')
+            }
+            for (const el of document.querySelectorAll('.selection-highlight-sticky')) {
+                el.classList.remove('selection-highlight-sticky')
+            }
+            const cell = this.getCodeCell(parsed.line) as HTMLElement
+            if (parsed.character) {
+                const el = this.props.findElementWithOffset(cell, parsed.line, parsed.character, this.diffSpec())
+                if (el) {
+                    el.classList.add('selection-highlight-sticky')
+                }
+            }
 
-		if (this.isDelta) {
-			if (this.baseCommitID && this.baseRepoURI) {
-				this.updateResolvedRevs(this.baseRepoURI, this.baseCommitID);
-			}
-			if (this.headCommitID && this.headRepoURI) {
-				this.updateResolvedRevs(this.headRepoURI, this.headCommitID);
-			}
-		} else if (this.rev) {
-			this.updateResolvedRevs(this.props.repoURI, this.rev);
-		} else {
-			console.error("unable to fetch annotations; missing revision data");
-		}
-	}
+            // Don't use `this.setFixedTooltip` b/c it will remove sticky selection highlight.
+            this.setState({ fixedTooltip: undefined })
+            if (isTooltipVisible(this.props, this.props.isBase)) {
+                hideTooltip()
+            }
+        }
+    }
 
-	private getCodeCells(isSplitDiff: boolean, repoRevSpec: RepoRevSpec, el: HTMLElement): CodeCell[] {
-		// The blob is represented by a table; the first column is the line number,
-		// the second is code. Each row is a line of code
-		const table = el.querySelector("table");
-		if (!table) {
-			return [];
-		}
-		return github.getCodeCellsForAnnotation(table, { isSplitDiff, ...repoRevSpec } as any);
-	}
+    /**
+     * getTooltip wraps the asynchronous fetch of tooltip data from the Sourcegraph API.
+     * This Observable will emit exactly one value before it completes. If the resolved
+     * tooltip is defined, it will update the target styling.
+     */
+    private getTooltip(target: HTMLElement, ctx: AbsoluteRepoFilePosition): Observable<TooltipData> {
+        return Observable.fromPromise(fetchHover(ctx))
+            .do(data => {
+                if (isEmptyHover(data)) {
+                    // short-cirtuit, no tooltip data
+                    return
+                }
+                target.style.cursor = 'pointer'
+                target.classList.add('selection-highlight')
+            })
+            .map(data => ({ target, ctx, ...data }))
+    }
+    /**
+     * getDefinition wraps the asynchronous fetch of tooltip data from the Sourcegraph API.
+     * This Observable will emit exactly one value before it completes.
+     */
+    private getDefinition(ctx: AbsoluteRepoFilePosition): Observable<string | null> {
+        return Observable.fromPromise(fetchJumpURL(ctx))
+    }
 
-	addAnnotations = (): void => {
-		// this check is for either when the blob is collapsed or the dom element is not rendered
-		const blobElement = github.tryGetBlobElement(this.props.fileElement);
-		if (!blobElement) {
-			return;
-		}
+    /**
+     * getLoadingTooltip emits "loading" tooltip data after a delay,
+     * iff the other Observable hasn't already emitted a value.
+     */
+    private getLoadingTooltip(target: HTMLElement, ctx: AbsoluteRepoFilePosition, tooltip: Observable<TooltipData>): Observable<TooltipData> {
+        return Observable.interval(500)
+            .take(1)
+            .takeUntil(tooltip)
+            .map(() => ({ target, ctx, loading: true }))
+    }
 
-		/**
-		 * applyAnnotationsIfResolvedRev will call addAnnotations if we've established that the repo@rev exists at Sourcegraph
-		 */
-		const applyAnnotationsIfResolvedRev = (path: string, uri: string, rev?: string, isBase?: boolean) => {
-			const resolvedRev = this.state.resolvedRevs[backend.cacheKey(uri, rev)];
-			if (resolvedRev && resolvedRev.commitID) {
-				const repoRevSpec = { repoURI: uri, rev: resolvedRev.commitID, isDelta: this.isDelta || false, isBase: Boolean(isBase) };
-				const cells = this.getCodeCells(this.isSplitDiff || false, repoRevSpec, blobElement);
-				addAnnotations(path, repoRevSpec, cells);
-			}
-		};
+    private setFixedTooltip = (data?: TooltipData) => {
+        for (const el of this.props.fileElement.querySelectorAll('.selection-highlight')) {
+            el.classList.remove('selection-highlight')
+        }
+        for (const el of this.props.fileElement.querySelectorAll('.selection-highlight-sticky')) {
+            el.classList.remove('selection-highlight-sticky')
+        }
+        if (data) {
+            eventLogger.logClick(this.getEventLoggerProps())
+            data.target.classList.add('selection-highlight-sticky')
+        } else {
+            if (isTooltipVisible(this.props, this.props.isBase)) {
+                hideTooltip()
+            }
+        }
+        this.setState({ fixedTooltip: data || undefined })
+    }
 
-		if (this.isDelta) {
-			if (this.baseCommitID && this.baseRepoURI) {
-				applyAnnotationsIfResolvedRev(this.props.basePath ? this.props.basePath : this.props.headPath, this.baseRepoURI, this.baseCommitID, true);
-			}
-			if (this.headCommitID && this.headRepoURI) {
-				applyAnnotationsIfResolvedRev(this.props.headPath, this.headRepoURI, this.headCommitID, false);
-			}
-		} else {
-			applyAnnotationsIfResolvedRev(this.props.headPath, this.props.repoURI, this.rev, false);
-		}
-	}
+    private onClickOpenFile = (): void => {
+        eventLogger.logOpenFile(this.getEventLoggerProps())
+    }
 
-	getEventLoggerProps(): any {
-		return {
-			repo: this.props.repoURI,
-			path: this.props.headPath,
-			isPullRequest: this.isPullRequest,
-			isCommit: this.isCommit,
-			language: this.fileExtension,
-			isPrivateRepo: github.isPrivateRepo(),
-		};
-	}
+    private handleGoToDefinition = (defCtx: AbsoluteRepoFilePosition) =>
+        (e: MouseEvent) => {
+            eventLogger.logJumpToDef(this.getEventLoggerProps())
+            if (!window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
+                // Assume it is GitHub, make default j2d be within github pages.
+                if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
+                    return
+                }
+                e.preventDefault()
+                if (isTooltipVisible(this.props, this.props.isBase)) {
+                    hideTooltip()
+                }
+                this.setState({ fixedTooltip: undefined })
+                // TODO(john): unsetting fixed tooltip won't work b/c it removes sticky highlight for identity j2d?
+                // this.setFixedTooltip()
+                const sameRepo = this.props.repoPath === defCtx.repoPath
+                const rev = sameRepo ? (this.props.commitID === defCtx.commitID ? this.props.rev : defCtx.commitID || defCtx.rev) : (defCtx.commitID || defCtx.rev)
+                // tslint:disable-next-line
+                const url = `https://${defCtx.repoPath}/blob/${rev || 'master'}/${defCtx.filePath}#L${defCtx.position.line}${defCtx.position.character ? (':' + defCtx.position.character) : ''}`
+                window.location.href = url
+            }
+        }
 
-	render(): JSX.Element | null {
-		if (!this.isCodePage && !this.isPullRequest) {
-			return null;
-		}
-		if (!this.isDelta && !Boolean(this.state.resolvedRevs[this.props.repoURI])) {
-			return null;
-		}
-		if (this.isDelta && !Boolean(this.state.resolvedRevs[this.baseRepoURI as string])) {
-			return null;
-		}
-		const resolvedRevs = this.state.resolvedRevs[this.props.repoURI] as backend.ResolvedRevResp;
-		// We currently do not support private auth.
-		if (resolvedRevs.notFound) {
-			return null;
-		}
+    private handleFindReferences = (ctx: AbsoluteRepoFilePosition) =>
+        (e: MouseEvent) => {
+            eventLogger.logFindRefs(this.getEventLoggerProps())
+        }
 
-		let props: OpenInSourcegraphProps;
-		if (this.isDelta) {
-			props = {
-				repoUri: this.headRepoURI!,
-				path: this.props.headPath,
-				rev: this.headCommitID!,
-				query: {
-					diff: {
-						rev: this.baseCommitID || "",
-					},
-				},
-			};
-		} else {
-			props = {
-				repoUri: this.props.repoURI,
-				path: this.props.headPath,
-				rev: this.rev!,
-			};
-		}
+    private handleDismiss = () => {
+        this.setFixedTooltip()
+    }
 
-		return getSourcegraphButton(props, this.getFileOpenCallback);
-	}
+    private updateCodeCells = () => {
+        this.cells.clear()
+        for (const cell of this.props.getCodeCells()) {
+            this.cells.set(cell.line, cell)
+        }
+    }
 
-	getFileOpenCallback = (): void => {
-		eventLogger.logOpenFile(this.getEventLoggerProps());
-	}
+    private tooltipActions = (ctx: AbsoluteRepoFilePosition) =>
+        ({ definition: this.handleGoToDefinition, references: this.handleFindReferences, dismiss: this.handleDismiss })
 
-	getAuthFileCallback = (): void => {
-		eventLogger.logAuthClicked(this.getEventLoggerProps());
-	}
-}
+    private getCodeCell(line: number): HTMLElement {
+        let cell: HTMLElement
+        // TODO(john): this is less efficient than it needs to be;
+        // non-expanding file views don't need to recalculate code cells.
+        // if (this.isDelta) {
+        this.updateCodeCells()
+        cell = this.cells.get(line)!.cell
+        // } else {
+        //     const table = this.props.getTableElement()
+        //     const row = table.rows[line - 1]
+        //     cell = row.children[1] as HTMLElement
+        // }
+        if (!cell.classList.contains('annotated')) {
+            convertNode(cell)
+            cell.classList.add('annotated')
+        }
+        return cell
+    }
 
-function getSourcegraphButton(openProps: OpenInSourcegraphProps, fileCallack: () => void): JSX.Element {
-	const callback = fileCallack;
-	const ariaLabel = "View file on Sourcegraph";
-	const customIconStyle = iconStyle;
-	return <div style={{ display: "inline-block" }}>
-		<OpenOnSourcegraph label="View File" ariaLabel={ariaLabel} openProps={openProps} className={className} style={buttonStyle} iconStyle={customIconStyle} onClick={() => callback()} />
-	</div>;
+    private onTooltipDismissed = () => {
+        this.setState({ fixedTooltip: undefined })
+    }
 }

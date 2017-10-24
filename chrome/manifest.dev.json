@@ -18,7 +18,8 @@
 			"matches": [
 				"https://github.com/*",
 				"https://sourcegraph.com/*",
-				"https://localhost:3443/*"
+				"https://localhost:3443/*",
+				"http://phabricator.aws.sgdev.org/*"
 			],
 			"run_at": "document_end",
 			"js": [
@@ -31,8 +32,7 @@
 			],
 			"run_at": "document_end",
 			"css": [
-				"css/highlight.css",
-				"css/options.css"
+				"css/style.bundle.css"
 			]
 		}
 	],
@@ -51,7 +51,8 @@
 		"nativeMessaging",
 		"https://github.com/*",
 		"https://localhost:3443/*",
-		"https://sourcegraph.com/*"
+		"https://sourcegraph.com/*",
+		"http://phabricator.aws.sgdev.org/*"
 	],
 	"optional_permissions": [
 		"http://*/",

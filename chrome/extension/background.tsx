@@ -1,118 +1,100 @@
-import { TelligentWrapper } from "app/tracking/TelligentWrapper";
-import { isFirefoxExtension } from "app/util";
-import { sourcegraphUrl } from "app/util/context";
-import * as bluebird from "bluebird";
+import { TelligentWrapper } from '../../app/tracking/TelligentWrapper'
+import { sourcegraphUrl } from '../../app/util/context'
 
-let telligentWrapper: TelligentWrapper | null = null;
-Promise = (bluebird as any);
+const telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
 
-function promisifier(method: any): (...args: any[]) => Promise<any> {
-	return (...args) => new Promise((resolve) => {
-		args.push(resolve);
-		method.apply(this, args);
-	});
+const application = 'com.sourcegraph.browser_ext_host'
+let port: any = null
+
+if (process.env.NODE_ENV === 'development') {
+    try {
+        port = chrome.runtime.connectNative(application)
+        // port.onMessage.addListener((e) => console.log("port connected", e));
+        port.onDisconnect.addListener(e => {
+            console.error('unexpected disconnect', e)
+            port = null
+        })
+    } catch (err) {
+        console.error(err)
+    }
 }
 
-function promisifyAll(obj: any, list: string[]): void {
-	list.forEach(api => bluebird.promisifyAll(obj[api], { promisifier }));
-}
-
-// let chrome extension api support Promise
-promisifyAll(chrome.storage, ["local"]);
-
-telligentWrapper = new TelligentWrapper("SourcegraphExtension", "BrowserExtension", true, true);
-
-const application = "com.sourcegraph.browser_ext_host";
-let port: any = null;
-
-if (process.env.NODE_ENV === "development") {
-	try {
-		port = chrome.runtime.connectNative(application);
-		// port.onMessage.addListener((e) => console.log("port connected", e));
-		port.onDisconnect.addListener((e) => {
-			console.error("unexpected disconnect", e);
-			port = null;
-		});
-	} catch (err) {
-		console.error(err);
-	}
-}
-
-let trackingEnabled = true;
-
-chrome.storage.sync.get((items) => {
-	if (isFirefoxExtension()) {
-		trackingEnabled = items.eventTrackingEnabled;
-	} else if (items.eventTrackingEnabled === undefined) {
-		chrome.storage.sync.set({ eventTrackingEnabled: true });
-	}
-});
+let trackingEnabled = true
+chrome.storage.sync.get(items => {
+    trackingEnabled = items.eventTrackingEnabled
+})
+chrome.storage.onChanged.addListener(change  => {
+    console.log('got a change!!!', change)
+    chrome.storage.sync.get(items => {
+        trackingEnabled = items.eventTrackingEnabled
+    })
+})
 
 chrome.runtime.onMessage.addListener((message, _, cb) => {
-	switch (message.type) {
-		case "setIdentity":
-			chrome.storage.local.set({ identity: message.identity });
-			return;
+    switch (message.type) {
+        case 'setIdentity':
+            chrome.storage.local.set({ identity: message.identity })
+            return
 
-		case "getIdentity":
-			chrome.storage.local.get("identity", (obj) => {
-				const { identity } = obj;
-				cb(identity);
-			});
-			return true;
+        case 'getIdentity':
+            chrome.storage.local.get('identity', obj => {
+                const { identity } = obj
+                cb(identity)
+            })
+            return true
 
-		case "getSessionToken":
-			chrome.cookies.get({ url: sourcegraphUrl, name: "sg-session" }, (sessionToken) => {
-				cb(sessionToken ? sessionToken.value : null);
-			});
-			return true;
+        case 'getSessionToken':
+            chrome.cookies.get({ url: sourcegraphUrl, name: 'sg-session' }, sessionToken => {
+                cb(sessionToken ? sessionToken.value : null)
+            })
+            return true
 
-		case "openSourcegraphTab":
-			chrome.tabs.create({ url: message.url });
-			return true;
+        case 'openSourcegraphTab':
+            chrome.tabs.create({ url: message.url })
+            return true
 
-		case "openEditor":
-			const msg = { cmd: message.cmd };
-			if (port) {
-				port.postMessage(msg);
-			} else {
-				chrome.runtime.sendNativeMessage(application, msg, cb);
-			}
-			return true;
+        case 'openEditor':
+            const msg = { cmd: message.cmd }
+            if (port) {
+                port.postMessage(msg)
+            } else {
+                chrome.runtime.sendNativeMessage(application, msg, cb)
+            }
+            return true
 
-		case "trackEvent":
-			if (telligentWrapper && trackingEnabled) {
-				telligentWrapper.track(message.payload.eventAction, message.payload);
-			}
-			return;
+        case 'trackEvent':
+            if (telligentWrapper && trackingEnabled) {
+                telligentWrapper.track(message.payload.eventAction, message.payload)
+            }
+            return
 
-		case "trackView":
+        case 'trackView':
 
-			if (telligentWrapper) {
-				telligentWrapper.track("view", message.payload);
-			}
-			return;
+            if (telligentWrapper) {
+                telligentWrapper.track('view', message.payload)
+            }
+            return
 
-		case "setTrackerUserId":
-			if (telligentWrapper) {
-				telligentWrapper.setUserId(message.payload);
-			}
-			return;
+        case 'setTrackerUserId':
+            if (telligentWrapper) {
+                telligentWrapper.setUserId(message.payload)
+            }
+            return
 
-		case "setTrackerDeviceId":
-			if (telligentWrapper) {
-				telligentWrapper.addStaticMetadataObject({ deviceInfo: { TelligentWebDeviceId: message.payload } });
-			}
-			return;
+        case 'setTrackerDeviceId':
+            if (telligentWrapper) {
+                telligentWrapper.addStaticMetadataObject({ deviceInfo: { TelligentWebDeviceId: message.payload } })
+            }
+            return
 
-		case "setTrackerGAClientId":
-			if (telligentWrapper) {
-				telligentWrapper.addStaticMetadataObject({ deviceInfo: { GAClientId: message.payload } });
-			}
-			return;
-	}
-});
+        case 'setTrackerGAClientId':
+            if (telligentWrapper) {
+                telligentWrapper.addStaticMetadataObject({ deviceInfo: { GAClientId: message.payload } })
+            }
+            return
+    }
+})
 
 if (chrome.runtime.setUninstallURL) {
-	chrome.runtime.setUninstallURL("https://about.sourcegraph.com/uninstall/");
+    chrome.runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
 }

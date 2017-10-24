@@ -1,59 +1,151 @@
-import { EventLogger } from "app/tracking/EventLogger";
-import { PhabricatorInstance } from "app/util/classes";
+import { EventLogger } from '../tracking/EventLogger'
 
-export let eventLogger: EventLogger;
+export let eventLogger: EventLogger
 
 export function setEventLogger(logger: EventLogger): void {
-	if (eventLogger) {
-		console.error(`event logger is being set twice, currently is ${eventLogger} and being set to ${logger}`);
-	}
-	eventLogger = logger;
+    if (eventLogger) {
+        console.error(`event logger is being set twice, currently is ${eventLogger} and being set to ${logger}`)
+    }
+    eventLogger = logger
 }
 
-// TODO(john): fix initialization (without setting this, the background script cannot scrape cookies
-// because the Sourcegraph url is undefined).
-export let sourcegraphUrl: string = "https://sourcegraph.com";
+export let sourcegraphUrl = window.SOURCEGRAPH_URL || 'https://sourcegraph.com'
 
-export let eventTrackingEnabled: boolean = false;
+export let eventTrackingEnabled = false
 
-export let sourcegraphRepoSearchToggled: boolean = false;
+export let sourcegraphRepoSearchToggled = false
 
-export let repositorySearchEnabled: boolean = false;
+export let repositorySearchEnabled = false
 
-export let repositoryFileTreeEnabled: boolean = false;
+export let repositoryFileTreeEnabled = false
 
-export let openInEditorEnabled: boolean = false;
+export let openInEditorEnabled = false
 
 export function setSourcegraphUrl(url: string): void {
-	sourcegraphUrl = url;
-}
-
-export let phabricatorInstance: PhabricatorInstance;
-
-export function setPhabricatorInstance(instance: PhabricatorInstance): void {
-	phabricatorInstance = instance;
+    sourcegraphUrl = url
 }
 
 export function isBrowserExtension(): boolean {
-	return !phabricatorInstance;
+    return window.SOURCEGRAPH_PHABRICATOR_EXTENSION || false
 }
 
 export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
-	sourcegraphRepoSearchToggled = enabled;
+    sourcegraphRepoSearchToggled = enabled
 }
 
 export function setEventTrackingEnabled(enabled: boolean): void {
-	eventTrackingEnabled = enabled;
+    eventTrackingEnabled = enabled
 }
 
 export function setRepositorySearchEnabled(enabled: boolean): void {
-	repositorySearchEnabled = enabled;
+    repositorySearchEnabled = enabled
 }
 
 export function setRepositoryFileTreeEnabled(enabled: boolean): void {
-	repositoryFileTreeEnabled = enabled;
+    repositoryFileTreeEnabled = enabled
 }
 
 export function setOpenInEditorEnabled(enabled: boolean): void {
-	openInEditorEnabled = enabled;
+    openInEditorEnabled = enabled
+}
+
+/**
+ * supportedExtensions are the file extensions
+ * the extension will apply annotations to
+ */
+export const supportedExtensions = new Set<string>([
+    'go', // Golang
+    'ts', 'tsx', // TypeScript
+    'js', 'jsx', // JavaScript
+    'java', // Java
+    'py', // Python
+    'php', // PHP
+])
+
+/**
+ * getModeFromExtension returns the LSP mode for the
+ * provided file extension (e.g. "jsx")
+ */
+export function getModeFromExtension(ext: string): string {
+    switch (ext) {
+        case 'go':
+            return 'go'
+        case 'ts':
+        case 'tsx':
+            return 'typescript'
+        case 'js':
+        case 'jsx':
+            return 'javascript'
+        case 'java':
+            return 'java'
+        case 'py':
+        case 'pyc':
+        case 'pyd':
+        case 'pyo':
+        case 'pyw':
+        case 'pyz':
+            return 'python'
+        case 'php':
+        case 'phtml':
+        case 'php3':
+        case 'php4':
+        case 'php5':
+        case 'php6':
+        case 'php7':
+        case 'phps':
+            return 'php'
+        default:
+            return 'unknown'
+    }
+}
+
+export function getPathExtension(path: string): string {
+    const pathSplit = path.split('.')
+    if (pathSplit.length === 1) {
+        return ''
+    }
+    if (pathSplit.length === 2 && pathSplit[0] === '') {
+        return '' // e.g. .gitignore
+    }
+    return pathSplit[pathSplit.length - 1].toLowerCase()
+}
+
+export function getPlatformName(): string {
+    if (window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
+        return 'phabricator-integration'
+    }
+    return isFirefoxExtension() ? 'firefox-extension' : 'chrome-extension'
+}
+
+export function getExtensionVersion(): string {
+    const c = chrome as any
+    if (c && c.app && c.app.getDetails) {
+        const details = c.app.getDetails()
+        if (details && details.version) {
+            return details.version
+        }
+    }
+    if (c && c.runtime && c.runtime.getManifest) {
+        const manifest = c.runtime.getManifest()
+        if (manifest && manifest.version) {
+            return manifest.version
+        }
+    }
+    return 'NO_VERSION'
+}
+
+export function isFirefoxExtension(): boolean {
+    return window.navigator.userAgent.indexOf('Firefox') !== -1
+}
+
+export function isE2ETest(): boolean {
+    return process.env.NODE_ENV === 'test'
+}
+
+/**
+ * This method created a unique username based on the platform and domain the user is visiting.
+ * Examples: sg_dev_phabricator:matt , or uber_phabricator:matt
+ */
+export function getDomainUsername(domain: string, username: string): string {
+    return `${domain}:${username}`
 }

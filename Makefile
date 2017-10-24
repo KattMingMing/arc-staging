@@ -3,32 +3,25 @@
 default: bundle
 
 install:
-	yarn
+	npm install
 
-bundle: install
-	yarn run build
+build: install
+	npm run build
+
+bundle: build
 	zip -r chrome-bundle.zip dist/*
 	cd dist && zip -r ../firefox-bundle.xpi *
 
 phabricator: clean build
-	# this is phabricator, not umami, because we don't control the code and it references phabricator
-	cp build/js/umami.bundle.js ../../ui/assets/scripts/phabricator.bundle.js
-	# this should be umami, because the last line of the above bundle asks for umami.bundle.js.map
-	cp build/js/umami.bundle.js.map ../../ui/assets/scripts/umami.bundle.js.map
-	cp build/js/sgdev.bundle.js ../../ui/assets/scripts/sgdev.bundle.js
-	cp build/js/sgdev.bundle.js.map ../../ui/assets/scripts/sgdev.bundle.js.map
+	cp dist/js/phabricator.bundle.js ../../ui/assets/scripts/phabricator.bundle.js
+	cp dist/js/phabricator.bundle.js.map ../../ui/assets/scripts/phabricator.bundle.js.map
 
 test-unit:
-	yarn run test
+	npm run test
 
 test-watch:
-	yarn run test:auto
+	npm run test:auto
 
-fmt:
-	yarn run fmt
-
-fmt-check:
-	yarn run fmt-check
 
 selenium-chrome: build
 	docker build --no-cache -t us.gcr.io/sourcegraph-dev/selenium-standalone-chrome-with-extension:latest .
@@ -38,7 +31,7 @@ deploy-e2e:
 	cd ../../test/e2e2 && make deploy
 
 clean:
-	rm -rf build/ dev/ .checksum node_modules/ chrome-bundle.zip firefox-bundle.xpi
+	rm -rf dist/ dev/ .checksum chrome-bundle.zip firefox-bundle.xpi
 
 export CHROME_BUNDLE ?= $(shell pwd)/chrome-bundle.zip
 deploy: clean bundle test-unit deploy-e2e

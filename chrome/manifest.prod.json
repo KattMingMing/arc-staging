@@ -34,8 +34,7 @@
 			],
 			"run_at": "document_end",
 			"css": [
-				"css/highlight.css",
-				"css/options.css"
+				"css/style.bundle.css"
 			]
 		}
 	],
