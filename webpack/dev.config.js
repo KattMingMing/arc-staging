@@ -11,7 +11,7 @@ module.exports = {
 		phabricator: ['babel-polyfill', path.join(__dirname, '../app/phabricator/extension.tsx')]
 	},
 	output: {
-		path: process.env.GENERATE_SOURCEGRAPH_ASSETS ? path.join(__dirname, '../../../ui/assets/extension/scripts') : path.join(__dirname, '../dist/js'),
+		path: path.join(__dirname, '../dist/js'),
 		filename: '[name].bundle.js',
 		chunkFilename: '[id].chunk.js'
 	},
@@ -49,23 +49,23 @@ module.exports = {
 				})],
 			},
 			{
-                test: /\.jsx?$/,
-                loader: 'babel-loader'
-            },
+				test: /\.jsx?$/,
+				loader: 'babel-loader'
+			},
 			{
-                // sass / scss loader for webpack
-                test: /\.(css|sass|scss)$/,
-                loader: ExtractTextPlugin.extract([
-                    'css-loader',
-                    'postcss-loader',
-                    {
-                        loader: 'sass-loader',
-                        options: {
-                            includePaths: [__dirname + '/node_modules']
-                        }
-                    }
-                ])
-            }
+				// sass / scss loader for webpack
+				test: /\.(css|sass|scss)$/,
+				loader: ExtractTextPlugin.extract([
+					'css-loader',
+					'postcss-loader',
+					{
+						loader: 'sass-loader',
+						options: {
+							includePaths: [__dirname + '/node_modules']
+						}
+					}
+				])
+			}
 		]
 	},
 }

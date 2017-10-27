@@ -196,10 +196,6 @@ export interface PhabricatorRepoDetails {
 }
 
 export async function getRepoDetailsFromCallsign(callsign: string): Promise<PhabricatorRepoDetails> {
-    // TODO(john): REMOVE THIS IS FOR TESTING ONLY!!
-    if (callsign.toLowerCase() === 'zap') {
-        callsign = 'nzap'
-    }
     const form = createConduitRequestForm()
     form.set('params[constraints]', JSON.stringify({ callsigns: [callsign] }))
     form.set('params[attachments]', '{ "uris": true }')

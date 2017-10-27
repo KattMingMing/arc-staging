@@ -34,7 +34,6 @@
     "extract-text-webpack-plugin": "^3.0.1",
     "get-graphql-schema": "^2.1.1",
     "gql2ts": "^1.2.1",
-    "hash-files": "^1.1.1",
     "jade": "^1.11.0",
     "node-sass": "^4.5.3",
     "postcss-loader": "^2.0.8",
