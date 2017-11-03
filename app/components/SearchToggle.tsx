@@ -122,10 +122,18 @@ function canRenderRepositorySearch(): boolean {
 function getSourcegraphURLProps(query: string): { url: string, repo: string, rev: string | undefined } | undefined {
     const { repoPath, rev } = github.parseURL()
     if (repoPath) {
-        let url = `${sourcegraphUrl}/${repoPath}`
+        const url = `${sourcegraphUrl}/search`
         if (rev) {
-            url = `${url}@${rev}`
+            return {
+                url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(repoPath.replace(/\./g, '\\.'))}%24@${encodeURIComponent(rev)}&utm_source=${getPlatformName()}`,
+                repo: repoPath,
+                rev,
+            }
         }
-        return {url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(repoPath.replace(/\./g, '\\.'))}%24`, repo: repoPath, rev }
+        return {
+            url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(repoPath.replace(/\./g, '\\.'))}%24&utm_source=${getPlatformName()}`,
+            repo: repoPath,
+            rev,
+        }
     }
 }
