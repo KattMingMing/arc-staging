@@ -126,6 +126,6 @@ function getSourcegraphURLProps(query: string): { url: string, repo: string, rev
         if (rev) {
             url = `${url}@${rev}`
         }
-        return { url: `${url}?q=${query}&utm_source=${getPlatformName()}`, repo: repoPath, rev }
+        return {url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(repoPath.replace(/\./g, '\\.'))}%24`, repo: repoPath, rev }
     }
 }
