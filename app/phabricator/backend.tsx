@@ -14,8 +14,8 @@ export interface ConduitURI extends PhabEntity {
             raw: string // e.g. https://secure.phabricator.com/source/phabricator.git",
             display: string // e.g. https://secure.phabricator.com/source/phabricator.git",
             effective: string // e.g. https://secure.phabricator.com/source/phabricator.git",
-            normalized: string, // e.g. secure.phabricator.com/source/phabricator",
-        },
+            normalized: string // e.g. secure.phabricator.com/source/phabricator",
+        }
     }
 }
 
@@ -25,12 +25,12 @@ export interface ConduitRepo extends PhabEntity {
         vcs: string // e.g. 'git'
         callsign: string
         shortName: string
-        status: 'active' | 'inactive',
+        status: 'active' | 'inactive'
     }
     attachments: {
         uris: {
-            uris: ConduitURI[],
-        },
+            uris: ConduitURI[]
+        }
     }
 }
 
@@ -39,11 +39,11 @@ interface ConduitReposResponse {
     error_info?: string
     result: {
         cursor: {
-            limit: number,
+            limit: number
             after: number | null
-            before: number | null,
+            before: number | null
         }
-        data: ConduitRepo[],
+        data: ConduitRepo[]
     }
 }
 
@@ -63,7 +63,6 @@ export async function getRepoListFromConduit(): Promise<ConduitRepo[]> {
             const res: ConduitReposResponse = await fetch(
                 'http://phabricator.aws.sgdev.org/api/diffusion.repository.search',
                 {
-
                     method: 'POST',
                     body: form,
                     credentials: 'include',
@@ -96,7 +95,7 @@ export interface ConduitRef {
     type: 'base' | 'diff'
     commit: string // a SHA
     remote: {
-        uri: string,
+        uri: string
     }
 }
 
@@ -113,8 +112,8 @@ export interface ConduitDiffDetails {
     properties: {
         'arc.staging': {
             status: string
-            refs: ConduitRef[],
-        },
+            refs: ConduitRef[]
+        }
     }
 }
 
@@ -122,7 +121,7 @@ interface ConduitDiffDetailsResponse {
     error_code?: string
     error_info?: string
     result: {
-        [id: string]: ConduitDiffDetails,
+        [id: string]: ConduitDiffDetails
     }
 }
 
@@ -145,7 +144,6 @@ export async function getDiffDetailsFromConduit(diffID: number, differentialID: 
     const res: ConduitDiffDetailsResponse = await fetch(
         'http://phabricator.aws.sgdev.org/api/differential.querydiffs',
         {
-
             method: 'POST',
             body: form,
             credentials: 'include',
@@ -163,9 +161,10 @@ interface ConduitDifferentialQueryResponse {
     error_code?: string
     error_info?: string
     result: {
-        [index: string]: { // arrays
-            repositoryPHID: string,
-        },
+        [index: string]: {
+            // arrays
+            repositoryPHID: string
+        }
     }
 }
 
@@ -176,7 +175,6 @@ export async function getRepoPHIDForDifferentialID(differentialID: number): Prom
     const res: ConduitDifferentialQueryResponse = await fetch(
         'http://phabricator.aws.sgdev.org/api/differential.query',
         {
-
             method: 'POST',
             body: form,
             credentials: 'include',
@@ -200,16 +198,12 @@ export async function getRepoDetailsFromCallsign(callsign: string): Promise<Phab
     form.set('params[constraints]', JSON.stringify({ callsigns: [callsign] }))
     form.set('params[attachments]', '{ "uris": true }')
 
-    const res: ConduitReposResponse = await fetch(
-        'http://phabricator.aws.sgdev.org/api/diffusion.repository.search',
-        {
-
-            method: 'POST',
-            body: form,
-            credentials: 'include',
-            headers: new Headers({ Accept: 'application/json' }),
-        }
-    ).then(resp => resp.json())
+    const res: ConduitReposResponse = await fetch('http://phabricator.aws.sgdev.org/api/diffusion.repository.search', {
+        method: 'POST',
+        body: form,
+        credentials: 'include',
+        headers: new Headers({ Accept: 'application/json' }),
+    }).then(resp => resp.json())
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -233,16 +227,12 @@ export async function getRepoDetailsFromRepoPHID(phid: string): Promise<Phabrica
     form.set('params[constraints]', JSON.stringify({ phids: [phid] }))
     form.set('params[attachments]', '{ "uris": true }')
 
-    const res: ConduitReposResponse = await fetch(
-        'http://phabricator.aws.sgdev.org/api/diffusion.repository.search',
-        {
-
-            method: 'POST',
-            body: form,
-            credentials: 'include',
-            headers: new Headers({ Accept: 'application/json' }),
-        }
-    ).then(resp => resp.json())
+    const res: ConduitReposResponse = await fetch('http://phabricator.aws.sgdev.org/api/diffusion.repository.search', {
+        method: 'POST',
+        body: form,
+        credentials: 'include',
+        headers: new Headers({ Accept: 'application/json' }),
+    }).then(resp => resp.json())
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -279,17 +269,19 @@ interface CreatePhabricatorRepoOptions {
 }
 
 export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Observable<void> {
-    return mutateGraphQL(`
+    return mutateGraphQL(
+        `
         mutation addPhabricatorRepo(
             $callsign: String!,
             $repoPath: String!
         ) {
             addPhabricatorRepo(callsign: $callsign, uri: $repoPath) { }
         }
-    `, options)
-        .map(({ data, errors }) => {
-            if (!data || (errors && errors.length > 0)) {
-                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
-            }
-        })
+    `,
+        options
+    ).map(({ data, errors }) => {
+        if (!data || (errors && errors.length > 0)) {
+            throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
+        }
+    })
 }

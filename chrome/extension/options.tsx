@@ -104,17 +104,20 @@ getSourcegraphURLForm().addEventListener('submit', evt => {
         url = url.substr(url.length - 1)
     }
 
-    chrome.permissions.request({
-        origins: [url + '/*'],
-    }, granted => {
-        if (granted) {
-            chrome.storage.sync.set({ sourcegraphURL: url })
-        } else {
-            syncInputsToLocalStorage()
-            // Note: it would be nice to display an alert here with an error, but the alert API doesn't work in the options panel
-            // (see https://bugs.chromium.org/p/chromium/issues/detail?id=476350)
+    chrome.permissions.request(
+        {
+            origins: [url + '/*'],
+        },
+        granted => {
+            if (granted) {
+                chrome.storage.sync.set({ sourcegraphURL: url })
+            } else {
+                syncInputsToLocalStorage()
+                // Note: it would be nice to display an alert here with an error, but the alert API doesn't work in the options panel
+                // (see https://bugs.chromium.org/p/chromium/issues/detail?id=476350)
+            }
         }
-    })
+    )
 })
 
 getSourcegraphURLInput().addEventListener('keydown', evt => {

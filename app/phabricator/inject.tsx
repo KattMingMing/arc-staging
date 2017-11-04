@@ -5,7 +5,15 @@ import { BlobAnnotator } from '../components/BlobAnnotator'
 import { fetchBlobContentLines, resolveRev } from '../repo/backend'
 import { getTableDataCell } from '../repo/tooltips'
 import { ConduitDiffChange, getDiffDetailsFromConduit } from './backend'
-import { ChangeState, DifferentialState, DiffusionState, findElementWithOffset, getTargetLineAndOffset, PhabricatorMode, RevisionState } from './index'
+import {
+    ChangeState,
+    DifferentialState,
+    DiffusionState,
+    findElementWithOffset,
+    getTargetLineAndOffset,
+    PhabricatorMode,
+    RevisionState,
+} from './index'
 import {
     expanderListen,
     getCodeCellsForAnnotation,
@@ -80,7 +88,8 @@ async function injectDiffusion(state: DiffusionState): Promise<void> {
             isCommit={false}
             isBase={false}
             buttonProps={diffusionButtonProps}
-        />, mount
+        />,
+        mount
     )
 }
 
@@ -124,25 +133,24 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                     return getCodeCellsForDifferentialAnnotations(table, isSplitDiff, false)
                 }
 
-                const filterTarget = (isBase: boolean) =>
-                    (target: HTMLElement) => {
-                        const td = getTableDataCell(target)
-                        if (!td) {
-                            return false
-                        }
-                        if (isSplitDiff) {
-                            if (isBase) {
-                                return td.colSpan === 1
-                            } else {
-                                return td.colSpan === 2
-                            }
-                        }
+                const filterTarget = (isBase: boolean) => (target: HTMLElement) => {
+                    const td = getTableDataCell(target)
+                    if (!td) {
+                        return false
+                    }
+                    if (isSplitDiff) {
                         if (isBase) {
-                            return td.classList.contains('left')
+                            return td.colSpan === 1
                         } else {
-                            return !td.classList.contains('left')
+                            return td.colSpan === 2
                         }
                     }
+                    if (isBase) {
+                        return td.classList.contains('left')
+                    } else {
+                        return !td.classList.contains('left')
+                    }
+                }
 
                 if (!getTableElement()) {
                     // TODO(john): figure out something better to do
@@ -164,7 +172,13 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
 
                 switch (state.mode) {
                     case PhabricatorMode.Differential: {
-                        const { baseRepoPath, headRepoPath, differentialID, diffID, leftDiffID } = state as DifferentialState
+                        const {
+                            baseRepoPath,
+                            headRepoPath,
+                            differentialID,
+                            diffID,
+                            leftDiffID,
+                        } = state as DifferentialState
                         const resolveBaseRevOpt = {
                             repoPath: baseRepoPath,
                             differentialID,
@@ -187,12 +201,21 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                         }
                         const [baseRev, headRev] = await Promise.all([
                             resolveDiff(resolveBaseRevOpt),
-                            resolveDiff(resolveHeadRevOpt)])
+                            resolveDiff(resolveHeadRevOpt),
+                        ])
                         const actualBaseRepoPath = baseRev.stagingRepoPath || baseRepoPath
                         const actualHeadRepoPath = headRev.stagingRepoPath || headRepoPath
                         const [baseFile, headFile] = await Promise.all([
-                            fetchBlobContentLines({ repoPath: actualBaseRepoPath, commitID: baseRev.commitID, filePath: baseFilePath || filePath }),
-                            fetchBlobContentLines({ repoPath: actualHeadRepoPath, commitID: headRev.commitID, filePath }),
+                            fetchBlobContentLines({
+                                repoPath: actualBaseRepoPath,
+                                commitID: baseRev.commitID,
+                                filePath: baseFilePath || filePath,
+                            }),
+                            fetchBlobContentLines({
+                                repoPath: actualHeadRepoPath,
+                                commitID: headRev.commitID,
+                                filePath,
+                            }),
                         ])
                         if (baseFile.length > 0) {
                             render(
@@ -211,7 +234,8 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     isSplitDiff={isSplitDiff}
                                     isCommit={false}
                                     buttonProps={differentialButtonProps}
-                                />, mountBase
+                                />,
+                                mountBase
                             )
                         }
                         if (headFile.length > 0) {
@@ -231,7 +255,8 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     isSplitDiff={isSplitDiff}
                                     isCommit={false}
                                     buttonProps={differentialButtonProps}
-                                />, mountHead
+                                />,
+                                mountHead
                             )
                         }
                         break // end inner switch
@@ -261,7 +286,8 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     isSplitDiff={isSplitDiff}
                                     isBase={true}
                                     buttonProps={differentialButtonProps}
-                                />, mountBase
+                                />,
+                                mountBase
                             )
                         }
                         if (headFile.length > 0) {
@@ -282,7 +308,8 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     isSplitDiff={isSplitDiff}
                                     isBase={false}
                                     buttonProps={differentialButtonProps}
-                                />, mountHead
+                                />,
+                                mountHead
                             )
                         }
                         break // end inner switch
@@ -290,7 +317,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
 
                     case PhabricatorMode.Change: {
                         const { repoPath, commitID } = state as ChangeState
-                        const baseRev = (await resolveRev({ repoPath, rev: commitID + '~1' }).toPromise())
+                        const baseRev = await resolveRev({ repoPath, rev: commitID + '~1' }).toPromise()
                         const [baseFile, headFile] = await Promise.all([
                             fetchBlobContentLines({ repoPath, commitID: baseRev, filePath }),
                             fetchBlobContentLines({ repoPath, commitID, filePath }),
@@ -314,7 +341,8 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     isSplitDiff={isSplitDiff}
                                     isBase={true}
                                     buttonProps={differentialButtonProps}
-                                />, mountBase
+                                />,
+                                mountBase
                             )
                         }
                         if (headFile.length > 0) {
@@ -335,7 +363,8 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     isSplitDiff={isSplitDiff}
                                     isBase={false}
                                     buttonProps={differentialButtonProps}
-                                />, mountHead
+                                />,
+                                mountHead
                             )
                         }
                         break // end inner switch
@@ -346,7 +375,11 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
     }
 }
 
-function createBlobAnnotatorMount(fileContainer: HTMLElement, buttonClass: string, isBase: boolean): HTMLElement | null {
+function createBlobAnnotatorMount(
+    fileContainer: HTMLElement,
+    buttonClass: string,
+    isBase: boolean
+): HTMLElement | null {
     const className = 'sourcegraph-app-annotator' + (isBase ? '-base' : '')
     const existingMount = fileContainer.querySelector('.' + className)
     if (existingMount) {
@@ -379,11 +412,9 @@ export function injectPhabricatorApplication(): void {
 }
 
 function injectModules(): void {
-    injectPhabricatorBlobAnnotators()
-        .catch(e => console.error(e))
+    injectPhabricatorBlobAnnotators().catch(e => console.error(e))
     setTimeout(() => {
-        injectPhabricatorBlobAnnotators()
-            .catch(e => console.error(e))
+        injectPhabricatorBlobAnnotators().catch(e => console.error(e))
     }, 1000)
 }
 
@@ -413,14 +444,23 @@ function hasThisFileChanged(filePath: string, changes: ConduitDiffChange[]): boo
 }
 
 async function resolveDiff(props: ResolveDiffOpt): Promise<ResolvedDiff> {
-    let propsWithInfo = await getDiffDetailsFromConduit(props.diffID, props.differentialID).then(info => ({ ...props, info }))
+    let propsWithInfo = await getDiffDetailsFromConduit(props.diffID, props.differentialID).then(info => ({
+        ...props,
+        info,
+    }))
     if (propsWithInfo.isBase || !propsWithInfo.leftDiffID) {
         // no need to update propsWithInfo
-    } else if (hasThisFileChanged(propsWithInfo.filePath, propsWithInfo.info.changes) || propsWithInfo.isBase || !propsWithInfo.leftDiffID) {
+    } else if (
+        hasThisFileChanged(propsWithInfo.filePath, propsWithInfo.info.changes) ||
+        propsWithInfo.isBase ||
+        !propsWithInfo.leftDiffID
+    ) {
         // no need to update propsWithInfo
     } else {
-        propsWithInfo = await getDiffDetailsFromConduit(propsWithInfo.leftDiffID, propsWithInfo.differentialID)
-            .then(info => ({ ...propsWithInfo, info, diffID: propsWithInfo.leftDiffID!, useBaseForDiff: true }))
+        propsWithInfo = await getDiffDetailsFromConduit(
+            propsWithInfo.leftDiffID,
+            propsWithInfo.differentialID
+        ).then(info => ({ ...propsWithInfo, info, diffID: propsWithInfo.leftDiffID!, useBaseForDiff: true }))
     }
 
     if (!propsWithInfo.info.properties['arc.staging']) {

@@ -68,15 +68,16 @@ function convertSpacesToTabs(realLineContent: string, domContent: string): boole
  * @param target The element to compute line & character offset for.
  * @param isDelta Whether to ignore the first character on a line when computing character offset.
  */
-export function getTargetLineAndOffset(blobContentLines: string[]):
-    (target: HTMLElement, opt: MaybeDiffSpec) => { line: number, character: number, word: string } | undefined {
+export function getTargetLineAndOffset(
+    blobContentLines: string[]
+): (target: HTMLElement, opt: MaybeDiffSpec) => { line: number; character: number; word: string } | undefined {
     return (target: HTMLElement, opt: MaybeDiffSpec) => {
         let isDelta = opt.isDelta
 
         const origTarget = target
         while (target && target.tagName !== 'TD' && target.tagName !== 'TR' && target.tagName !== 'BODY') {
             // Find ancestor which wraps the whole line of code, not just the target token.
-            target = (target.parentNode as HTMLElement)
+            target = target.parentNode as HTMLElement
         }
         if (!target || target.tagName !== 'TD') {
             // Make sure we're looking at an element we've annotated line number for (otherwise we have no idea )
@@ -189,13 +190,17 @@ function isOnlyWhitespace(text: string): boolean {
  * @param cell the <td> containing syntax highlighted code
  * @param offset character offset
  */
-export function findElementWithOffset(blobContentLines: string[]):
-    (cell: HTMLElement, line: number, offset: number, opt: MaybeDiffSpec) => HTMLElement | undefined {
+export function findElementWithOffset(
+    blobContentLines: string[]
+): (cell: HTMLElement, line: number, offset: number, opt: MaybeDiffSpec) => HTMLElement | undefined {
     return (cell: HTMLElement, line: number, offset: number, opt: MaybeDiffSpec) => {
         let ignoreFirstCharacter = true && !opt.isBase // for some reason, base doesn't have leading character
         let seenNonWhitespace = false
         const realLineContent = blobContentLines[line - 1]
-        const convertSpaces = convertSpacesToTabs(realLineContent, cell.textContent!.substr(ignoreFirstCharacter ? 1 : 0))
+        const convertSpaces = convertSpacesToTabs(
+            realLineContent,
+            cell.textContent!.substr(ignoreFirstCharacter ? 1 : 0)
+        )
 
         let currOffset = 0
         const walkNode = (currNode: HTMLElement): HTMLElement | undefined => {
@@ -220,12 +225,14 @@ export function findElementWithOffset(blobContentLines: string[]):
                             }
                         }
                         if (!seenNonWhitespace) {
-                            seenNonWhitespace = doIgnore ? !isOnlyWhitespace(child.textContent!.substr(1)) : isOnlyWhitespace(child.textContent!)
+                            seenNonWhitespace = doIgnore
+                                ? !isOnlyWhitespace(child.textContent!.substr(1))
+                                : isOnlyWhitespace(child.textContent!)
                         }
                         if (currOffset + (child.textContent!.length - adjustment) >= offset) {
                             return currNode
                         }
-                        currOffset += (child.textContent!.length - adjustment)
+                        currOffset += child.textContent!.length - adjustment
                         continue
 
                     case Node.ELEMENT_NODE:

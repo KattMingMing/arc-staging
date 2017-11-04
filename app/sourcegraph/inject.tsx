@@ -8,7 +8,8 @@ export function injectSourcegraphApp(marker: HTMLElement): void {
 
     document.addEventListener('sourcegraph:identify', (ev: CustomEvent) => {
         if (ev && ev.detail) {
-            (eventLogger as ExtensionEventLogger).updatePropsForUser(ev.detail)
+            const e = eventLogger as ExtensionEventLogger
+            e.updatePropsForUser(ev.detail)
             chrome.runtime.sendMessage({ type: 'setIdentity', identity: ev.detail })
         } else {
             console.error('sourcegraph:identify missing details')

@@ -84,7 +84,10 @@ function sourcegraphSearchToggle(toggled: boolean): void {
         container.appendChild(a)
         insertAfter(container, formContainer.parentNode!)
         if (formContainer.parentElement) {
-            if (formContainer.parentElement.classList.contains('flex-items-center') || formContainer.parentElement.className === 'd-lg-flex flex-items-center mr-3') {
+            if (
+                formContainer.parentElement.classList.contains('flex-items-center') ||
+                formContainer.parentElement.className === 'd-lg-flex flex-items-center mr-3'
+            ) {
                 // No user
                 insertAfter(container, formContainer)
             } else {
@@ -119,19 +122,23 @@ function canRenderRepositorySearch(): boolean {
     return Boolean(document.querySelector('.header-search-scope')) && repositorySearchEnabled
 }
 
-function getSourcegraphURLProps(query: string): { url: string, repo: string, rev: string | undefined } | undefined {
+function getSourcegraphURLProps(query: string): { url: string; repo: string; rev: string | undefined } | undefined {
     const { repoPath, rev } = github.parseURL()
     if (repoPath) {
         const url = `${sourcegraphUrl}/search`
         if (rev) {
             return {
-                url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(repoPath.replace(/\./g, '\\.'))}%24@${encodeURIComponent(rev)}&utm_source=${getPlatformName()}`,
+                url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(
+                    repoPath.replace(/\./g, '\\.')
+                )}%24@${encodeURIComponent(rev)}&utm_source=${getPlatformName()}`,
                 repo: repoPath,
                 rev,
             }
         }
         return {
-            url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(repoPath.replace(/\./g, '\\.'))}%24&utm_source=${getPlatformName()}`,
+            url: `${url}?q=${encodeURIComponent(query)}&sq=repo:%5E${encodeURIComponent(
+                repoPath.replace(/\./g, '\\.')
+            )}%24&utm_source=${getPlatformName()}`,
             repo: repoPath,
             rev,
         }

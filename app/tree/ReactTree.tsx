@@ -6,11 +6,11 @@ import 'jstree'
 
 interface Props {
     core: {
-        data: any[],
-        worker: boolean,
-        multiple: boolean,
-        force_text: boolean,
-        'dblclick_toggle': boolean,
+        data: any[]
+        worker: boolean
+        multiple: boolean
+        force_text: boolean
+        dblclick_toggle: boolean
     }
     plugins?: string[]
     onSelected: (url: string, tab: boolean) => void
@@ -21,7 +21,9 @@ export class ReactTree extends React.Component<Props, {}> {
     public componentDidMount(): void {
         $(ReactDOM.findDOMNode(this))
             .on('click', '.jstree-anchor', (e: any) => {
-                $('.jstree').jstree(true).toggle_node(e.target)
+                $('.jstree')
+                    .jstree(true)
+                    .toggle_node(e.target)
             })
             .on('click', this.onClick.bind(this))
             .jstree({
@@ -50,6 +52,6 @@ export class ReactTree extends React.Component<Props, {}> {
     }
 
     public render(): JSX.Element | null {
-        return <div className='sg-tree' />
+        return <div className="sg-tree" />
     }
 }

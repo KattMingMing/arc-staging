@@ -1,6 +1,13 @@
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
-import { getExtensionVersion, getModeFromExtension, getPathExtension, getPlatformName, sourcegraphUrl, supportedExtensions } from '../util/context'
+import {
+    getExtensionVersion,
+    getModeFromExtension,
+    getPathExtension,
+    getPlatformName,
+    sourcegraphUrl,
+    supportedExtensions,
+} from '../util/context'
 import { memoizeAsync } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
 
@@ -50,23 +57,29 @@ export const fetchHover = memoizeAsync((pos: AbsoluteRepoFilePosition): Promise<
         return Promise.resolve({ contents: [] })
     }
 
-    const body = wrapLSP({
-        method: 'textDocument/hover',
-        params: {
-            textDocument: {
-                uri: `git://${pos.repoPath}?${pos.commitID}#${pos.filePath}`,
-            },
-            position: {
-                character: pos.position.character! - 1,
-                line: pos.position.line - 1,
+    const body = wrapLSP(
+        {
+            method: 'textDocument/hover',
+            params: {
+                textDocument: {
+                    uri: `git://${pos.repoPath}?${pos.commitID}#${pos.filePath}`,
+                },
+                position: {
+                    character: pos.position.character! - 1,
+                    line: pos.position.line - 1,
+                },
             },
         },
-    }, pos, pos.filePath)
-
-    return fetch(
-        `${sourcegraphUrl}/.api/xlang/textDocument/hover`,
-        { method: 'POST', body: JSON.stringify(body), credentials: 'same-origin', headers }
+        pos,
+        pos.filePath
     )
+
+    return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/hover`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        credentials: 'same-origin',
+        headers,
+    })
         .then(resp => resp.json())
         .then(json => {
             if (!json || !json[1] || !json[1].result) {
@@ -82,23 +95,29 @@ export const fetchDefinition = memoizeAsync((pos: AbsoluteRepoFilePosition): Pro
         return Promise.resolve([])
     }
 
-    const body = wrapLSP({
-        method: 'textDocument/definition',
-        params: {
-            textDocument: {
-                uri: `git://${pos.repoPath}?${pos.commitID}#${pos.filePath}`,
-            },
-            position: {
-                character: pos.position.character! - 1,
-                line: pos.position.line - 1,
+    const body = wrapLSP(
+        {
+            method: 'textDocument/definition',
+            params: {
+                textDocument: {
+                    uri: `git://${pos.repoPath}?${pos.commitID}#${pos.filePath}`,
+                },
+                position: {
+                    character: pos.position.character! - 1,
+                    line: pos.position.line - 1,
+                },
             },
         },
-    }, pos, pos.filePath)
-
-    return fetch(
-        `${sourcegraphUrl}/.api/xlang/textDocument/definition`,
-        { method: 'POST', body: JSON.stringify(body), credentials: 'same-origin', headers }
+        pos,
+        pos.filePath
     )
+
+    return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/definition`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        credentials: 'same-origin',
+        headers,
+    })
         .then(resp => resp.json())
         .then(json => {
             if (!json || !json[1] || !json[1].result) {
@@ -109,16 +128,15 @@ export const fetchDefinition = memoizeAsync((pos: AbsoluteRepoFilePosition): Pro
 }, makeRepoURI)
 
 export function fetchJumpURL(pos: AbsoluteRepoFilePosition): Promise<string | null> {
-    return fetchDefinition(pos)
-        .then(def => {
-            const defArray = Array.isArray(def) ? def : [def]
-            def = defArray[0]
-            if (!def) {
-                return null
-            }
+    return fetchDefinition(pos).then(def => {
+        const defArray = Array.isArray(def) ? def : [def]
+        def = defArray[0]
+        if (!def) {
+            return null
+        }
 
-            const uri = parseRepoURI(def.uri) as AbsoluteRepoFilePosition
-            uri.position = { line: def.range.start.line + 1, character: def.range.start.character + 1 }
-            return toAbsoluteBlobURL(uri)
-        })
+        const uri = parseRepoURI(def.uri) as AbsoluteRepoFilePosition
+        uri.position = { line: def.range.start.line + 1, character: def.range.start.character + 1 }
+        return toAbsoluteBlobURL(uri)
+    })
 }

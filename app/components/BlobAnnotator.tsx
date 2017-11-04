@@ -18,7 +18,14 @@ import { Subscription } from 'rxjs/Subscription'
 import { fetchHover, fetchJumpURL, isEmptyHover } from '../backend/lsp'
 import { OpenOnSourcegraph } from '../components/OpenOnSourcegraph'
 import * as github from '../github/util'
-import { AbsoluteRepoFile, AbsoluteRepoFilePosition, CodeCell, MaybeDiffSpec, OpenInSourcegraphProps, PositionSpec } from '../repo/index'
+import {
+    AbsoluteRepoFile,
+    AbsoluteRepoFilePosition,
+    CodeCell,
+    MaybeDiffSpec,
+    OpenInSourcegraphProps,
+    PositionSpec,
+} from '../repo/index'
 import {
     convertNode,
     createTooltips,
@@ -42,8 +49,16 @@ interface Props extends AbsoluteRepoFile, Partial<PositionSpec> {
     fileElement: HTMLElement
     getTableElement: () => HTMLTableElement
     getCodeCells: () => CodeCell[]
-    getTargetLineAndOffset: (target: HTMLElement, opt: MaybeDiffSpec) => { line: number, character: number, word: string } | undefined
-    findElementWithOffset: (cell: HTMLElement, line: number, offset: number, opt: MaybeDiffSpec) => HTMLElement | undefined
+    getTargetLineAndOffset: (
+        target: HTMLElement,
+        opt: MaybeDiffSpec
+    ) => { line: number; character: number; word: string } | undefined
+    findElementWithOffset: (
+        cell: HTMLElement,
+        line: number,
+        offset: number,
+        opt: MaybeDiffSpec
+    ) => HTMLElement | undefined
     filterTarget: (target: HTMLElement) => boolean
     getNodeToConvert: (td: HTMLTableDataCellElement) => HTMLElement
     isCommit: boolean
@@ -79,7 +94,12 @@ export class BlobAnnotator extends React.Component<Props, State> {
         if (this.props.position) {
             const cell = this.getCodeCell(this.props.position.line)
             if (this.props.position.character) {
-                const el = this.props.findElementWithOffset(cell, this.props.position.line, this.props.position.character, this.diffSpec())
+                const el = this.props.findElementWithOffset(
+                    cell,
+                    this.props.position.line,
+                    this.props.position.character,
+                    this.diffSpec()
+                )
                 if (el) {
                     el.classList.add('selection-highlight-sticky')
                 }
@@ -141,7 +161,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
             <div style={{ display: 'inline-block' }}>
                 <OpenOnSourcegraph
                     label={label}
-                    ariaLabel='View file on Sourcegraph'
+                    ariaLabel="View file on Sourcegraph"
                     openProps={props}
                     className={this.props.buttonProps.className}
                     style={this.props.buttonProps.style}
@@ -167,7 +187,12 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     }
                     if (position.line && position.character) {
                         const cell = this.getCodeCell(position.line)
-                        const el = this.props.findElementWithOffset(cell, position.line, position.character!, this.diffSpec())
+                        const el = this.props.findElementWithOffset(
+                            cell,
+                            position.line,
+                            position.character!,
+                            this.diffSpec()
+                        )
                         if (el) {
                             el.classList.add('selection-highlight-sticky')
                             return true
@@ -177,7 +202,14 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     return false
                 })
                 .map(props => props.position!)
-                .map(pos => this.props.findElementWithOffset(this.getCodeCell(pos.line), pos.line, pos.character, this.diffSpec()))
+                .map(pos =>
+                    this.props.findElementWithOffset(
+                        this.getCodeCell(pos.line),
+                        pos.line,
+                        pos.character,
+                        this.diffSpec()
+                    )
+                )
                 .filter(el => !!el)
                 .map((target: HTMLElement) => {
                     const loc = this.props.getTargetLineAndOffset(target!, this.diffSpec())
@@ -240,7 +272,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 .map(data => ({ target: data.target, ctx: { ...this.props, position: data.loc! } }))
                 .switchMap(({ target, ctx }) => {
                     const tooltip = this.getTooltip(target, ctx)
-                    const tooltipWithJ2D: Observable<TooltipData> = tooltip.zip(this.getDefinition(ctx))
+                    const tooltipWithJ2D: Observable<TooltipData> = tooltip
+                        .zip(this.getDefinition(ctx))
                         .map(([tooltip, defUrl]) => ({ ...tooltip, defUrl: defUrl || undefined }))
                     const loading = this.getLoadingTooltip(target, ctx, tooltip)
                     return Observable.merge(loading, tooltip, tooltipWithJ2D).catch(e => {
@@ -259,21 +292,20 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 })
         )
         this.subscriptions.add(
-            Observable.fromEvent<MouseEvent>(ref, 'mouseout')
-                .subscribe(e => {
-                    for (const el of this.props.fileElement.querySelectorAll('.selection-highlight')) {
-                        el.classList.remove('selection-highlight')
+            Observable.fromEvent<MouseEvent>(ref, 'mouseout').subscribe(e => {
+                for (const el of this.props.fileElement.querySelectorAll('.selection-highlight')) {
+                    el.classList.remove('selection-highlight')
+                }
+                if (isTooltipVisible(this.props, !this.props.isBase)) {
+                    // If another tooltip is visible for the diff, ignore this mouseover.
+                    return
+                }
+                if (!this.state.fixedTooltip) {
+                    if (isTooltipVisible(this.props, this.props.isBase)) {
+                        hideTooltip()
                     }
-                    if (isTooltipVisible(this.props, !this.props.isBase)) {
-                        // If another tooltip is visible for the diff, ignore this mouseover.
-                        return
-                    }
-                    if (!this.state.fixedTooltip) {
-                        if (isTooltipVisible(this.props, this.props.isBase)) {
-                            hideTooltip()
-                        }
-                    }
-                })
+                }
+            })
         )
         this.subscriptions.add(
             Observable.fromEvent<MouseEvent>(ref, 'click')
@@ -303,7 +335,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     }
                     const position = this.props.getTargetLineAndOffset(target, this.diffSpec())
                     if (position && !this.isDelta) {
-                        const hash = '#L' + position.line + (position.character ? (':' + position.character) : '')
+                        const hash = '#L' + position.line + (position.character ? ':' + position.character : '')
                         const url = new URL(window.location.href)
                         url.hash = hash
                         if (url.href !== window.location.href && !window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
@@ -385,7 +417,11 @@ export class BlobAnnotator extends React.Component<Props, State> {
      * getLoadingTooltip emits "loading" tooltip data after a delay,
      * iff the other Observable hasn't already emitted a value.
      */
-    private getLoadingTooltip(target: HTMLElement, ctx: AbsoluteRepoFilePosition, tooltip: Observable<TooltipData>): Observable<TooltipData> {
+    private getLoadingTooltip(
+        target: HTMLElement,
+        ctx: AbsoluteRepoFilePosition,
+        tooltip: Observable<TooltipData>
+    ): Observable<TooltipData> {
         return Observable.interval(500)
             .take(1)
             .takeUntil(tooltip)
@@ -414,33 +450,34 @@ export class BlobAnnotator extends React.Component<Props, State> {
         eventLogger.logOpenFile(this.getEventLoggerProps())
     }
 
-    private handleGoToDefinition = (defCtx: AbsoluteRepoFilePosition) =>
-        (e: MouseEvent) => {
-            eventLogger.logJumpToDef(this.getEventLoggerProps())
-            if (!window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
-                // Assume it is GitHub, make default j2d be within github pages.
-                if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
-                    return
-                }
-                e.preventDefault()
-                if (isTooltipVisible(this.props, this.props.isBase)) {
-                    hideTooltip()
-                }
-                this.setState({ fixedTooltip: undefined })
-                // TODO(john): unsetting fixed tooltip won't work b/c it removes sticky highlight for identity j2d?
-                // this.setFixedTooltip()
-                const sameRepo = this.props.repoPath === defCtx.repoPath
-                const rev = sameRepo ? (this.props.commitID === defCtx.commitID ? this.props.rev : defCtx.commitID || defCtx.rev) : (defCtx.commitID || defCtx.rev)
-                // tslint:disable-next-line
-                const url = `https://${defCtx.repoPath}/blob/${rev || 'master'}/${defCtx.filePath}#L${defCtx.position.line}${defCtx.position.character ? (':' + defCtx.position.character) : ''}`
-                window.location.href = url
+    private handleGoToDefinition = (defCtx: AbsoluteRepoFilePosition) => (e: MouseEvent) => {
+        eventLogger.logJumpToDef(this.getEventLoggerProps())
+        if (!window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
+            // Assume it is GitHub, make default j2d be within github pages.
+            if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
+                return
             }
+            e.preventDefault()
+            if (isTooltipVisible(this.props, this.props.isBase)) {
+                hideTooltip()
+            }
+            this.setState({ fixedTooltip: undefined })
+            // TODO(john): unsetting fixed tooltip won't work b/c it removes sticky highlight for identity j2d?
+            // this.setFixedTooltip()
+            const sameRepo = this.props.repoPath === defCtx.repoPath
+            const rev = sameRepo
+                ? this.props.commitID === defCtx.commitID ? this.props.rev : defCtx.commitID || defCtx.rev
+                : defCtx.commitID || defCtx.rev
+            // tslint:disable-next-line
+            const url = `https://${defCtx.repoPath}/blob/${rev || 'master'}/${defCtx.filePath}#L${defCtx.position
+                .line}${defCtx.position.character ? ':' + defCtx.position.character : ''}`
+            window.location.href = url
         }
+    }
 
-    private handleFindReferences = (ctx: AbsoluteRepoFilePosition) =>
-        (e: MouseEvent) => {
-            eventLogger.logFindRefs(this.getEventLoggerProps())
-        }
+    private handleFindReferences = (ctx: AbsoluteRepoFilePosition) => (e: MouseEvent) => {
+        eventLogger.logFindRefs(this.getEventLoggerProps())
+    }
 
     private handleDismiss = () => {
         this.setFixedTooltip()
@@ -453,8 +490,11 @@ export class BlobAnnotator extends React.Component<Props, State> {
         }
     }
 
-    private tooltipActions = (ctx: AbsoluteRepoFilePosition) =>
-        ({ definition: this.handleGoToDefinition, references: this.handleFindReferences, dismiss: this.handleDismiss })
+    private tooltipActions = (ctx: AbsoluteRepoFilePosition) => ({
+        definition: this.handleGoToDefinition,
+        references: this.handleFindReferences,
+        dismiss: this.handleDismiss,
+    })
 
     private getCodeCell(line: number): HTMLElement {
         let cell: HTMLElement

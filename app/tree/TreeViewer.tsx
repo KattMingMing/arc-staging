@@ -45,12 +45,23 @@ export class TreeViewer extends React.Component<Props, State> {
         }
         return (
             <div className={`sg-tree__container ${this.state.toggled ? 'sg-tree__container--toggled' : ''}`}>
-                <div className='sg-tree__splitter' />
-                <TreeHeader toggled={this.state.toggled} uri={this.props.uri} rev={this.props.rev} onClick={this.toggleTreeViewer} />
+                <div className="sg-tree__splitter" />
+                <TreeHeader
+                    toggled={this.state.toggled}
+                    uri={this.props.uri}
+                    rev={this.props.rev}
+                    onClick={this.toggleTreeViewer}
+                />
                 <ReactTree
                     onSelected={this.handleSelection}
                     plugins={['wholerow']}
-                    core={{ force_text: true, dblclick_toggle: false, multiple: false, worker: false, data: this.props.treeData }}
+                    core={{
+                        force_text: true,
+                        dblclick_toggle: false,
+                        multiple: false,
+                        worker: false,
+                        data: this.props.treeData,
+                    }}
                 />
             </div>
         )
@@ -62,7 +73,8 @@ export class TreeViewer extends React.Component<Props, State> {
             this.props.onToggled(!this.state.toggled)
         }
         this.setState({
-            ...this.state, toggled: !this.state.toggled,
+            ...this.state,
+            toggled: !this.state.toggled,
         })
     }
 

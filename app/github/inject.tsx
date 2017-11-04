@@ -58,7 +58,8 @@ export function injectGitHubApplication(marker: HTMLElement): void {
     inject()
     chrome.runtime.sendMessage({ type: 'getIdentity' }, identity => {
         if (identity) {
-            (eventLogger as ExtensionEventLogger).updatePropsForUser(identity)
+            const e = eventLogger as ExtensionEventLogger
+            e.updatePropsForUser(identity)
         }
     })
 
@@ -75,9 +76,17 @@ export function injectGitHubApplication(marker: HTMLElement): void {
         console.log('asdfasdfasdfadsf!')
     })
 
-    window.addEventListener('resize', _.debounce(() => {
-        updateMarginForWidth()
-    }, 500, { trailing: true }), true)
+    window.addEventListener(
+        'resize',
+        _.debounce(
+            () => {
+                updateMarginForWidth()
+            },
+            500,
+            { trailing: true }
+        ),
+        true
+    )
 }
 
 function progressiveContainerObserver(): void {
@@ -94,10 +103,10 @@ function progressiveContainerObserver(): void {
     }
     const observer = new MutationObserver(mutations => {
         // tslint:disable-next-line
-        mutations.forEach((mutation) => {
+        mutations.forEach(mutation => {
             const nodes = Array.prototype.slice.call(mutation.removedNodes)
             // tslint:disable-next-line
-            nodes.forEach((node) => {
+            nodes.forEach(node => {
                 // tslint:disable-next-line
                 loaders.forEach(loader => {
                     if (loader === node) {
@@ -169,57 +178,63 @@ function injectFileTree(): void {
     if (!gitHubState) {
         return
     }
-    resolveRev({ repoPath, rev: gitHubState.rev || '' }).toPromise().then(resolvedRev => {
-        let commit = gitHubState.rev
-        if (!commit && resolvedRev) {
-            commit = resolvedRev
-        }
-        listAllFiles({ repoPath, commitID: commit || '' }).then(resp => {
-            if (resp.length === 0) {
-                return
+    resolveRev({ repoPath, rev: gitHubState.rev || '' })
+        .toPromise()
+        .then(resolvedRev => {
+            let commit = gitHubState.rev
+            if (!commit && resolvedRev) {
+                commit = resolvedRev
             }
-            const treeData = buildFileTree(`https://com/${gitHubState.owner}/${gitHubState.repoName}/blob/${commit}/`, resp)
-            if (document.querySelector('.octotree')) {
-                chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
-                hideFileTree()
-                return
-            }
-            chrome.storage.sync.get(items => {
-                isTreeViewToggled = items.treeViewToggled === undefined ? true : items.treeViewToggled
-                if (!isCodePage) {
-                    isTreeViewToggled = false
+            listAllFiles({ repoPath, commitID: commit || '' }).then(resp => {
+                if (resp.length === 0) {
+                    return
                 }
-                render(
-                    <TreeViewer
-                        onToggled={treeViewToggled}
-                        toggled={isTreeViewToggled}
-                        onSelected={handleSelected}
-                        treeData={treeData}
-                        parentRef={mount}
-                        uri={repoPath}
-                        rev={commit!}
-                    />, mount
+                const treeData = buildFileTree(
+                    `https://com/${gitHubState.owner}/${gitHubState.repoName}/blob/${commit}/`,
+                    resp
                 )
-                updateTreeViewLayout()
-                selectTreeNodeForURL()
-                const opt = {
-                    onDrag(__: any, $el: any, newWidth: number): boolean {
-                        if (newWidth < 280) {
-                            newWidth = 280
-                        }
-                        $el.width(newWidth)
-                        updateMarginForWidth()
-                        return false
-                    },
-                    resizeWidth: true,
-                    resizeHeight: false,
-                    resizeWidthFrom: 'right',
-                    handleSelector: '.sg-tree__splitter',
+                if (document.querySelector('.octotree')) {
+                    chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
+                    hideFileTree()
+                    return
                 }
-                $(mount).resizable(opt)
+                chrome.storage.sync.get(items => {
+                    isTreeViewToggled = items.treeViewToggled === undefined ? true : items.treeViewToggled
+                    if (!isCodePage) {
+                        isTreeViewToggled = false
+                    }
+                    render(
+                        <TreeViewer
+                            onToggled={treeViewToggled}
+                            toggled={isTreeViewToggled}
+                            onSelected={handleSelected}
+                            treeData={treeData}
+                            parentRef={mount}
+                            uri={repoPath}
+                            rev={commit!}
+                        />,
+                        mount
+                    )
+                    updateTreeViewLayout()
+                    selectTreeNodeForURL()
+                    const opt = {
+                        onDrag(__: any, $el: any, newWidth: number): boolean {
+                            if (newWidth < 280) {
+                                newWidth = 280
+                            }
+                            $el.width(newWidth)
+                            updateMarginForWidth()
+                            return false
+                        },
+                        resizeWidth: true,
+                        resizeHeight: false,
+                        resizeWidthFrom: 'right',
+                        handleSelector: '.sg-tree__splitter',
+                    }
+                    $(mount).resizable(opt)
+                })
             })
         })
-    })
 }
 
 function treeViewToggled(toggleState: boolean): void {
@@ -241,7 +256,8 @@ function updateMarginForWidth(): void {
         return
     }
     const widthDiff = window.innerWidth - repoContent.clientWidth
-    document.body.style.marginLeft = (widthDiff / 2 > fileTree.clientWidth || !isTreeViewToggled) ? '0px' : `${fileTree.clientWidth}px`
+    document.body.style.marginLeft =
+        widthDiff / 2 > fileTree.clientWidth || !isTreeViewToggled ? '0px' : `${fileTree.clientWidth}px`
 }
 
 function updateTreeViewLayout(): void {
@@ -306,7 +322,7 @@ function selectTreeNodeForURL(): void {
     }
 
     const selected = tree.get_selected()
-    if (selected && (selected[0] === gitHubState.filePath)) {
+    if (selected && selected[0] === gitHubState.filePath) {
         return
     }
     $('.jstree').jstree('deselect_all')
@@ -318,7 +334,11 @@ function selectTreeNodeForURL(): void {
  * @param containers The blob containers that holds the code snippet to be annotated.
  * @param selector The selector of the element to append a "View File" button.
  */
-function injectCodeSnippetAnnotator(containers: HTMLCollectionOf<HTMLElement>, selector: string, isRepoSearch: boolean): void {
+function injectCodeSnippetAnnotator(
+    containers: HTMLCollectionOf<HTMLElement>,
+    selector: string,
+    isRepoSearch: boolean
+): void {
     for (const file of Array.from(containers)) {
         const filePathContainer = file.querySelector(selector)
         if (!filePathContainer) {
@@ -372,7 +392,8 @@ function injectCodeSnippetAnnotator(containers: HTMLCollectionOf<HTMLElement>, s
                 isCommit={!isRepoSearch}
                 isBase={false}
                 buttonProps={buttonProps}
-            />, mountEl
+            />,
+            mountEl
         )
     }
 }
@@ -426,7 +447,8 @@ function injectBlobAnnotators(): void {
                     isBase={false}
                     buttonProps={buttonProps}
                     position={position}
-                />, mount
+                />,
+                mount
             )
             return
         }
@@ -477,45 +499,44 @@ function injectBlobAnnotators(): void {
         const getCodeCellsBase = getCodeCellsDiff(true)
         const getCodeCellsHead = getCodeCellsDiff(false)
 
-        const filterTarget = (isBase: boolean, isSplitDiff: boolean) =>
-            (target: HTMLElement) => {
-                const td = getTableDataCell(target)
-                if (!td) {
-                    return false
-                }
+        const filterTarget = (isBase: boolean, isSplitDiff: boolean) => (target: HTMLElement) => {
+            const td = getTableDataCell(target)
+            if (!td) {
+                return false
+            }
 
-                if (isSplitDiff) {
-                    if (td.classList.contains('empty-cell')) {
-                        return false
-                    }
-                    // Check the relative position of the <td> element to determine if it is
-                    // on the left or right.
-                    const previousEl = td.previousElementSibling
-                    const isLeft = previousEl === td.parentElement!.firstElementChild
-                    if (isBase) {
-                        return isLeft
-                    } else {
-                        return !isLeft
-                    }
-                }
-
-                if (td.classList.contains('blob-code-deletion') && !isBase) {
+            if (isSplitDiff) {
+                if (td.classList.contains('empty-cell')) {
                     return false
                 }
-                if (td.classList.contains('blob-code-deletion') && isBase) {
-                    return true
-                }
-                if (td.classList.contains('blob-code-addition') && isBase) {
-                    return false
-                }
-                if (td.classList.contains('blob-code-addition') && !isBase) {
-                    return true
-                }
+                // Check the relative position of the <td> element to determine if it is
+                // on the left or right.
+                const previousEl = td.previousElementSibling
+                const isLeft = previousEl === td.parentElement!.firstElementChild
                 if (isBase) {
-                    return false
+                    return isLeft
+                } else {
+                    return !isLeft
                 }
+            }
+
+            if (td.classList.contains('blob-code-deletion') && !isBase) {
+                return false
+            }
+            if (td.classList.contains('blob-code-deletion') && isBase) {
                 return true
             }
+            if (td.classList.contains('blob-code-addition') && isBase) {
+                return false
+            }
+            if (td.classList.contains('blob-code-addition') && !isBase) {
+                return true
+            }
+            if (isBase) {
+                return false
+            }
+            return true
+        }
 
         const getNodeToConvert = (td: HTMLTableDataCellElement) => {
             if (!td.classList.contains('blob-code-inner')) {
@@ -542,7 +563,8 @@ function injectBlobAnnotators(): void {
                 isCommit={isCommit}
                 isBase={true}
                 buttonProps={buttonProps}
-            />, mountBase
+            />,
+            mountBase
         )
 
         const mountHead = createBlobAnnotatorMount(file)
@@ -568,7 +590,8 @@ function injectBlobAnnotators(): void {
                 isCommit={isCommit}
                 isBase={false}
                 buttonProps={buttonProps}
-            />, mountHead
+            />,
+            mountHead
         )
     }
 

@@ -14,7 +14,15 @@ export class ContextualSourcegraphButton extends React.Component<{}, {}> {
 
         const { label, openProps, ariaLabel } = this.openOnSourcegraphProps(gitHubState)
         const className = ariaLabel ? 'btn btn-sm tooltipped tooltipped-s' : 'btn btn-sm'
-        return <OpenOnSourcegraph openProps={openProps} ariaLabel={ariaLabel} label={label} className={className} onClick={this.onClick} />
+        return (
+            <OpenOnSourcegraph
+                openProps={openProps}
+                ariaLabel={ariaLabel}
+                label={label}
+                className={className}
+                onClick={this.onClick}
+            />
+        )
     }
 
     private onClick = () => {
@@ -40,7 +48,9 @@ export class ContextualSourcegraphButton extends React.Component<{}, {}> {
         }
     }
 
-    private openOnSourcegraphProps(state: GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl): { label: string, openProps: OpenInSourcegraphProps, ariaLabel?: string } {
+    private openOnSourcegraphProps(
+        state: GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl
+    ): { label: string; openProps: OpenInSourcegraphProps; ariaLabel?: string } {
         const props: OpenInSourcegraphProps = {
             repoPath: `github.com/${state.owner}/${state.repoName}`,
             rev: state.rev || '',

@@ -23,7 +23,7 @@ let trackingEnabled = true
 chrome.storage.sync.get(items => {
     trackingEnabled = items.eventTrackingEnabled
 })
-chrome.storage.onChanged.addListener(change  => {
+chrome.storage.onChanged.addListener(change => {
     console.log('got a change!!!', change)
     chrome.storage.sync.get(items => {
         trackingEnabled = items.eventTrackingEnabled
@@ -69,7 +69,6 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
             return
 
         case 'trackView':
-
             if (telligentWrapper) {
                 telligentWrapper.track('view', message.payload)
             }

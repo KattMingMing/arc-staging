@@ -50,12 +50,15 @@ export enum GitHubMode {
  * @param target The element to compute line & character offset for.
  * @param isDelta Whether to ignore the first character on a line when computing character offset.
  */
-export function getTargetLineAndOffset(target: HTMLElement, opt: MaybeDiffSpec): { line: number, character: number, word: string } | undefined {
+export function getTargetLineAndOffset(
+    target: HTMLElement,
+    opt: MaybeDiffSpec
+): { line: number; character: number; word: string } | undefined {
     const origTarget = target
     let isDelta = opt.isDelta
     while (target && target.tagName !== 'TD' && target.tagName !== 'BODY') {
         // Find ancestor which wraps the whole line of code, not just the target token.
-        target = (target.parentNode as HTMLElement)
+        target = target.parentNode as HTMLElement
     }
     if (!target || target.tagName !== 'TD') {
         // Make sure we're looking at an element we've annotated line number for (otherwise we have no idea )
@@ -73,10 +76,9 @@ export function getTargetLineAndOffset(target: HTMLElement, opt: MaybeDiffSpec):
             const lineEl = target.previousElementSibling!
             line = parseInt(lineEl.getAttribute('data-line-number')!, 10) || parseInt(lineEl.textContent!, 10)
         } else {
-            const lineEl = (isDelta ?
-                (opt.isBase ? target.previousElementSibling!.previousElementSibling : target.previousElementSibling) :
-                target.previousElementSibling
-            ) as HTMLElement
+            const lineEl = (isDelta
+                ? opt.isBase ? target.previousElementSibling!.previousElementSibling : target.previousElementSibling
+                : target.previousElementSibling) as HTMLElement
             line = parseInt(lineEl.getAttribute('data-line-number')!, 10) || parseInt(lineEl.textContent!, 10)
         }
     }
@@ -135,7 +137,12 @@ export function getTargetLineAndOffset(target: HTMLElement, opt: MaybeDiffSpec):
  * @param cell the <td> containing syntax highlighted code
  * @param offset character offset
  */
-export function findElementWithOffset(cell: HTMLElement, line: number, offset: number, opt: MaybeDiffSpec): HTMLElement | undefined {
+export function findElementWithOffset(
+    cell: HTMLElement,
+    line: number,
+    offset: number,
+    opt: MaybeDiffSpec
+): HTMLElement | undefined {
     let ignoreFirstCharacter = opt.isDelta
     let currOffset = 0
     const walkNode = (currNode: HTMLElement): HTMLElement | undefined => {

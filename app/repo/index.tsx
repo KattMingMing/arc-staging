@@ -65,37 +65,55 @@ export interface ReferencesModeSpec {
 /**
  * Properties of a RepoURI (like git://github.com/gorilla/mux#mux.go) or a URL (like https://sourcegraph.com/github.com/gorilla/mux/-/blob/mux.go)
  */
-export interface ParsedRepoURI extends RepoSpec, Partial<RevSpec>, Partial<ResolvedRevSpec>, Partial<FileSpec>, Partial<PositionSpec>, Partial<RangeSpec> { }
+export interface ParsedRepoURI
+    extends RepoSpec,
+        Partial<RevSpec>,
+        Partial<ResolvedRevSpec>,
+        Partial<FileSpec>,
+        Partial<PositionSpec>,
+        Partial<RangeSpec> {}
 
 /**
  * A repo
  */
-export interface Repo extends RepoSpec, Partial<RevSpec> { }
+export interface Repo extends RepoSpec, Partial<RevSpec> {}
 
 /**
  * A repo resolved to an exact commit
  */
-export interface AbsoluteRepo extends RepoSpec, Partial<RevSpec>, ResolvedRevSpec { }
+export interface AbsoluteRepo extends RepoSpec, Partial<RevSpec>, ResolvedRevSpec {}
 
 /**
  * A file in a repo
  */
-export interface RepoFile extends RepoSpec, Partial<RevSpec>, Partial<ResolvedRevSpec>, FileSpec { }
+export interface RepoFile extends RepoSpec, Partial<RevSpec>, Partial<ResolvedRevSpec>, FileSpec {}
 
 /**
  * A file at an exact commit
  */
-export interface AbsoluteRepoFile extends RepoSpec, Partial<RevSpec>, ResolvedRevSpec, FileSpec { }
+export interface AbsoluteRepoFile extends RepoSpec, Partial<RevSpec>, ResolvedRevSpec, FileSpec {}
 
 /**
  * A position in file
  */
-export interface RepoFilePosition extends RepoSpec, Partial<RevSpec>, Partial<ResolvedRevSpec>, FileSpec, PositionSpec, Partial<ReferencesModeSpec> { }
+export interface RepoFilePosition
+    extends RepoSpec,
+        Partial<RevSpec>,
+        Partial<ResolvedRevSpec>,
+        FileSpec,
+        PositionSpec,
+        Partial<ReferencesModeSpec> {}
 
 /**
  * A position in file at an exact commit
  */
-export interface AbsoluteRepoFilePosition extends RepoSpec, Partial<RevSpec>, ResolvedRevSpec, FileSpec, PositionSpec, Partial<ReferencesModeSpec> { }
+export interface AbsoluteRepoFilePosition
+    extends RepoSpec,
+        Partial<RevSpec>,
+        ResolvedRevSpec,
+        FileSpec,
+        PositionSpec,
+        Partial<ReferencesModeSpec> {}
 
 export interface DiffRepoSpec {
     baseRepoPath: string
@@ -112,7 +130,7 @@ export interface DiffResolvedRevSpec {
     headCommitID: string
 }
 
-export interface DiffRepoRev extends DiffRepoSpec, DiffRevSpec { }
+export interface DiffRepoRev extends DiffRepoSpec, DiffRevSpec {}
 
 export interface TooltipData {
     loading?: boolean
@@ -126,15 +144,15 @@ export interface OpenInSourcegraphProps {
     rev: string
     filePath?: string
     coords?: {
-        line: number;
-        char: number;
+        line: number
+        char: number
     }
     fragment?: 'references'
     query?: {
-        search?: string,
+        search?: string
         diff?: {
-            rev: string,
-        };
+            rev: string
+        }
     }
     withModifierKey?: boolean
 }

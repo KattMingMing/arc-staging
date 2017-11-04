@@ -10,7 +10,6 @@ interface Props {
 }
 
 export class TreeHeader extends React.Component<Props, {}> {
-
     public render(): JSX.Element | null {
         const { uri, rev } = this.props
         let url = `${sourcegraphUrl}/${uri}`
@@ -20,12 +19,13 @@ export class TreeHeader extends React.Component<Props, {}> {
         url = `${url}?utm_source=${getPlatformName()}`
 
         return (
-            <div className='sg-tree__header' >
-                <div className='sg-tree__header-box'>
-                    {this.props.toggled ?
-                        <ToggleFileTree className='sg-tree__header-toggle' onClick={this.props.onClick} /> :
-                        <ShowFileTree className='sg-tree__header-toggle' onClick={this.props.onClick} />
-                    }
+            <div className="sg-tree__header">
+                <div className="sg-tree__header-box">
+                    {this.props.toggled ? (
+                        <ToggleFileTree className="sg-tree__header-toggle" onClick={this.props.onClick} />
+                    ) : (
+                        <ShowFileTree className="sg-tree__header-toggle" onClick={this.props.onClick} />
+                    )}
                 </div>
             </div>
         )

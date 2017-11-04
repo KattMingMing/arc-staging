@@ -5,7 +5,7 @@ import { sourcegraphUrl } from './context'
 type Modal = 'references'
 type ModalMode = 'local' | 'external'
 
-export function parseHash(hash: string): { line?: number, character?: number, modal?: Modal, modalMode?: ModalMode } {
+export function parseHash(hash: string): { line?: number; character?: number; modal?: Modal; modalMode?: ModalMode } {
     if (hash.startsWith('#')) {
         hash = hash.substr('#'.length)
     }
@@ -29,7 +29,7 @@ export function parseHash(hash: string): { line?: number, character?: number, mo
 
     const modalInfo = lineCharModalInfo[1].split(':')
     const modal = modalInfo[0] as Modal // "references"
-    const modalMode = modalInfo[1] as ModalMode || 'local' // "external"
+    const modalMode = (modalInfo[1] as ModalMode) || 'local' // "external"
     return { line, character, modal, modalMode }
 }
 
@@ -59,12 +59,16 @@ export function toBlobURL(ctx: RepoFile & Partial<PositionSpec>): string {
 }
 
 export function toPrettyBlobURL(ctx: RepoFile & Partial<PositionSpec> & Partial<ReferencesModeSpec>): string {
-    return `${sourcegraphUrl}/${ctx.repoPath}${ctx.rev ? '@' + ctx.rev : ''}/-/blob/${ctx.filePath}${toPositionHash(ctx.position)}${toReferencesHash(ctx.referencesMode)}`
+    return `${sourcegraphUrl}/${ctx.repoPath}${ctx.rev ? '@' + ctx.rev : ''}/-/blob/${ctx.filePath}${toPositionHash(
+        ctx.position
+    )}${toReferencesHash(ctx.referencesMode)}`
 }
 
 export function toAbsoluteBlobURL(ctx: AbsoluteRepoFile & Partial<PositionSpec> & Partial<ReferencesModeSpec>): string {
     const rev = ctx.commitID ? ctx.commitID : ctx.rev
-    return `${sourcegraphUrl}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/blob/${ctx.filePath}${toPositionHash(ctx.position)}${toReferencesHash(ctx.referencesMode)}`
+    return `${sourcegraphUrl}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/blob/${ctx.filePath}${toPositionHash(
+        ctx.position
+    )}${toReferencesHash(ctx.referencesMode)}`
 }
 
 export function toTreeURL(ctx: RepoFile): string {

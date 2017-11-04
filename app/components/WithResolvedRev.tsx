@@ -39,32 +39,35 @@ export class WithResolvedRev extends React.Component<WithResolvedRevProps, WithR
                         return [undefined]
                     }
                     // Defer Observable so it retries the request on resubscription
-                    return Observable.defer(() => resolveRev({ repoPath, rev }))
-                        // On a CloneInProgress error, retry after 5s
-                        .retryWhen(errors => errors
-                            .do(err => {
-                                if (err.code === ECLONEINPROGESS) {
-                                    // Display cloning screen to the user and retry
-                                    this.setState({ cloneInProgress: true })
-                                    return
-                                }
-                                if (err.code === EREPONOTFOUND) {
-                                    // Display 404to the user and do not retry
-                                    this.setState({ notFound: true })
-                                }
-                                // Don't retry other errors
-                                throw err
-                            })
-                            .delay(1000)
-                        )
-                        // Don't break the stream
-                        .catch(err => [])
+                    return (
+                        Observable.defer(() => resolveRev({ repoPath, rev }))
+                            // On a CloneInProgress error, retry after 5s
+                            .retryWhen(errors =>
+                                errors
+                                    .do(err => {
+                                        if (err.code === ECLONEINPROGESS) {
+                                            // Display cloning screen to the user and retry
+                                            this.setState({ cloneInProgress: true })
+                                            return
+                                        }
+                                        if (err.code === EREPONOTFOUND) {
+                                            // Display 404to the user and do not retry
+                                            this.setState({ notFound: true })
+                                        }
+                                        // Don't retry other errors
+                                        throw err
+                                    })
+                                    .delay(1000)
+                            )
+                            // Don't break the stream
+                            .catch(err => [])
+                    )
                 })
                 .subscribe(
-                commitID => {
-                    this.setState({ commitID, cloneInProgress: false })
-                },
-                err => console.error(err)
+                    commitID => {
+                        this.setState({ commitID, cloneInProgress: false })
+                    },
+                    err => console.error(err)
                 )
         )
     }

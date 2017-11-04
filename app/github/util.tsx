@@ -40,10 +40,12 @@ export function createBlobAnnotatorMount(fileContainer: HTMLElement, isBase?: bo
         return null
     }
     const buttonGroup = fileActions.querySelector('.BtnGroup')
-    if (buttonGroup && buttonGroup.parentNode) { // blob view
+    if (buttonGroup && buttonGroup.parentNode) {
+        // blob view
         // mountEl.style.cssFloat = "none";
         buttonGroup.parentNode.insertBefore(mountEl, buttonGroup)
-    } else { // commit & pull request view
+    } else {
+        // commit & pull request view
         const note = fileContainer.querySelector('.show-file-notes')
         if (!note || !note.parentNode) {
             throw new Error('cannot locate BlobAnnotator injection site')
@@ -70,7 +72,7 @@ export function isPrivateRepo(): boolean {
  * getDeltaFileName returns the path of the file container. It assumes
  * the file container is for a diff (i.e. a commit or pull request view).
  */
-export function getDeltaFileName(container: HTMLElement): { headFilePath: string, baseFilePath: string | null } {
+export function getDeltaFileName(container: HTMLElement): { headFilePath: string; baseFilePath: string | null } {
     const info = container.querySelector('.file-info') as HTMLElement
 
     if (info.title) {
@@ -82,7 +84,7 @@ export function getDeltaFileName(container: HTMLElement): { headFilePath: string
     }
 }
 
-function getPathNamesFromElement(element: HTMLElement): { headFilePath: string, baseFilePath: string | null } {
+function getPathNamesFromElement(element: HTMLElement): { headFilePath: string; baseFilePath: string | null } {
     const elements = element.title.split(' → ')
     if (elements.length > 1) {
         return { headFilePath: elements[1], baseFilePath: elements[0] }
@@ -108,7 +110,8 @@ export function isDomSplitDiff(): boolean {
         const diffToggles = headerBar[0].getElementsByClassName('BtnGroup')
         const disabledToggle = diffToggles[0].getElementsByTagName('A')[0] as HTMLAnchorElement
         return disabledToggle && !disabledToggle.href.includes('diff=split')
-    } else { // delta for a commit view
+    } else {
+        // delta for a commit view
         const headerBar = document.getElementsByClassName('details-collapse table-of-contents js-details-container')
         if (!headerBar || headerBar.length !== 1) {
             return false
@@ -131,7 +134,9 @@ export function getDiffResolvedRev(): DiffResolvedRevSpec | null {
 
     let baseCommitID = ''
     let headCommitID = ''
-    const fetchContainers = document.getElementsByClassName('js-socket-channel js-updatable-content js-pull-refresh-on-pjax')
+    const fetchContainers = document.getElementsByClassName(
+        'js-socket-channel js-updatable-content js-pull-refresh-on-pjax'
+    )
     if (isPullRequest) {
         if (fetchContainers && fetchContainers.length === 1) {
             // tslint:disable-next-line
@@ -158,7 +163,6 @@ export function getDiffResolvedRev(): DiffResolvedRevSpec | null {
                     }
                 }
             }
-
         } else {
             // Last-ditch: look for inline comment form input which has base/head on it.
             const baseInput = document.querySelector(`input[name="comparison_start_oid"]`)
@@ -249,7 +253,6 @@ export function getDiffRepoRev(): DiffRepoRev | null {
         } else {
             headRepoPath = repoPath as string
         }
-
     } else if (isCommit) {
         let branchEl = document.querySelector('li.branch') as HTMLElement
         if (branchEl) {
@@ -439,7 +442,9 @@ function getBranchName(): string | null {
     if ((branchButtons[0] as HTMLElement).title) {
         return (branchButtons[0] as HTMLElement).title
     }
-    const innerButtonEls = (branchButtons[0] as HTMLElement).getElementsByClassName('js-select-button css-truncate-target')
+    const innerButtonEls = (branchButtons[0] as HTMLElement).getElementsByClassName(
+        'js-select-button css-truncate-target'
+    )
     if (innerButtonEls.length === 0) {
         return null
     }
@@ -478,7 +483,7 @@ export function parseURL(loc: Location = window.location): GitHubURL {
     repoName = urlsplit[1]
 
     let revParts = 1 // a revision may have "/" chars, in which case we consume multiple parts;
-    if (urlsplit[3] && (urlsplit[2] === 'tree' || urlsplit[2] === 'blob') || urlsplit[2] === 'commit') {
+    if ((urlsplit[3] && (urlsplit[2] === 'tree' || urlsplit[2] === 'blob')) || urlsplit[2] === 'commit') {
         const currBranch = getBranchName()
         if (currBranch) {
             revParts = currBranch.split('/').length

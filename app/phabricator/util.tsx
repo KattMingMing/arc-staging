@@ -25,7 +25,7 @@ function isDifferentialLanded(): boolean {
 }
 
 const DIFF_LINK = /D[0-9]+\?id=([0-9]+)/i
-function getMaxDiffFromTabView(): { diffID: number, revDescription: string } | null {
+function getMaxDiffFromTabView(): { diffID: number; revDescription: string } | null {
     // first, find Revision contents table box
     const headerShells = document.getElementsByClassName('phui-header-header')
     let revisionContents: Element | null = null
@@ -47,7 +47,7 @@ function getMaxDiffFromTabView(): { diffID: number, revDescription: string } | n
             continue
         }
         const links = table.getElementsByTagName('a')
-        let max: { diffID: number, revDescription: string } | null = null
+        let max: { diffID: number; revDescription: string } | null = null
         for (const link of Array.from(links)) {
             const linkHref = link.getAttribute('href')
             if (!linkHref) {
@@ -62,7 +62,10 @@ function getMaxDiffFromTabView(): { diffID: number, revDescription: string } | n
             if (!shaMatch) {
                 continue
             }
-            max = max && max.diffID > parseInt(matches[1], 10) ? max : { diffID: parseInt(matches[1], 10), revDescription: shaMatch[2] }
+            max =
+                max && max.diffID > parseInt(matches[1], 10)
+                    ? max
+                    : { diffID: parseInt(matches[1], 10), revDescription: shaMatch[2] }
         }
         return max
     }
@@ -142,7 +145,9 @@ function getBaseCommitIDFromRevisionPage(): string | null {
     return null
 }
 
-export async function getPhabricatorState(loc: Location): Promise<DiffusionState | DifferentialState | RevisionState | ChangeState | null> {
+export async function getPhabricatorState(
+    loc: Location
+): Promise<DiffusionState | DifferentialState | RevisionState | ChangeState | null> {
     const diffusionMatch = PHAB_DIFFUSION_REGEX.exec(loc.href)
     if (diffusionMatch) {
         const match = {
@@ -213,7 +218,9 @@ export async function getPhabricatorState(loc: Location): Promise<DiffusionState
         const maxDiff = getMaxDiffFromTabView()
         const diffLanded = isDifferentialLanded()
         if (diffLanded && !maxDiff) {
-            console.error('looking for the final diff id in the revision contents table failed. expected final row to have the commit in the description field.')
+            console.error(
+                'looking for the final diff id in the revision contents table failed. expected final row to have the commit in the description field.'
+            )
             return null
         }
         if (match.comparison) {
@@ -316,7 +323,7 @@ export async function getPhabricatorState(loc: Location): Promise<DiffusionState
     return null
 }
 
-export function getFilepathFromFile(fileContainer: HTMLElement): { filePath: string, baseFilePath?: string } {
+export function getFilepathFromFile(fileContainer: HTMLElement): { filePath: string; baseFilePath?: string } {
     const filePath = fileContainer.children[3].textContent as string
     const metas = fileContainer.querySelectorAll('.differential-meta-notice')
     let baseFilePath: string | undefined
@@ -369,7 +376,11 @@ export function getCodeCellsForAnnotation(table: HTMLTableElement): CodeCell[] {
 /**
  * getCodeCellsForAnnotation code cells which should be annotated
  */
-export function getCodeCellsForDifferentialAnnotations(table: HTMLTableElement, isSplitView: boolean, isBase: boolean): CodeCell[] {
+export function getCodeCellsForDifferentialAnnotations(
+    table: HTMLTableElement,
+    isSplitView: boolean,
+    isBase: boolean
+): CodeCell[] {
     const cells: CodeCell[] = []
     // tslint:disable-next-line:prefer-for-of
     for (const row of Array.from(table.rows)) {
@@ -468,7 +479,9 @@ export function expanderListen(): void {
     JX.Stratcom._dispatchProxyPreExpander = JX.Stratcom._dispatchProxy
     JX.Stratcom._dispatchProxy = proxyEvent => {
         if (proxyEvent.isNormalClick() && proxyEvent.getNodes()['show-more']) {
-            proxyEvent.__auto__target.parentElement.parentElement.parentElement.parentElement.dispatchEvent(new Event('expandClicked', {}))
+            proxyEvent.__auto__target.parentElement.parentElement.parentElement.parentElement.dispatchEvent(
+                new Event('expandClicked', {})
+            )
         }
         return JX.Stratcom._dispatchProxyPreExpander(proxyEvent)
     }
@@ -485,7 +498,11 @@ export function metaClickOverride(): void {
     }
     JX.Stratcom._dispatchProxyPreMeta = JX.Stratcom._dispatchProxy
     JX.Stratcom._dispatchProxy = proxyEvent => {
-        if (proxyEvent.__auto__type === 'click' && proxyEvent.__auto__rawEvent.metaKey && proxyEvent.__auto__target.classList.contains('sg-clickable')) {
+        if (
+            proxyEvent.__auto__type === 'click' &&
+            proxyEvent.__auto__rawEvent.metaKey &&
+            proxyEvent.__auto__target.classList.contains('sg-clickable')
+        ) {
             return
         }
         return JX.Stratcom._dispatchProxyPreMeta(proxyEvent)

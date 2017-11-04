@@ -3,15 +3,25 @@ const telligentFunctionName = 'telligent'
 
 export class TelligentWrapper {
     private t: any
-    constructor(appId: string, platform: string, forceSecure: boolean, installedChromeExtension: boolean, url?: string) {
+    constructor(
+        appId: string,
+        platform: string,
+        forceSecure: boolean,
+        installedChromeExtension: boolean,
+        url?: string
+    ) {
         // Create the initializing function
         // tslint:disable-next-line
         window[telligentFunctionName] = function(): void {
-            (window[telligentFunctionName].q = window[telligentFunctionName].q || []).push(arguments)
+            window[telligentFunctionName].q = window[telligentFunctionName].q || []
+            window[telligentFunctionName].q.push(arguments)
         }
 
         // Set up the initial queue, if it doesn't already exist
-        window[telligentFunctionName].q = new telligent.Telligent((window[telligentFunctionName].q || []), telligentFunctionName)
+        window[telligentFunctionName].q = new telligent.Telligent(
+            window[telligentFunctionName].q || [],
+            telligentFunctionName
+        )
 
         this.t = (window as any).telligent
 

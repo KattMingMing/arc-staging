@@ -29,8 +29,12 @@ function injectApplication(): void {
         chrome.storage.sync.get(items => {
             const sgurl = items.sourcegraphURL ? items.sourcegraphURL : 'https://sourcegraph.com'
             setSourcegraphUrl(sgurl)
-            setRepositoryFileTreeEnabled(items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled)
-            setRepositorySearchEnabled(items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled)
+            setRepositoryFileTreeEnabled(
+                items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled
+            )
+            setRepositorySearchEnabled(
+                items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled
+            )
             setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled)
             setEventTrackingEnabled(items.eventTrackingEnabled)
             setOpenInEditorEnabled(items.openInEditorEnabled)

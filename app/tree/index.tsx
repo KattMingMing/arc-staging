@@ -4,7 +4,7 @@ export interface TreeNode {
     state: NodeState | undefined
     id?: string
     a_attr?: {
-        href: string,
+        href: string
     }
 }
 
@@ -41,10 +41,16 @@ export function buildFileTree(baseURL: string, data: string[]): any[] {
             // that has the right name, create one:
             if (lastNode === currentNode) {
                 if (chain[chain.length - 1] === wantedNode) {
-                    const newNode = currentNode![k] = { text: wantedNode, children: undefined, id: data[i], state: {}, a_attr: { href: `${baseURL}${data[i]}` } }
+                    const newNode = (currentNode![k] = {
+                        text: wantedNode,
+                        children: undefined,
+                        id: data[i],
+                        state: {},
+                        a_attr: { href: `${baseURL}${data[i]}` },
+                    })
                     currentNode = newNode.children
                 } else {
-                    const newNode = currentNode![k] = { text: wantedNode, children: [], state: {} }
+                    const newNode = (currentNode![k] = { text: wantedNode, children: [], state: {} })
                     currentNode = newNode.children
                 }
             }

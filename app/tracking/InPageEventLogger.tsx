@@ -10,7 +10,13 @@ export class InPageEventLogger extends EventLogger {
         super()
         // remove http or https from address since telligent adds it back in
         const telligentUrl = sourcegraphUrl.replace('http://', '').replace('https://', '')
-        this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'PhabricatorExtension', false, false, `${telligentUrl}/.bi-logger`)
+        this.telligentWrapper = new TelligentWrapper(
+            'SourcegraphExtension',
+            'PhabricatorExtension',
+            false,
+            false,
+            `${telligentUrl}/.bi-logger`
+        )
     }
 
     public setUserId(userId: string | null): void {
@@ -22,5 +28,4 @@ export class InPageEventLogger extends EventLogger {
         eventProps.userId = this.userId
         this.telligentWrapper.track(eventAction, eventProps)
     }
-
 }

@@ -1,7 +1,6 @@
 import { getPlatformName, isE2ETest } from '../util/context'
 
 export abstract class EventLogger {
-
     public logHover(eventProperties: any = {}): void {
         this.logEventForCategory('BrowserExtension', 'Hover', 'SymbolHovered', eventProperties)
     }
@@ -75,13 +74,19 @@ export abstract class EventLogger {
         }
     }
 
-    private logEventForCategory(eventCategory: string, eventAction: string, eventLabel: string, eventProperties: any = {}): void {
+    private logEventForCategory(
+        eventCategory: string,
+        eventAction: string,
+        eventLabel: string,
+        eventProperties: any = {}
+    ): void {
         if (isE2ETest()) {
             return
         }
 
         const decoratedEventProps = {
-            ...eventProperties, ...this.defaultProperties(),
+            ...eventProperties,
+            ...this.defaultProperties(),
 
             eventLabel,
             eventCategory,

@@ -8,14 +8,13 @@ import { expanderListen, getPhabricatorUsername, metaClickOverride, setupPageLoa
 
 // NOTE: injectModules is idempotent, so safe to call multiple times on the same page.
 function injectModules(): void {
-    injectPhabricatorBlobAnnotators()
-        .catch(e => console.error(e))
+    injectPhabricatorBlobAnnotators().catch(e => console.error(e))
 }
 
 export function init(): void {
     const phabricatorUsername = getPhabricatorUsername()
     if (phabricatorUsername !== null) {
-        (eventLogger as InPageEventLogger).setUserId(getDomainUsername(window.SOURCEGRAPH_URL, phabricatorUsername))
+        ;(eventLogger as InPageEventLogger).setUserId(getDomainUsername(window.SOURCEGRAPH_URL, phabricatorUsername))
     }
 
     /**
@@ -32,7 +31,10 @@ export function init(): void {
         setupPageLoadListener()
     } else {
         // tslint:disable-next-line
-        console.log(`Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${window.localStorage.SOURCEGRAPH_DISABLED}.`);
+        console.log(
+            `Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${window
+                .localStorage.SOURCEGRAPH_DISABLED}.`
+        )
     }
 }
 

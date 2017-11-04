@@ -23,7 +23,9 @@ export class OpenOnSourcegraph extends React.Component<Props, {}> {
                 style={this.props.style}
                 onClick={this.props.onClick}
             >
-                <SourcegraphIcon style={this.props.iconStyle || { marginTop: '-1px', paddingRight: '4px', fontSize: '18px' }} />
+                <SourcegraphIcon
+                    style={this.props.iconStyle || { marginTop: '-1px', paddingRight: '4px', fontSize: '18px' }}
+                />
                 {this.props.label}
             </a>
         )

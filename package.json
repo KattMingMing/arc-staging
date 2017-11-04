@@ -14,7 +14,7 @@
   "author": "John Rothfels <john@sourcegraph.com>",
   "license": "MIT",
   "devDependencies": {
-    "@sourcegraph/tslint-config": "^6.0.0",
+    "@sourcegraph/tslint-config": "^7.0.0",
     "@types/bluebird": "^3.0.35",
     "@types/chrome": "^0.0.48",
     "@types/jquery": "^3.2.10",
