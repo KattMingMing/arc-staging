@@ -116,6 +116,12 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                 }
 
                 const getTableElement = () => file.querySelector('table')!
+                if (!getTableElement()) {
+                    // TODO(john): figure out something better to do
+                    continue
+                }
+                file.className = `${file.className} sg-blob-annotated`
+                const isSplitDiff = getTableElement()!.classList.contains('diff-2up')
 
                 const getCodeCellsBase = () => {
                     const table = getTableElement()
@@ -152,12 +158,6 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                     }
                 }
 
-                if (!getTableElement()) {
-                    // TODO(john): figure out something better to do
-                    continue
-                }
-                file.className = `${file.className} sg-blob-annotated`
-
                 const mountBase = createBlobAnnotatorMount(file, '.differential-changeset-buttons', true)
                 if (!mountBase) {
                     continue
@@ -167,7 +167,6 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                     continue
                 }
 
-                const isSplitDiff = getTableElement()!.classList.contains('diff-2up')
                 const { filePath, baseFilePath } = getFilepathFromFile(file)
 
                 switch (state.mode) {

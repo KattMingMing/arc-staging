@@ -1,4 +1,5 @@
 import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/toPromise'
 import { Observable } from 'rxjs/Observable'
 import { queryGraphQL } from '../backend/graphql'
 import { memoizeAsync, memoizeObservable } from '../util/memoize'

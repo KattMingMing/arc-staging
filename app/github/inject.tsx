@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import * as React from 'react'
 import { render } from 'react-dom'
-import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/toPromise'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { ContextualSourcegraphButton } from '../components/ContextualSourcegraphButton'
 import { injectRepositorySearchToggle } from '../components/SearchToggle'
@@ -34,6 +34,11 @@ require('jquery-resizable-dom')
 
 const defaultFilterTarget = () => true
 const identityFunction = (a: any) => a
+
+const buttonProps = {
+    className: 'btn btn-sm tooltipped tooltipped-n',
+    style: { marginRight: '5px', textDecoration: 'none', color: 'inherit' },
+}
 
 function refreshModules(): void {
     for (const el of Array.from(document.getElementsByClassName('sourcegraph-app-annotator'))) {
@@ -185,55 +190,62 @@ function injectFileTree(): void {
             if (!commit && resolvedRev) {
                 commit = resolvedRev
             }
-            listAllFiles({ repoPath, commitID: commit || '' }).then(resp => {
-                if (resp.length === 0) {
-                    return
-                }
-                const treeData = buildFileTree(
-                    `https://com/${gitHubState.owner}/${gitHubState.repoName}/blob/${commit}/`,
-                    resp
-                )
-                if (document.querySelector('.octotree')) {
-                    chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
-                    hideFileTree()
-                    return
-                }
-                chrome.storage.sync.get(items => {
-                    isTreeViewToggled = items.treeViewToggled === undefined ? true : items.treeViewToggled
-                    if (!isCodePage) {
-                        isTreeViewToggled = false
+            listAllFiles({ repoPath, commitID: commit || '' })
+                .then(resp => {
+                    if (resp.length === 0) {
+                        return
                     }
-                    render(
-                        <TreeViewer
-                            onToggled={treeViewToggled}
-                            toggled={isTreeViewToggled}
-                            onSelected={handleSelected}
-                            treeData={treeData}
-                            parentRef={mount}
-                            uri={repoPath}
-                            rev={commit!}
-                        />,
-                        mount
+                    const treeData = buildFileTree(
+                        `https://com/${gitHubState.owner}/${gitHubState.repoName}/blob/${commit}/`,
+                        resp
                     )
-                    updateTreeViewLayout()
-                    selectTreeNodeForURL()
-                    const opt = {
-                        onDrag(__: any, $el: any, newWidth: number): boolean {
-                            if (newWidth < 280) {
-                                newWidth = 280
-                            }
-                            $el.width(newWidth)
-                            updateMarginForWidth()
-                            return false
-                        },
-                        resizeWidth: true,
-                        resizeHeight: false,
-                        resizeWidthFrom: 'right',
-                        handleSelector: '.sg-tree__splitter',
+                    if (document.querySelector('.octotree')) {
+                        chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
+                        hideFileTree()
+                        return
                     }
-                    $(mount).resizable(opt)
+                    chrome.storage.sync.get(items => {
+                        isTreeViewToggled = items.treeViewToggled === undefined ? true : items.treeViewToggled
+                        if (!isCodePage) {
+                            isTreeViewToggled = false
+                        }
+                        render(
+                            <TreeViewer
+                                onToggled={treeViewToggled}
+                                toggled={isTreeViewToggled}
+                                onSelected={handleSelected}
+                                treeData={treeData}
+                                parentRef={mount}
+                                uri={repoPath}
+                                rev={commit!}
+                            />,
+                            mount
+                        )
+                        updateTreeViewLayout()
+                        selectTreeNodeForURL()
+                        const opt = {
+                            onDrag(__: any, $el: any, newWidth: number): boolean {
+                                if (newWidth < 280) {
+                                    newWidth = 280
+                                }
+                                $el.width(newWidth)
+                                updateMarginForWidth()
+                                return false
+                            },
+                            resizeWidth: true,
+                            resizeHeight: false,
+                            resizeWidthFrom: 'right',
+                            handleSelector: '.sg-tree__splitter',
+                        }
+                        $(mount).resizable(opt)
+                    })
                 })
-            })
+                .catch(e => {
+                    // ignore
+                })
+        })
+        .catch(e => {
+            // ignore
         })
 }
 
@@ -396,11 +408,6 @@ function injectCodeSnippetAnnotator(
             mountEl
         )
     }
-}
-
-const buttonProps = {
-    className: 'btn btn-sm tooltipped tooltipped-n',
-    style: { marginRight: '5px', textDecoration: 'none', color: 'inherit' },
 }
 
 function injectBlobAnnotators(): void {

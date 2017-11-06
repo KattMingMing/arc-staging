@@ -14,7 +14,8 @@ function injectModules(): void {
 export function init(): void {
     const phabricatorUsername = getPhabricatorUsername()
     if (phabricatorUsername !== null) {
-        ;(eventLogger as InPageEventLogger).setUserId(getDomainUsername(window.SOURCEGRAPH_URL, phabricatorUsername))
+        const e = eventLogger as InPageEventLogger
+        e.setUserId(getDomainUsername(window.SOURCEGRAPH_URL, phabricatorUsername))
     }
 
     /**
