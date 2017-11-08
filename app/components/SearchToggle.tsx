@@ -102,7 +102,7 @@ function sourcegraphSearchToggle(toggled: boolean): void {
             form.style.minWidth = '340px !important'
             form.onsubmit = () => {
                 if (toggled && scopedRepoSearchFormContainer()) {
-                    const searchQuery = encodeURIComponent(labelInput.value)
+                    const searchQuery = labelInput.value
                     const linkProps = getSourcegraphURLProps(searchQuery)
                     if (linkProps) {
                         eventLogger.logSourcegraphRepoSearchSubmitted({ ...linkProps, query: searchQuery })
