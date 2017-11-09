@@ -272,6 +272,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 .map(data => ({ target: data.target, ctx: { ...this.props, position: data.loc! } }))
                 .switchMap(({ target, ctx }) => {
                     const tooltip = this.getTooltip(target, ctx)
+                    tooltip.subscribe(() => eventLogger.logHover(this.getEventLoggerProps()))
                     const tooltipWithJ2D: Observable<TooltipData> = tooltip
                         .zip(this.getDefinition(ctx))
                         .map(([tooltip, defUrl]) => ({ ...tooltip, defUrl: defUrl || undefined }))
