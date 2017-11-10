@@ -272,7 +272,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 .map(data => ({ target: data.target, ctx: { ...this.props, position: data.loc! } }))
                 .switchMap(({ target, ctx }) => {
                     const tooltip = this.getTooltip(target, ctx)
-                    tooltip.subscribe(() => eventLogger.logHover(this.getEventLoggerProps()))
+                    this.subscriptions.add(tooltip.subscribe(this.logTelemetryOnTooltip))
                     const tooltipWithJ2D: Observable<TooltipData> = tooltip
                         .zip(this.getDefinition(ctx))
                         .map(([tooltip, defUrl]) => ({ ...tooltip, defUrl: defUrl || undefined }))
@@ -347,6 +347,18 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     this.fixedTooltip.next(nextProps)
                 })
         )
+    }
+
+    private logTelemetryOnTooltip = (data: TooltipData) => {
+        // If another tooltip is visible for the diff, ignore this mouseover.
+        if (isTooltipVisible(this.props, !this.props.isBase) || isOtherFileTooltipVisible(this.props)) {
+            return
+        }
+        // Only log an event if there is no fixed tooltip docked, we have a
+        // target element, and we have tooltip contents
+        if (!this.state.fixedTooltip && data.target && data.contents) {
+            eventLogger.logHover(this.getEventLoggerProps())
+        }
     }
 
     private diffSpec = () => {
