@@ -42,7 +42,7 @@ It works as follows:
 - `yarn`
 - `make`
 
-## Development (Chrome, with hot reloading)
+## Development (Chrome)
 
 ```bash
 $ npm install
@@ -79,7 +79,9 @@ Coming soon...
 - Click "Upload Updated Package" in the top section (inside Upload).
 - Ensure that you have bumped and commited the version in both the `manifest.json` and the `manifest.dev.json` files.
 - Click choose file and select the `chrome-bundle.zip` file.
+- Run `make bundle` to generate the new production build.
 - Add release notes and submit the build. It will be availble for the submitter instantly, but users will see it in a couple of hours. If this is a big fix for a bug then it is worth telling users they can go to `chrome://extensions` and clicking "Update extensions now" (This option is only available if "Developer mode" is enabled).
+- Click "Publish Changes"
 
 ### Automated
 
@@ -98,7 +100,7 @@ $ make deploy
 - Click "Select a file..." and click the `firefox-bundle.xpi` that was generated from `make bundle`.
 - Following the upload, create a zip of the entire browser-extension reposiotry.
 - Upload all of the source code to the Firefox store before clicking continue.
-- Append to the version notes if there is something significant. Otherwise use the previous version notes.
+- Append to the version notes if there is something significant. Otherwise use the previous version notes. You can find previous version notes by going to https://addons.mozilla.org/en-US/developers/addon/sourcegraph-addon-for-github/versions and clicking the previous submission.
 - ALWAYS INCLUDE NOTES FOR REVIEWERS: (Copy paste what is below, if a significant change happened include it and update the README.)
 Running from source:
 1) make bundle
