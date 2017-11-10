@@ -45,14 +45,19 @@ It works as follows:
 ## Development (Chrome, with hot reloading)
 
 ```bash
-$ yarn install
-$ yarn run dev
+$ npm install
+$ npm run dev
 ```
 
-* Allow `https://localhost:3000` (insecure) connections in Chrome (navigate to https://localhost:3000, click "ADVANCED",
-then "Proceed to localhost"). This is necessary because pages are injected on Sourcegraph/GitHub (https), so `webpack-dev-server`
-procotol must also be https.
-* [Load unpacked extensions](https://developer.chrome.com/extensions/getstarted#unpacked) with `./dev` folder.
+This will create a `dist` folder in the workspace. From there, in Chrome:
+
+* Browse to [chrome://extensions](chrome://extensions).
+* If you already have the Sourcegraph extension installed, disable it by unchecking the "Enabled" box.
+* Click on [Load unpacked extensions](https://developer.chrome.com/extensions/getstarted#unpacked), and select the `dist` folder.
+* Browse to any public repository on GitHub to confirm it is working.
+* After making changes it is necessary to refresh the extension. This is done by going to [chrome://extensions](chrome://extensions) and clicking "Reload".
+
+![Add dist folder](readme-load-extension-asset.png)
 
 ## Development (Firefox)
 
@@ -68,14 +73,13 @@ Coming soon...
 
 ## Deploy (Chrome)
 
-### Manual
-
-1. In `sourcegraph/sourcegraph/client/browser-ext/build/manifest.json`, bump the version on line 2. i.e. if the current version number is `"version": "1.1.98"`, change it to `"version": "1.1.99"`.
-1. In `sourcegraph/sourcegraph/client/browser-ext`, run `make bundle`
-1. Go to https://chrome.google.com/webstore/category/extensions and from settings, go to the developer dashboard: https://cl.ly/1J3c0N1j0E0F.
-1. Click edit on the Sourcegraph for GitHub extension.
-1. Click "Upload Updated Package" and select the newly generated `sourcegraph/sourcegraph/client/browser-ext/chrome-bundle.zip`
-1. Publish (at the bottom of the form)
+- Sign in via Google with your Sourcegraph email address.
+- Naviate to https://chrome.google.com/webstore/developer/dashboard?pli=1
+- Click "edit" in the row associated with Sourcegraph for GitHub
+- Click "Upload Updated Package" in the top section (inside Upload).
+- Ensure that you have bumped and commited the version in both the `manifest.json` and the `manifest.dev.json` files.
+- Click choose file and select the `chrome-bundle.zip` file.
+- Add release notes and submit the build. It will be availble for the submitter instantly, but users will see it in a couple of hours. If this is a big fix for a bug then it is worth telling users they can go to `chrome://extensions` and clicking "Update extensions now" (This option is only available if "Developer mode" is enabled).
 
 ### Automated
 
@@ -88,4 +92,35 @@ $ make deploy
 
 ## Deploy (Firefox)
 
-Coming soon...
+- Sign into Firefox under a Sourcegraph developer account
+- Go to https://addons.mozilla.org/en-US/developers/addon/sourcegraph-addon-for-github/versions/submit/
+- Ensure you have completed the steps above for release a production version. The three most important steps are: 1) Ensure it runs and there are no errors 2) Bump the version. 3) The `dist` build reflects the current changes you've made.
+- Click "Select a file..." and click the `firefox-bundle.xpi` that was generated from `make bundle`.
+- Following the upload, create a zip of the entire browser-extension reposiotry.
+- Upload all of the source code to the Firefox store before clicking continue.
+- Append to the version notes if there is something significant. Otherwise use the previous version notes.
+- ALWAYS INCLUDE NOTES FOR REVIEWERS: (Copy paste what is below, if a significant change happened include it and update the README.)
+Running from source:
+1) make bundle
+3) Go to about:debugging
+4) Select "Enable add-on debugging"
+5) Load Temporary Add-on
+6) Click "Load Temporary Add-on" and select "firefox-bundle.xpi"
+
+NOTE: This extension includes an opt-in for event tracking on GitHub.com for the purposes of personalization.
+
+How to use the extension:
+The Sourcegraph developer extension works on GitHub.com. Below you will find a list of Sourcegraph's features with relevant URLs as well as screenshots and videos to help verify the extension.
+
+Relevant URLs:
+Open on Sourcegraph URL: https://github.com/gorilla/mux
+Code browsing URL: https://github.com/gorilla/mux/blob/master/mux.go
+
+Main features of Sourcegraph:
+1) Open in Sourcegraph - This feature takes the user from the repository homepage to viewing the repository on Sourcegraph.com https://goo.gl/jepnDz
+2) Code intelligence when hovering over code tokens - This provides developers with IDE like code browsing tools on GitHub - https://goo.gl/G1cMMM
+3) Action items for hover tooltip - Users can now see references, the definition, and also search based on the currently selected token. -
+https://goo.gl/CHFnjr
+4) File tree navigation when viewing a GitHub repository - https://goo.gl/7NafYf
+- Click Save Changes
+- You're done.
