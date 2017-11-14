@@ -73,13 +73,13 @@ Coming soon...
 
 ## Deploy (Chrome)
 
+- Ensure that you have bumped and commited the version in both the `manifest.json` and the `manifest.dev.json` files.
+- Run `make bundle` to generate the new production build.
 - Sign in via Google with your Sourcegraph email address.
 - Naviate to https://chrome.google.com/webstore/developer/dashboard?pli=1
 - Click "edit" in the row associated with Sourcegraph for GitHub
 - Click "Upload Updated Package" in the top section (inside Upload).
-- Ensure that you have bumped and commited the version in both the `manifest.json` and the `manifest.dev.json` files.
 - Click choose file and select the `chrome-bundle.zip` file.
-- Run `make bundle` to generate the new production build.
 - Add release notes and submit the build. It will be availble for the submitter instantly, but users will see it in a couple of hours. If this is a big fix for a bug then it is worth telling users they can go to `chrome://extensions` and clicking "Update extensions now" (This option is only available if "Developer mode" is enabled).
 - Click "Publish Changes"
 
