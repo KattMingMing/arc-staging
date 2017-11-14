@@ -356,7 +356,12 @@ export class BlobAnnotator extends React.Component<Props, State> {
         }
         // Only log an event if there is no fixed tooltip docked, we have a
         // target element, and we have tooltip contents
-        if (!this.state.fixedTooltip && data.target && data.contents) {
+        if (
+            !this.state.fixedTooltip &&
+            data.target &&
+            data.contents &&
+            (data.contents instanceof Array ? data.contents.length : true)
+        ) {
             eventLogger.logHover(this.getEventLoggerProps())
         }
     }
