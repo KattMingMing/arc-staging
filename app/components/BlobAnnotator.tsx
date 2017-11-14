@@ -253,7 +253,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 
         this.subscriptions.add(
             Observable.fromEvent<MouseEvent>(ref, 'mouseover')
-                .debounceTime(10)
+                .debounceTime(50)
                 .map(e => e.target as HTMLElement)
                 .filter(this.props.filterTarget)
                 .do(target => {
