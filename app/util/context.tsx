@@ -146,7 +146,7 @@ export function isE2ETest(): boolean {
 
 /**
  * This method created a unique username based on the platform and domain the user is visiting.
- * Examples: sg_dev_phabricator:matt , or uber_phabricator:matt
+ * Examples: sg_dev_phabricator:matt
  */
 export function getDomainUsername(domain: string, username: string): string {
     return `${domain}:${username}`
