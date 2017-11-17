@@ -3,7 +3,10 @@ import { eventLogger } from '../../app/util/context'
 
 export function injectSourcegraphApp(marker: HTMLElement): void {
     window.addEventListener('load', () => {
+        // Generate and insert DOM element, in case this code executes first.
         document.body.appendChild(marker)
+        // Send custom webapp <-> extension registration event in case webapp listener is attached first.
+        document.dispatchEvent(new CustomEvent('sourcegraph:browser-extension-registration'))
     })
 
     document.addEventListener('sourcegraph:identify', (ev: CustomEvent) => {

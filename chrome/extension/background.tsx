@@ -24,7 +24,6 @@ chrome.storage.sync.get(items => {
     trackingEnabled = items.eventTrackingEnabled
 })
 chrome.storage.onChanged.addListener(change => {
-    console.log('got a change!!!', change)
     chrome.storage.sync.get(items => {
         trackingEnabled = items.eventTrackingEnabled
     })
