@@ -62,15 +62,12 @@ export async function getRepoListFromConduit(): Promise<ConduitRepo[]> {
     const results: ConduitRepo[] = []
     while (true) {
         try {
-            const res: ConduitReposResponse = await fetch(
-                'http://phabricator.aws.sgdev.org/api/diffusion.repository.search',
-                {
-                    method: 'POST',
-                    body: form,
-                    credentials: 'include',
-                    headers: new Headers({ Accept: 'application/json' }),
-                }
-            ).then(resp => resp.json())
+            const res: ConduitReposResponse = await fetch(window.location.origin + '/api/diffusion.repository.search', {
+                method: 'POST',
+                body: form,
+                credentials: 'include',
+                headers: new Headers({ Accept: 'application/json' }),
+            }).then(resp => resp.json())
 
             if (res.error_code) {
                 throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -143,15 +140,12 @@ export async function getDiffDetailsFromConduit(diffID: number, differentialID: 
     form.set('params[ids]', `[${diffID}]`)
     form.set('params[revisionIDs]', `[${differentialID}]`)
 
-    const res: ConduitDiffDetailsResponse = await fetch(
-        'http://phabricator.aws.sgdev.org/api/differential.querydiffs',
-        {
-            method: 'POST',
-            body: form,
-            credentials: 'include',
-            headers: new Headers({ Accept: 'application/json' }),
-        }
-    ).then(resp => resp.json())
+    const res: ConduitDiffDetailsResponse = await fetch(window.location.origin + '/api/differential.querydiffs', {
+        method: 'POST',
+        body: form,
+        credentials: 'include',
+        headers: new Headers({ Accept: 'application/json' }),
+    }).then(resp => resp.json())
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -174,15 +168,12 @@ export async function getRepoPHIDForDifferentialID(differentialID: number): Prom
     const form = createConduitRequestForm()
     form.set('params[ids]', `[${differentialID}]`)
 
-    const res: ConduitDifferentialQueryResponse = await fetch(
-        'http://phabricator.aws.sgdev.org/api/differential.query',
-        {
-            method: 'POST',
-            body: form,
-            credentials: 'include',
-            headers: new Headers({ Accept: 'application/json' }),
-        }
-    ).then(resp => resp.json())
+    const res: ConduitDifferentialQueryResponse = await fetch(window.location.origin + '/api/differential.query', {
+        method: 'POST',
+        body: form,
+        credentials: 'include',
+        headers: new Headers({ Accept: 'application/json' }),
+    }).then(resp => resp.json())
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -200,7 +191,7 @@ export async function getRepoDetailsFromCallsign(callsign: string): Promise<Phab
     form.set('params[constraints]', JSON.stringify({ callsigns: [callsign] }))
     form.set('params[attachments]', '{ "uris": true }')
 
-    const res: ConduitReposResponse = await fetch('http://phabricator.aws.sgdev.org/api/diffusion.repository.search', {
+    const res: ConduitReposResponse = await fetch(window.location.origin + '/api/diffusion.repository.search', {
         method: 'POST',
         body: form,
         credentials: 'include',
@@ -229,7 +220,7 @@ export async function getRepoDetailsFromRepoPHID(phid: string): Promise<Phabrica
     form.set('params[constraints]', JSON.stringify({ phids: [phid] }))
     form.set('params[attachments]', '{ "uris": true }')
 
-    const res: ConduitReposResponse = await fetch('http://phabricator.aws.sgdev.org/api/diffusion.repository.search', {
+    const res: ConduitReposResponse = await fetch(window.location.origin + '/api/diffusion.repository.search', {
         method: 'POST',
         body: form,
         credentials: 'include',
