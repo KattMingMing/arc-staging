@@ -541,6 +541,11 @@ export function normalizeRepoPath(origin: string): string {
         }
     } else if (origin.startsWith('https://')) {
         repoPath = origin.substr('https://'.length)
+    } else if (origin.includes('@')) {
+        // Assume the origin looks like `username@host:repo/path`
+        const split = origin.split('@')
+        repoPath = split[1]
+        repoPath = repoPath.replace(':', '/')
     }
 
     return repoPath
