@@ -1,6 +1,13 @@
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
-import { getModeFromExtension, getPathExtension, sourcegraphUrl, supportedExtensions } from '../util/context'
+import {
+    getExtensionVersion,
+    getModeFromExtension,
+    getPathExtension,
+    getPlatformName,
+    sourcegraphUrl,
+    supportedExtensions,
+} from '../util/context'
 import { memoizeAsync } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
 
@@ -12,6 +19,8 @@ interface LSPRequest {
 export function isEmptyHover(hover: Hover): boolean {
     return !hover.contents || (Array.isArray(hover.contents) && hover.contents.length === 0)
 }
+
+const headers = new Headers({ 'x-sourcegraph-client': `${getPlatformName()} v${getExtensionVersion()}` })
 
 function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
     return [
@@ -68,7 +77,8 @@ export const fetchHover = memoizeAsync((pos: AbsoluteRepoFilePosition): Promise<
     return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/hover`, {
         method: 'POST',
         body: JSON.stringify(body),
-        credentials: 'include',
+        credentials: 'same-origin',
+        headers,
     })
         .then(resp => resp.json())
         .then(json => {
@@ -105,7 +115,8 @@ export const fetchDefinition = memoizeAsync((pos: AbsoluteRepoFilePosition): Pro
     return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/definition`, {
         method: 'POST',
         body: JSON.stringify(body),
-        credentials: 'include',
+        credentials: 'same-origin',
+        headers,
     })
         .then(resp => resp.json())
         .then(json => {
