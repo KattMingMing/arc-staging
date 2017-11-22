@@ -77,9 +77,7 @@ export function injectGitHubApplication(marker: HTMLElement): void {
         })
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('asdfasdfasdfadsf!')
-    })
+    updateHeaderMargin()
 
     window.addEventListener(
         'resize',
@@ -161,6 +159,7 @@ function hideFileTree(): void {
 let isTreeViewToggled = false
 
 function injectFileTree(): void {
+    updateHeaderMargin()
     if (!repositoryFileTreeEnabled) {
         return
     }
@@ -253,6 +252,7 @@ function treeViewToggled(toggleState: boolean): void {
     isTreeViewToggled = toggleState
     updateTreeViewLayout()
     selectTreeNodeForURL()
+    updateHeaderMargin()
     chrome.storage.sync.set({ treeViewToggled: isTreeViewToggled })
 }
 
@@ -270,6 +270,20 @@ function updateMarginForWidth(): void {
     const widthDiff = window.innerWidth - repoContent.clientWidth
     document.body.style.marginLeft =
         widthDiff / 2 > fileTree.clientWidth || !isTreeViewToggled ? '0px' : `${fileTree.clientWidth}px`
+}
+
+function updateHeaderMargin(): void {
+    const header = document.querySelector('.Header') as HTMLElement
+    if (header) {
+        header.style.marginLeft = '0px'
+        if (document.body.classList.contains('full-width')) {
+            if (isTreeViewToggled) {
+                header.style.marginLeft = '0px'
+                return
+            }
+            header.style.marginLeft = '45px'
+        }
+    }
 }
 
 function updateTreeViewLayout(): void {
