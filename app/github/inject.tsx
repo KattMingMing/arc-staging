@@ -9,7 +9,7 @@ import { WithResolvedRev } from '../components/WithResolvedRev'
 import { findElementWithOffset, getTargetLineAndOffset, GitHubBlobUrl } from '../github/index'
 import { listAllFiles, resolveRev } from '../repo/backend'
 import { CodeCell } from '../repo/index'
-import { getTableDataCell } from '../repo/tooltips'
+import { getTableDataCell, hideTooltip } from '../repo/tooltips'
 import { ExtensionEventLogger } from '../tracking/ExtensionEventLogger'
 import { buildFileTree } from '../tree/index'
 import { TreeViewer } from '../tree/TreeViewer'
@@ -50,6 +50,7 @@ function refreshModules(): void {
     for (const el of Array.from(document.querySelectorAll('.sg-annotated'))) {
         el.classList.remove('sg-annotated')
     }
+    hideTooltip()
     inject()
     selectTreeNodeForURL()
 }
