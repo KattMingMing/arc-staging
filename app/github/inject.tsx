@@ -160,7 +160,6 @@ function hideFileTree(): void {
 let isTreeViewToggled = false
 
 function injectFileTree(): void {
-    updateHeaderMargin()
     if (!repositoryFileTreeEnabled) {
         return
     }
@@ -238,6 +237,7 @@ function injectFileTree(): void {
                             handleSelector: '.sg-tree__splitter',
                         }
                         $(mount).resizable(opt)
+                        updateHeaderMargin()
                     })
                 })
                 .catch(e => {
@@ -275,7 +275,8 @@ function updateMarginForWidth(): void {
 
 function updateHeaderMargin(): void {
     const header = document.querySelector('.Header') as HTMLElement
-    if (header) {
+    const treeContainer = document.querySelector('.sg-tree__container')
+    if (header && repositoryFileTreeEnabled && treeContainer) {
         header.style.marginLeft = '0px'
         if (document.body.classList.contains('full-width')) {
             if (isTreeViewToggled) {
