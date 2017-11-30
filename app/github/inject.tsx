@@ -275,8 +275,7 @@ function updateMarginForWidth(): void {
 
 function updateHeaderMargin(): void {
     const header = document.querySelector('.Header') as HTMLElement
-    const treeContainer = document.querySelector('.sg-tree__container')
-    if (header && repositoryFileTreeEnabled && treeContainer) {
+    if (header && repositoryFileTreeEnabled) {
         header.style.marginLeft = '0px'
         if (document.body.classList.contains('full-width')) {
             if (isTreeViewToggled) {
