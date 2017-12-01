@@ -53,6 +53,7 @@ function refreshModules(): void {
     hideTooltip()
     inject()
     selectTreeNodeForURL()
+    updateHeaderMargin()
 }
 const injectModulesAfterPjaxNavigation = _.debounce(refreshModules, 200, { leading: true, trailing: true })
 
@@ -77,8 +78,6 @@ export function injectGitHubApplication(marker: HTMLElement): void {
             childList: true,
         })
     }
-
-    updateHeaderMargin()
 
     window.addEventListener(
         'resize',
