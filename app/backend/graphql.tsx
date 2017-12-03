@@ -34,6 +34,7 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
         headers: {
             'Content-Type': 'application/json',
             'x-sourcegraph-client': `${getPlatformName()} v${getExtensionVersion()}`,
+            'X-Oidc-Override': (window as any).OIDC_TOKEN || undefined,
         },
         body: JSON.stringify({ query: request, variables }),
     }).map(({ response }) => response)

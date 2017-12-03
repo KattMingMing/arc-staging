@@ -20,7 +20,10 @@ export function isEmptyHover(hover: Hover): boolean {
     return !hover.contents || (Array.isArray(hover.contents) && hover.contents.length === 0)
 }
 
-const headers = new Headers({ 'x-sourcegraph-client': `${getPlatformName()} v${getExtensionVersion()}` })
+const headers = new Headers({
+    'x-sourcegraph-client': `${getPlatformName()} v${getExtensionVersion()}`,
+    'X-Oidc-Override': (window as any).OIDC_TOKEN || undefined,
+})
 
 function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
     return [
