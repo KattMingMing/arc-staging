@@ -205,11 +205,14 @@ export async function getRepoDetailsFromCallsign(callsign: string): Promise<Phab
     if (!repo) {
         throw new Error(`could not locate repo with callsign ${callsign}`)
     }
-    if (!repo.attachments || !repo.attachments.uris || repo.attachments.uris.uris.length !== 1) {
+    if (!repo.attachments || !repo.attachments.uris) {
         throw new Error(`could not locate git uri for repo with callsign ${callsign}`)
     }
 
     const details = convertConduitRepoToRepoDetails(repo)
+    if (!details) {
+        throw new Error('could not parse repo details')
+    }
     return createPhabricatorRepo({ callsign, repoPath: details.repoPath })
         .map(() => details)
         .toPromise()
@@ -234,11 +237,14 @@ export async function getRepoDetailsFromRepoPHID(phid: string): Promise<Phabrica
     if (!repo) {
         throw new Error(`could not locate repo with phid ${phid}`)
     }
-    if (!repo.attachments || !repo.attachments.uris || repo.attachments.uris.uris.length !== 1) {
+    if (!repo.attachments || !repo.attachments.uris) {
         throw new Error(`could not locate git uri for repo with phid ${phid}`)
     }
 
     const details = convertConduitRepoToRepoDetails(repo)
+    if (!details) {
+        throw new Error('could not parse repo details')
+    }
     return createPhabricatorRepo({ callsign: repo.fields.callsign, repoPath: details.repoPath })
         .map(() => details)
         .toPromise()
@@ -249,8 +255,20 @@ export async function getRepoDetailsFromDifferentialID(differentialID: number): 
     return getRepoDetailsFromRepoPHID(phid)
 }
 
-function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDetails {
-    const uri = repo.attachments.uris.uris[0]
+function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDetails | null {
+    let uri: ConduitURI | undefined
+    for (const u of repo.attachments.uris.uris) {
+        const normalPath = u.fields.uri.normalized.replace('\\', '')
+        if (normalPath.startsWith(window.location.host + '/')) {
+            console.log('ignoring uri', u)
+            continue
+        }
+        uri = u
+        break
+    }
+    if (!uri) {
+        return null
+    }
     const rawURI = uri.fields.uri.raw
     const repoPath = normalizeRepoPath(rawURI)
     return { callsign: repo.fields.callsign, repoPath }

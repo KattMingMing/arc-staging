@@ -2,18 +2,29 @@ import { CodeCell } from '../repo/index'
 import { getRepoDetailsFromCallsign, getRepoDetailsFromDifferentialID } from './backend'
 import { ChangeState, DifferentialState, DiffusionState, PhabricatorMode, RevisionState } from './index'
 
-const COMMIT_SHA_PATTERN = /r([0-9A-z]+)([0-9a-f]{40})/
+const TAG_PATTERN = /r([0-9A-z]+)([0-9a-f]{40})/
+function matchPageTag(): RegExpExecArray | null {
+    const el = document.getElementsByClassName('phui-tag-core').item(0)
+    if (!el) {
+        return null
+    }
+    return TAG_PATTERN.exec(el.children[0].getAttribute('href') as string)
+}
 
-function getCommitIDFromPage(): string | null {
-    const revElement = document.getElementsByClassName('phui-tag-core').item(0)
-    if (!revElement) {
+function getCallsignFromPageTag(): string | null {
+    const match = matchPageTag()
+    if (!match) {
         return null
     }
-    const shaMatch = COMMIT_SHA_PATTERN.exec(revElement.children[0].getAttribute('href') as string)
-    if (!shaMatch) {
+    return match[1]
+}
+
+function getCommitIDFromPageTag(): string | null {
+    const match = matchPageTag()
+    if (!match) {
         return null
     }
-    return shaMatch[2]
+    return match[2]
 }
 
 function isDifferentialLanded(): boolean {
@@ -58,7 +69,7 @@ function getMaxDiffFromTabView(): { diffID: number; revDescription: string } | n
                 continue
             }
             const revDescription = link.parentNode!.parentNode!.childNodes[3].textContent
-            const shaMatch = COMMIT_SHA_PATTERN.exec(revDescription!)
+            const shaMatch = TAG_PATTERN.exec(revDescription!)
             if (!shaMatch) {
                 continue
             }
@@ -166,8 +177,14 @@ export async function getPhabricatorState(
             match.branch = match.branch.substr(match.branch.length - 1)
         }
 
-        const repoPath = (await getRepoDetailsFromCallsign(match.callsign)).repoPath
-        const commitID = getCommitIDFromPage()
+        const callsign = getCallsignFromPageTag()
+        if (!callsign) {
+            console.error('could not locate callsign for differential page')
+            return null
+        }
+        match.callsign = callsign
+        const repoPath = (await getRepoDetailsFromCallsign(callsign)).repoPath
+        const commitID = getCommitIDFromPageTag()
         if (!commitID) {
             console.error('cannot determine commitIDision from page')
             return null
@@ -300,9 +317,15 @@ export async function getPhabricatorState(
             revInUrl: changeMatch[9], // only on previous versions
         }
 
-        const repoPath = (await getRepoDetailsFromCallsign(match.callsign)).repoPath
+        const callsign = getCallsignFromPageTag()
+        if (!callsign) {
+            console.error('could not locate callsign for differential page')
+            return null
+        }
+        match.callsign = callsign
+        const repoPath = (await getRepoDetailsFromCallsign(callsign)).repoPath
 
-        const commitID = getCommitIDFromPage()
+        const commitID = getCommitIDFromPageTag()
         if (!commitID) {
             console.error('cannot determine revision from page.')
             return null
@@ -528,6 +551,7 @@ export function getPhabricatorUsername(): string | null {
 
 export function normalizeRepoPath(origin: string): string {
     let repoPath = origin
+    repoPath = repoPath.replace('\\', '')
     if (origin.startsWith('git@')) {
         repoPath = origin.substr('git@'.length)
         repoPath = repoPath.replace(':', '/')
