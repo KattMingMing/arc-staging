@@ -213,7 +213,7 @@ export async function getRepoDetailsFromCallsign(callsign: string): Promise<Phab
     if (!details) {
         throw new Error('could not parse repo details')
     }
-    return createPhabricatorRepo({ callsign, repoPath: details.repoPath, phabURL: window.location.origin })
+    return createPhabricatorRepo({ callsign, repoPath: details.repoPath, phabricatorURL: window.location.origin })
         .map(() => details)
         .toPromise()
 }
@@ -248,7 +248,7 @@ export async function getRepoDetailsFromRepoPHID(phid: string): Promise<Phabrica
     return createPhabricatorRepo({
         callsign: repo.fields.callsign,
         repoPath: details.repoPath,
-        phabURL: window.location.origin,
+        phabricatorURL: window.location.origin,
     })
         .map(() => details)
         .toPromise()
@@ -281,19 +281,17 @@ function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDeta
 interface CreatePhabricatorRepoOptions {
     callsign: string
     repoPath: string
-    phabURL: string
+    phabricatorURL: string
 }
 
 export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Observable<void> {
     return mutateGraphQL(
-        `
-        mutation addPhabricatorRepo(
+        `mutation addPhabricatorRepo(
             $callsign: String!,
             $repoPath: String!
         ) {
-            addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabURL) { }
-        }
-    `,
+            addPhabricatorRepo(callsign: $callsign, repoPath: $repoPath, phabricatorURL: $phabricatorURL) { }
+        }`,
         options
     ).map(({ data, errors }) => {
         if (!data || (errors && errors.length > 0)) {
