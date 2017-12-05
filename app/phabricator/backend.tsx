@@ -213,7 +213,7 @@ export async function getRepoDetailsFromCallsign(callsign: string): Promise<Phab
     if (!details) {
         throw new Error('could not parse repo details')
     }
-    return createPhabricatorRepo({ callsign, repoPath: details.repoPath })
+    return createPhabricatorRepo({ callsign, repoPath: details.repoPath, phabURL: window.location.origin })
         .map(() => details)
         .toPromise()
 }
@@ -245,7 +245,11 @@ export async function getRepoDetailsFromRepoPHID(phid: string): Promise<Phabrica
     if (!details) {
         throw new Error('could not parse repo details')
     }
-    return createPhabricatorRepo({ callsign: repo.fields.callsign, repoPath: details.repoPath })
+    return createPhabricatorRepo({
+        callsign: repo.fields.callsign,
+        repoPath: details.repoPath,
+        phabURL: window.location.origin,
+    })
         .map(() => details)
         .toPromise()
 }
@@ -277,6 +281,7 @@ function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDeta
 interface CreatePhabricatorRepoOptions {
     callsign: string
     repoPath: string
+    phabURL: string
 }
 
 export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Observable<void> {
@@ -286,7 +291,7 @@ export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Ob
             $callsign: String!,
             $repoPath: String!
         ) {
-            addPhabricatorRepo(callsign: $callsign, uri: $repoPath) { }
+            addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabURL) { }
         }
     `,
         options
