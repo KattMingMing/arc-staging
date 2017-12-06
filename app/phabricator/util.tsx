@@ -68,7 +68,7 @@ function getMaxDiffFromTabView(): { diffID: number; revDescription: string } | n
             if (!matches) {
                 continue
             }
-            const revDescription = link.parentNode!.parentNode!.childNodes[3].textContent
+            const revDescription = (link.parentNode!.parentNode!.childNodes[2].childNodes[0] as any).href
             const shaMatch = TAG_PATTERN.exec(revDescription!)
             if (!shaMatch) {
                 continue
