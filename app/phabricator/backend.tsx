@@ -288,9 +288,10 @@ export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Ob
     return mutateGraphQL(
         `mutation addPhabricatorRepo(
             $callsign: String!,
-            $repoPath: String!
+            $uri: String!
+            $url: String!
         ) {
-            addPhabricatorRepo(callsign: $callsign, repoPath: $repoPath, phabricatorURL: $phabricatorURL) { }
+            addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabricatorURL) { }
         }`,
         options
     ).map(({ data, errors }) => {
