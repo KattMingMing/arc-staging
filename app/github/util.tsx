@@ -40,7 +40,7 @@ export function createBlobAnnotatorMount(fileContainer: HTMLElement, isBase?: bo
         return null
     }
     const buttonGroup = fileActions.querySelector('.BtnGroup')
-    if (buttonGroup && buttonGroup.parentNode) {
+    if (buttonGroup && buttonGroup.parentNode && !fileContainer.querySelector('.show-file-notes')) {
         // blob view
         // mountEl.style.cssFloat = "none";
         buttonGroup.parentNode.insertBefore(mountEl, buttonGroup)

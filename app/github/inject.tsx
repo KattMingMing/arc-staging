@@ -566,6 +566,11 @@ function injectBlobAnnotators(): void {
             return td
         }
 
+        const mountHead = createBlobAnnotatorMount(file)
+        if (!mountHead) {
+            return
+        }
+
         render(
             <WithResolvedRev
                 component={BlobAnnotator}
@@ -585,13 +590,8 @@ function injectBlobAnnotators(): void {
                 isBase={true}
                 buttonProps={buttonProps}
             />,
-            mountBase
+            mountHead
         )
-
-        const mountHead = createBlobAnnotatorMount(file)
-        if (!mountHead) {
-            return
-        }
 
         render(
             <WithResolvedRev
@@ -612,7 +612,7 @@ function injectBlobAnnotators(): void {
                 isBase={false}
                 buttonProps={buttonProps}
             />,
-            mountHead
+            mountBase
         )
     }
 
