@@ -155,7 +155,6 @@ export class BlobAnnotator extends React.Component<Props, State> {
 
         let label = 'View File'
         if (this.isDelta) {
-            console.log(this.props.isBase)
             label += this.props.isBase ? ' (base)' : ' (head)'
         }
 
