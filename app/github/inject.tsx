@@ -503,11 +503,6 @@ function injectBlobAnnotators(): void {
         baseRepoPath = deltaInfo.baseRepoPath
         headRepoPath = deltaInfo.headRepoPath
 
-        const mountBase = createBlobAnnotatorMount(file, true)
-        if (!mountBase) {
-            return
-        }
-
         const getCodeCellsDiff = (isBase: boolean) => () => {
             const opt = { isDelta: true, isSplitDiff, isBase }
             const table = getTableElement()
@@ -566,28 +561,6 @@ function injectBlobAnnotators(): void {
             return td
         }
 
-        render(
-            <WithResolvedRev
-                component={BlobAnnotator}
-                getTableElement={getTableElement}
-                getCodeCells={getCodeCellsBase}
-                getTargetLineAndOffset={getTargetLineAndOffset}
-                findElementWithOffset={findElementWithOffset}
-                filterTarget={filterTarget(true, isSplitDiff)}
-                getNodeToConvert={getNodeToConvert}
-                fileElement={file}
-                repoPath={baseRepoPath}
-                rev={baseCommitID}
-                filePath={baseFilePath || headFilePath}
-                isPullRequest={isPullRequest}
-                isSplitDiff={isSplitDiff}
-                isCommit={isCommit}
-                isBase={true}
-                buttonProps={buttonProps}
-            />,
-            mountBase
-        )
-
         const mountHead = createBlobAnnotatorMount(file)
         if (!mountHead) {
             return
@@ -613,6 +586,33 @@ function injectBlobAnnotators(): void {
                 buttonProps={buttonProps}
             />,
             mountHead
+        )
+
+        const mountBase = createBlobAnnotatorMount(file, true)
+        if (!mountBase) {
+            return
+        }
+
+        render(
+            <WithResolvedRev
+                component={BlobAnnotator}
+                getTableElement={getTableElement}
+                getCodeCells={getCodeCellsBase}
+                getTargetLineAndOffset={getTargetLineAndOffset}
+                findElementWithOffset={findElementWithOffset}
+                filterTarget={filterTarget(true, isSplitDiff)}
+                getNodeToConvert={getNodeToConvert}
+                fileElement={file}
+                repoPath={baseRepoPath}
+                rev={baseCommitID}
+                filePath={baseFilePath || headFilePath}
+                isPullRequest={isPullRequest}
+                isSplitDiff={isSplitDiff}
+                isCommit={isCommit}
+                isBase={true}
+                buttonProps={buttonProps}
+            />,
+            mountBase
         )
     }
 
