@@ -6,7 +6,12 @@
     "description": "Gives GitHub IDE powers: jump to definition and hover tooltips in code, PRs, and diffs",
     "browser_action": {
         "default_title": "Sourcegraph",
-        "default_popup": "options.html"
+        "default_popup": "options.html",
+        "default_icon": {
+            "16": "img/icon-16.png",
+            "48": "img/icon-48.png",
+            "128": "img/icon-128.png"
+        }
     },
     "icons": {
         "16": "img/icon-16.png",
