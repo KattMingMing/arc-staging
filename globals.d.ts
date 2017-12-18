@@ -1,4 +1,5 @@
 interface Window {
-    SOURCEGRAPH_URL: string
-    SOURCEGRAPH_PHABRICATOR_EXTENSION: boolean
+    SOURCEGRAPH_URL: string | undefined
+    SOURCEGRAPH_PHABRICATOR_EXTENSION: boolean | undefined
+    OIDC_TOKEN: string | undefined
 }

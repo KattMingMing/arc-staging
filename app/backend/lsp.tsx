@@ -3,6 +3,7 @@ import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } fro
 import { getModeFromExtension, getPathExtension, sourcegraphUrl, supportedExtensions } from '../util/context'
 import { memoizeAsync } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
+import { getHeaders } from './headers'
 
 interface LSPRequest {
     method: string
@@ -68,6 +69,7 @@ export const fetchHover = memoizeAsync((pos: AbsoluteRepoFilePosition): Promise<
     return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/hover`, {
         method: 'POST',
         body: JSON.stringify(body),
+        headers: getHeaders(),
         credentials: 'include',
     })
         .then(resp => resp.json())
@@ -105,6 +107,7 @@ export const fetchDefinition = memoizeAsync((pos: AbsoluteRepoFilePosition): Pro
     return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/definition`, {
         method: 'POST',
         body: JSON.stringify(body),
+        headers: getHeaders(),
         credentials: 'include',
     })
         .then(resp => resp.json())

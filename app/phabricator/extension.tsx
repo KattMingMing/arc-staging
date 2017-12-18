@@ -15,7 +15,7 @@ export function init(): void {
     const phabricatorUsername = getPhabricatorUsername()
     if (phabricatorUsername !== null) {
         const e = eventLogger as InPageEventLogger
-        e.setUserId(getDomainUsername(window.SOURCEGRAPH_URL, phabricatorUsername))
+        e.setUserId(getDomainUsername(window.SOURCEGRAPH_URL!, phabricatorUsername))
     }
 
     /**
@@ -39,6 +39,6 @@ export function init(): void {
     }
 }
 
-setSourcegraphUrl(window.SOURCEGRAPH_URL)
+setSourcegraphUrl(window.SOURCEGRAPH_URL!)
 setEventLogger(new InPageEventLogger())
 init()
