@@ -234,21 +234,21 @@ export function getDiffRepoRev(): DiffRepoRev | null {
     let baseRepoPath = ''
     let headRepoPath = ''
     if (isPullRequest) {
-        const branches = document.querySelectorAll('.commit-ref,.current-branch')
+        const branches = document.querySelectorAll('.commit-ref')
         baseRev = (branches[0] as any).title
         headRev = (branches[1] as any).title
 
         if (baseRev.includes(':')) {
             const baseSplit = baseRev.split(':')
             baseRev = baseSplit[1]
-            baseRepoPath = `github.com/${baseSplit[0]}`
+            baseRepoPath = `${window.location.host}/${baseSplit[0]}`
         } else {
             baseRev = repoPath as string
         }
         if (headRev.includes(':')) {
             const headSplit = headRev.split(':')
             headRev = headSplit[1]
-            headRepoPath = `github.com/${headSplit[0]}`
+            headRepoPath = `${window.location.host}/${headSplit[0]}`
         } else {
             headRepoPath = repoPath as string
         }
@@ -493,7 +493,7 @@ export function parseURL(loc: Location = window.location): GitHubURL {
         filePath = urlsplit.slice(3 + revParts).join('/')
     }
     if (user && repoName) {
-        repoPath = `github.com/${user}/${repoName}`
+        repoPath = `${window.location.host}/${user}/${repoName}`
     } else {
         throw new Error('invalid location')
     }
