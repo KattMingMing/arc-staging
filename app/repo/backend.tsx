@@ -37,13 +37,11 @@ export const resolveRev = memoizeObservable(
     (ctx: { repoPath: string; rev?: string }): Observable<string> =>
         queryGraphQL(
             `query ResolveRev($repoPath: String, $rev: String) {
-                root {
-                    repository(uri: $repoPath) {
-                        commit(rev: $rev) {
-                            cloneInProgress,
-                            commit {
-                                sha1
-                            }
+                repository(uri: $repoPath) {
+                    commit(rev: $rev) {
+                        cloneInProgress,
+                        commit {
+                            sha1
                         }
                     }
                 }
@@ -53,16 +51,16 @@ export const resolveRev = memoizeObservable(
             if (!result.data) {
                 throw new Error('invalid response received from graphql endpoint')
             }
-            if (!result.data.root.repository || !result.data.root.repository.commit) {
+            if (!result.data.repository || !result.data.repository.commit) {
                 throw new RepoNotFoundError(ctx.repoPath)
             }
-            if (result.data.root.repository.commit.cloneInProgress) {
+            if (result.data.repository.commit.cloneInProgress) {
                 throw new CloneInProgressError(ctx.repoPath)
             }
-            if (!result.data.root.repository.commit.commit) {
+            if (!result.data.repository.commit.commit) {
                 throw new RevNotFoundError(ctx.rev)
             }
-            return result.data.root.repository.commit.commit.sha1
+            return result.data.repository.commit.commit.sha1
         }),
     makeRepoURI
 )
@@ -71,14 +69,12 @@ export const listAllFiles = memoizeAsync(
     (ctx: { repoPath: string; commitID: string }): Promise<string[]> =>
         queryGraphQL(
             `query FileTree($repoPath: String!, $commitID: String!) {
-                root {
-                    repository(uri: $repoPath) {
-                        commit(rev: $commitID) {
-                            commit {
-                                tree(recursive: true) {
-                                    files {
-                                        name
-                                    }
+                repository(uri: $repoPath) {
+                    commit(rev: $commitID) {
+                        commit {
+                            tree(recursive: true) {
+                                files {
+                                    name
                                 }
                             }
                         }
@@ -91,15 +87,15 @@ export const listAllFiles = memoizeAsync(
             .then(result => {
                 if (
                     !result.data ||
-                    !result.data.root.repository ||
-                    !result.data.root.repository.commit ||
-                    !result.data.root.repository.commit.commit ||
-                    !result.data.root.repository.commit.commit.tree ||
-                    !result.data.root.repository.commit.commit.tree.files
+                    !result.data.repository ||
+                    !result.data.repository.commit ||
+                    !result.data.repository.commit.commit ||
+                    !result.data.repository.commit.commit.tree ||
+                    !result.data.repository.commit.commit.tree.files
                 ) {
                     throw new Error('invalid response received from graphql endpoint')
                 }
-                return result.data.root.repository.commit.commit.tree.files.map(file => file.name)
+                return result.data.repository.commit.commit.tree.files.map(file => file.name)
             }),
     makeRepoURI
 )
@@ -108,13 +104,11 @@ export const fetchBlobContentLines = memoizeAsync(
     (ctx: AbsoluteRepoFile): Promise<string[]> =>
         queryGraphQL(
             `query BlobContent($repoPath: String, $commitID: String, $filePath: String) {
-                root {
-                    repository(uri: $repoPath) {
-                        commit(rev: $commitID) {
-                            commit {
-                                file(path: $filePath) {
-                                    content
-                                }
+                repository(uri: $repoPath) {
+                    commit(rev: $commitID) {
+                        commit {
+                            file(path: $filePath) {
+                                content
                             }
                         }
                     }
@@ -126,16 +120,15 @@ export const fetchBlobContentLines = memoizeAsync(
             .then(result => {
                 if (
                     !result.data ||
-                    !result.data.root ||
-                    !result.data.root.repository ||
-                    !result.data.root.repository.commit ||
-                    !result.data.root.repository.commit.commit ||
-                    !result.data.root.repository.commit.commit.file ||
-                    !result.data.root.repository.commit.commit.file.content
+                    !result.data.repository ||
+                    !result.data.repository.commit ||
+                    !result.data.repository.commit.commit ||
+                    !result.data.repository.commit.commit.file ||
+                    !result.data.repository.commit.commit.file.content
                 ) {
                     return []
                 }
-                return result.data.root.repository.commit.commit.file.content.split('\n')
+                return result.data.repository.commit.commit.file.content.split('\n')
             }),
     makeRepoURI
 )

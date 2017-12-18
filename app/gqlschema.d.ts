@@ -21,22 +21,20 @@ declare namespace GQL {
 
   interface IQuery {
     __typename: "Query";
-    root: IRoot;
+    root: IQuery;
     node: Node | null;
-  }
-
-
-  interface IRoot {
-    __typename: "Root";
     repository: IRepository | null;
     phabricatorRepo: IPhabricatorRepo | null;
-    repositories: Array<IRepository>;
+    /**
+    description: A list of all repositories on this site.
+  */
+    repositories: IRepositoryConnection;
     symbols: Array<ISymbol>;
     currentUser: IUser | null;
     isUsernameAvailable: boolean;
     configuration: IConfigurationCascade;
-    search2: ISearch2 | null;
-    searchScopes2: Array<ISearchScope2>;
+    search: ISearch | null;
+    searchScopes: Array<ISearchScope>;
     /**
     description: All saved queries configured for the current user, merged from all configurations.
   */
@@ -47,7 +45,21 @@ declare namespace GQL {
     sharedItem: ISharedItem | null;
     packages: Array<IPackage>;
     dependents: Array<IDependency>;
-    users: Array<IUser>;
+    users: IUserConnection | null;
+    /**
+    description: List all organizations.
+  */
+    orgs: IOrgConnection;
+    updateDeploymentConfiguration: IEmptyResponse | null;
+  }
+
+
+  type Node = IRepository | ICommit | IUser | IOrg;
+
+
+  interface INode {
+    __typename: "Node";
+    id: string;
   }
 
 
@@ -79,15 +91,6 @@ declare namespace GQL {
     description: Link to another sourcegraph instance location where this repository is located.
   */
     redirectURL: string | null;
-  }
-
-
-  type Node = IRepository | ICommit | IOrg;
-
-
-  interface INode {
-    __typename: "Node";
-    id: string;
   }
 
 
@@ -184,10 +187,10 @@ declare namespace GQL {
     name: string;
     content: string;
     /**
-    description:  The file rendered as rich HTML, or an empty string if it is not a supported
- rich file type.
+    description: The file rendered as rich HTML, or an empty string if it is not a supported
+rich file type.
 
- This HTML string is already escaped and thus is always safe to render.
+This HTML string is already escaped and thus is always safe to render.
   */
     richHTML: string;
     repository: IRepository;
@@ -277,7 +280,7 @@ declare namespace GQL {
     /**
     description: the canonical repo path, like 'github.com/gorilla/mux'
   */
-    repoPath: string;
+    uri: string;
     /**
     description: the unique Phabricator identifier for the repo, like 'MUX'
   */
@@ -285,7 +288,22 @@ declare namespace GQL {
     /**
     description: the URL to the phabricator instance, e.g. http://phabricator.sgdev.org
   */
-    phabricatorURL: string;
+    url: string;
+  }
+
+  /**
+    description: A list of repositories.
+  */
+  interface IRepositoryConnection {
+    __typename: "RepositoryConnection";
+    /**
+    description: A list of repositories.
+  */
+    nodes: Array<IRepository>;
+    /**
+    description: The total count of repositories in the connection.
+  */
+    totalCount: number;
   }
 
 
@@ -300,12 +318,10 @@ declare namespace GQL {
 
   interface IUser {
     __typename: "User";
-    id: string;
     /**
-    description: The unique ID for the user. TODO(sqs): This will be renamed to id when
-the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is done.
+    description: The unique ID for the user.
   */
-    gqlid: string;
+    id: string;
     auth0ID: string;
     sourcegraphID: number | null;
     email: string;
@@ -335,10 +351,7 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
   */
   interface IConfigurationSubject {
     __typename: "ConfigurationSubject";
-    /**
-    description: TODO(sqs): this will be renamed to id; see User.gqlid for more information.
-  */
-    gqlid: string;
+    id: string;
     latestSettings: ISettings | null;
   }
 
@@ -356,7 +369,6 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
     author: IUser;
     createdAt: string;
     contents: string;
-    highlighted: string;
   }
 
   /**
@@ -369,10 +381,6 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
   */
     contents: string;
     /**
-    description: The contents as highlighted HTML.
-  */
-    highlighted: string;
-    /**
     description: Error and warning messages about the configuration.
   */
     messages: Array<string>;
@@ -382,11 +390,14 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
   interface IOrg {
     __typename: "Org";
     id: string;
-    gqlid: string;
     orgID: number;
     name: string;
     displayName: string | null;
     slackWebhookURL: string | null;
+    /**
+    description: The date when the organization was created, in RFC 3339 format.
+  */
+    createdAt: string;
     members: Array<IOrgMember>;
     latestSettings: ISettings | null;
     repos: Array<IOrgRepo>;
@@ -429,28 +440,36 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
     id: number;
     repo: IOrgRepo;
     file: string;
+    /**
+    description: The relative path of the resource in the repository at repoRevision.
+  */
+    repoRevisionPath: string;
+    /**
+    description: The relative path of the resource in the repository at linesRevision.
+  */
+    linesRevisionPath: string;
     branch: string | null;
     /**
     description: The commit ID of the repository at the time the thread was created.
   */
     repoRevision: string;
     /**
-    description:  The commit ID from Git blame, at the time the thread was created.
+    description: The commit ID from Git blame, at the time the thread was created.
 
- The selection may be multiple lines, and the commit id is the
- topologically most recent commit of the blame commit ids for the selected
- lines.
+The selection may be multiple lines, and the commit id is the
+topologically most recent commit of the blame commit ids for the selected
+lines.
 
- For example, if you have a selection of lines that have blame revisions
- (a, c, e, f), and assuming a history like::
+For example, if you have a selection of lines that have blame revisions
+(a, c, e, f), and assuming a history like::
 
- 	a <- b <- c <- d <- e <- f <- g <- h <- HEAD
+	a <- b <- c <- d <- e <- f <- g <- h <- HEAD
 
- Then lines_revision would be f, because all other blame revisions a, c, e
- are reachable from f.
+Then lines_revision would be f, because all other blame revisions a, c, e
+are reachable from f.
 
- Or in lay terms: "What is the oldest revision that I could checkout and
- still see the exact lines of code that I selected?".
+Or in lay terms: "What is the oldest revision that I could checkout and
+still see the exact lines of code that I selected?".
   */
     linesRevision: string;
     title: string;
@@ -470,21 +489,21 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
   interface IThreadLines {
     __typename: "ThreadLines";
     /**
-    description:  HTML context lines before 'html'.
+    description: HTML context lines before 'html'.
 
- It is sanitized already by the server, and thus is safe for rendering.
+It is sanitized already by the server, and thus is safe for rendering.
   */
     htmlBefore: string;
     /**
-    description:  HTML lines that the user's selection was made on.
+    description: HTML lines that the user's selection was made on.
 
- It is sanitized already by the server, and thus is safe for rendering.
+It is sanitized already by the server, and thus is safe for rendering.
   */
     html: string;
     /**
-    description:  HTML context lines after 'html'.
+    description: HTML context lines after 'html'.
 
- It is sanitized already by the server, and thus is safe for rendering.
+It is sanitized already by the server, and thus is safe for rendering.
   */
     htmlAfter: string;
     /**
@@ -500,15 +519,15 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
   */
     textAfter: string;
     /**
-    description:  byte offset into textLines where user selection began
+    description: byte offset into textLines where user selection began
 
- In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
+In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
   */
     textSelectionRangeStart: number;
     /**
-    description:  length in bytes of the user selection
+    description: length in bytes of the user selection
 
- In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
+In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
   */
     textSelectionRangeLength: number;
   }
@@ -520,10 +539,10 @@ the migration described in commit 2ac372aa2773080dc3d077beb056e9513e64bf67 is do
     title: string;
     contents: string;
     /**
-    description:  The file rendered as rich HTML, or an empty string if it is not a supported
- rich file type.
+    description: The file rendered as rich HTML, or an empty string if it is not a supported
+rich file type.
 
- This HTML string is already escaped and thus is always safe to render.
+This HTML string is already escaped and thus is always safe to render.
   */
     richHTML: string;
     createdAt: string;
@@ -579,15 +598,15 @@ configuration subjects: org 1, org 2, and the user.
   }
 
 
-  interface ISearch2 {
-    __typename: "Search2";
-    results: ISearchResults2;
-    suggestions: Array<SearchSuggestion2>;
+  interface ISearch {
+    __typename: "Search";
+    results: ISearchResults;
+    suggestions: Array<SearchSuggestion>;
   }
 
 
-  interface ISearchResults2 {
-    __typename: "SearchResults2";
+  interface ISearchResults {
+    __typename: "SearchResults";
     results: Array<SearchResult>;
     resultCount: number;
     approximateResultCount: string;
@@ -670,11 +689,11 @@ again usually will work.
   */
     name: string;
     /**
-    description:  The display name of the ref. For branches ("refs/heads/foo"), this is the branch
- name ("foo").
+    description: The display name of the ref. For branches ("refs/heads/foo"), this is the branch
+name ("foo").
 
- As a special case, for GitHub pull request refs of the form refs/pull/NUMBER/head,
- this is "#NUMBER".
+As a special case, for GitHub pull request refs of the form refs/pull/NUMBER/head,
+this is "#NUMBER".
   */
     displayName: string;
     /**
@@ -744,31 +763,31 @@ again usually will work.
     /**
     description: "Did you mean: ____" query proposals
   */
-    proposedQueries: Array<ISearchQuery2Description>;
+    proposedQueries: Array<ISearchQueryDescription>;
   }
 
 
-  interface ISearchQuery2Description {
-    __typename: "SearchQuery2Description";
+  interface ISearchQueryDescription {
+    __typename: "SearchQueryDescription";
     description: string | null;
-    query: ISearchQuery2;
+    query: ISearchQuery;
   }
 
 
-  interface ISearchQuery2 {
-    __typename: "SearchQuery2";
+  interface ISearchQuery {
+    __typename: "SearchQuery";
     query: string;
     scopeQuery: string;
   }
 
 
-  type SearchSuggestion2 = IRepository | IFile;
+  type SearchSuggestion = IRepository | IFile;
 
 
 
 
-  interface ISearchScope2 {
-    __typename: "SearchScope2";
+  interface ISearchScope {
+    __typename: "SearchScope";
     name: string;
     value: string;
   }
@@ -779,15 +798,24 @@ again usually will work.
   interface ISavedQuery {
     __typename: "SavedQuery";
     /**
+    description: The unique ID of the saved query.
+  */
+    id: string;
+    /**
     description: The subject whose configuration this saved query was defined in.
   */
     subject: ConfigurationSubject;
+    /**
+    description: The unique key of this saved query (unique only among all other saved
+queries of the same subject).
+  */
+    key: string | null;
     /**
     description: The 0-indexed index of this saved query in the subject's configuration.
   */
     index: number;
     description: string;
-    query: ISearchQuery2;
+    query: ISearchQuery;
   }
 
   /**
@@ -846,11 +874,11 @@ again usually will work.
   }
 
   /**
-    description:  Represents a shared item (either a shared code comment OR code snippet).
+    description: Represents a shared item (either a shared code comment OR code snippet).
 
- 🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
- Do NOT use any non-primitive graphql type here unless it is also a SharedItem
- type.
+🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
+Do NOT use any non-primitive graphql type here unless it is also a SharedItem
+type.
   */
   interface ISharedItem {
     __typename: "SharedItem";
@@ -867,12 +895,12 @@ again usually will work.
   }
 
   /**
-    description:  Like the User type, except with fields that should not be accessible with a
- secret URL removed.
+    description: Like the User type, except with fields that should not be accessible with a
+secret URL removed.
 
- 🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
- Do NOT use any non-primitive graphql type here unless it is also a SharedItem
- type.
+🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
+Do NOT use any non-primitive graphql type here unless it is also a SharedItem
+type.
   */
   interface ISharedItemUser {
     __typename: "SharedItemUser";
@@ -882,12 +910,12 @@ again usually will work.
   }
 
   /**
-    description:  Like the Thread type, except with fields that should not be accessible with a
- secret URL removed.
+    description: Like the Thread type, except with fields that should not be accessible with a
+secret URL removed.
 
- 🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
- Do NOT use any non-primitive graphql type here unless it is also a SharedItem
- type.
+🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
+Do NOT use any non-primitive graphql type here unless it is also a SharedItem
+type.
   */
   interface ISharedItemThread {
     __typename: "SharedItemThread";
@@ -896,6 +924,7 @@ again usually will work.
     file: string;
     branch: string | null;
     repoRevision: string;
+    linesRevision: string;
     title: string;
     startLine: number;
     endLine: number;
@@ -910,12 +939,12 @@ again usually will work.
   }
 
   /**
-    description:  Like the OrgRepo type, except with fields that should not be accessible with
- a secret URL removed.
+    description: Like the OrgRepo type, except with fields that should not be accessible with
+a secret URL removed.
 
- 🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
- Do NOT use any non-primitive graphql type here unless it is also a SharedItem
- type.
+🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
+Do NOT use any non-primitive graphql type here unless it is also a SharedItem
+type.
   */
   interface ISharedItemOrgRepo {
     __typename: "SharedItemOrgRepo";
@@ -924,12 +953,12 @@ again usually will work.
   }
 
   /**
-    description:  Exactly the same as the ThreadLines type, except it cannot have sensitive
- fields accidently added.
+    description: Exactly the same as the ThreadLines type, except it cannot have sensitive
+fields accidently added.
 
- 🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
- Do NOT use any non-primitive graphql type here unless it is also a SharedItem
- type.
+🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
+Do NOT use any non-primitive graphql type here unless it is also a SharedItem
+type.
   */
   interface ISharedItemThreadLines {
     __typename: "SharedItemThreadLines";
@@ -944,12 +973,12 @@ again usually will work.
   }
 
   /**
-    description:  Like the Comment type, except with fields that should not be accessible with a
- secret URL removed.
+    description: Like the Comment type, except with fields that should not be accessible with a
+secret URL removed.
 
- 🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
- Do NOT use any non-primitive graphql type here unless it is also a SharedItem
- type.
+🚨 SECURITY: Every field here is accessible publicly given a shared item URL.
+Do NOT use any non-primitive graphql type here unless it is also a SharedItem
+type.
   */
   interface ISharedItemComment {
     __typename: "SharedItemComment";
@@ -998,11 +1027,48 @@ again usually will work.
     id: string | null;
   }
 
+  /**
+    description: A list of users.
+  */
+  interface IUserConnection {
+    __typename: "UserConnection";
+    /**
+    description: A list of users.
+  */
+    nodes: Array<IUser>;
+    /**
+    description: The total count of users in the connection.
+  */
+    totalCount: number;
+  }
+
+  /**
+    description: A list of organizations.
+  */
+  interface IOrgConnection {
+    __typename: "OrgConnection";
+    /**
+    description: A list of organizations.
+  */
+    nodes: Array<IOrg>;
+    /**
+    description: The total count of organizations in the connection.
+  */
+    totalCount: number;
+  }
+
+
+  interface IEmptyResponse {
+    __typename: "EmptyResponse";
+    alwaysNil: string | null;
+  }
+
 
   interface IMutation {
     __typename: "Mutation";
     createUser: IUser;
     createThread: IThread;
+    createThread2: IThread;
     updateUser: IUser;
     /**
     description: Update the settings for the currently authenticated user.
@@ -1011,12 +1077,12 @@ again usually will work.
     updateThread: IThread;
     addCommentToThread: IThread;
     /**
-    description:  This method is the same as addCommentToThread, the only difference is
- that authentication is based on the secret ULID instead of the current
- user.
+    description: This method is the same as addCommentToThread, the only difference is
+that authentication is based on the secret ULID instead of the current
+user.
 
- 🚨 SECURITY: Every field of the return type here is accessible publicly
- given a shared item URL.
+🚨 SECURITY: Every field of the return type here is accessible publicly
+given a shared item URL.
   */
     addCommentToThreadShared: ISharedItemThread;
     shareThread: string;
@@ -1024,21 +1090,20 @@ again usually will work.
     createOrg: IOrg;
     updateOrg: IOrg;
     updateOrgSettings: ISettings;
-    inviteUser: IEmptyResponse | null;
+    inviteUser: IInviteUserResult | null;
     acceptUserInvite: IOrgInviteStatus;
     removeUserFromOrg: IEmptyResponse | null;
     /**
     description: adds a phabricator repository to the Sourcegraph server.
 example callsign: "MUX"
-example repoPath: "github.com/gorilla/mux"
-example phabricatorURL: "http://phabricator.sgdev.org"
+example uri: "github.com/gorilla/mux"
   */
     addPhabricatorRepo: IEmptyResponse | null;
     logUserEvent: IEmptyResponse | null;
     /**
-    description: All mutations that update configuration setings are under this field.
+    description: All mutations that update configuration settings are under this field.
   */
-    configuration: IConfigurationMutation | null;
+    configurationMutation: IConfigurationMutation | null;
   }
 
   /**
@@ -1071,23 +1136,45 @@ GraphQL doesn't allow mixing input and output types.
   */
     textAfter: string;
     /**
-    description:  byte offset into textLines where user selection began
+    description: byte offset into textLines where user selection began
 
- In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
+In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
   */
     textSelectionRangeStart: number;
     /**
-    description:  length in bytes of the user selection
+    description: length in bytes of the user selection
 
- In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
+In Go syntax, userSelection := text[rangeStart:rangeStart+rangeLength]
   */
     textSelectionRangeLength: number;
   }
 
 
-  interface IEmptyResponse {
-    __typename: "EmptyResponse";
-    alwaysNil: string | null;
+  interface ICreateThreadInput {
+    orgID: string;
+    canonicalRemoteID: string;
+    cloneURL: string;
+    repoRevisionPath: string;
+    linesRevisionPath: string;
+    repoRevision: string;
+    linesRevision: string;
+    branch?: string | null;
+    startLine: number;
+    endLine: number;
+    startCharacter: number;
+    endCharacter: number;
+    rangeLength: number;
+    contents: string;
+    lines?: IThreadLinesInput | null;
+  }
+
+
+  interface IInviteUserResult {
+    __typename: "InviteUserResult";
+    /**
+    description: The URL that the invited user can visit to accept the invitation.
+  */
+    acceptInviteURL: string;
   }
 
 
@@ -1117,14 +1204,14 @@ are concurrent editors.
   }
 
   /**
-    description:  Mutations that update configuration settings. These mutations are grouped
- together because they:
+    description: Mutations that update configuration settings. These mutations are grouped
+together because they:
 
- - are all versioned to avoid race conditions with concurrent editors
- - all apply to a specific configuration subject
+- are all versioned to avoid race conditions with concurrent editors
+- all apply to a specific configuration subject
 
- Grouping them lets us extract those common parameters to the
- Mutation.configuration field.
+Grouping them lets us extract those common parameters to the
+Mutation.configuration field.
   */
   interface IConfigurationMutation {
     __typename: "ConfigurationMutation";
@@ -1138,11 +1225,11 @@ type instead if possible.
   */
     createSavedQuery: ISavedQuery;
     /**
-    description: Update the saved query at the given index in the configuration.
+    description: Update the saved query with the given ID in the configuration.
   */
     updateSavedQuery: ISavedQuery;
     /**
-    description: Delete the saved query at the given index in the configuration.
+    description: Delete the saved query with the given ID in the configuration.
   */
     deleteSavedQuery: IEmptyResponse | null;
   }
@@ -1154,9 +1241,9 @@ fields appear in this type.
   */
   interface IUpdateConfigurationInput {
     /**
-    description:  The name of the property to update.
+    description: The name of the property to update.
 
- Inserting into an existing array is not yet supported.
+Inserting into an existing array is not yet supported.
   */
     property: string;
     /**
@@ -1172,6 +1259,14 @@ removed. (This is different from the field's value being the string "null".)
   interface IUpdateConfigurationPayload {
     __typename: "UpdateConfigurationPayload";
     empty: IEmptyResponse | null;
+  }
+
+
+  interface IDeploymentConfiguration {
+    __typename: "DeploymentConfiguration";
+    email: string | null;
+    telemetryEnabled: boolean | null;
+    appID: string | null;
   }
 
   /**
@@ -1247,9 +1342,19 @@ revision range. If this is a "base..head" revision range, then this field is nul
   */
     diff: IDiff;
     /**
-    description: The matching portion of the diff. TODO(sqs): what format?
+    description: The matching portion of the diff.
   */
     preview: IHighlightedString;
+  }
+
+
+  interface IInstallation {
+    __typename: "Installation";
+    login: string;
+    githubId: number;
+    installId: number;
+    type: string;
+    avatarURL: string;
   }
 
 
@@ -1276,16 +1381,6 @@ revision range. If this is a "base..head" revision range, then this field is nul
     path: string;
     query: string;
     scheme: string;
-  }
-
-
-  interface IInstallation {
-    __typename: "Installation";
-    login: string;
-    githubId: number;
-    installId: number;
-    type: string;
-    avatarURL: string;
   }
 }
 
