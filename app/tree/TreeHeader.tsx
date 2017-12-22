@@ -20,11 +20,11 @@ export class TreeHeader extends React.Component<Props, {}> {
 
         return (
             <div className="sg-tree__header">
-                <div className="sg-tree__header-box">
+                <div className="sg-tree__header-box" onClick={this.props.onClick}>
                     {this.props.toggled ? (
-                        <ToggleFileTree className="sg-tree__header-toggle" onClick={this.props.onClick} />
+                        <ToggleFileTree className="sg-tree__header-toggle" />
                     ) : (
-                        <ShowFileTree className="sg-tree__header-toggle" onClick={this.props.onClick} />
+                        <ShowFileTree className="sg-tree__header-toggle" />
                     )}
                 </div>
             </div>

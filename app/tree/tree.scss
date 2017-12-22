@@ -20,9 +20,11 @@
     }
 
     &__header-box {
-        padding-left: 16px;
         display: flex;
         align-items: center;
+        justify-content: center;
+        height: 54px;
+        width: 45px;
     }
 
     &__header-toggle {
