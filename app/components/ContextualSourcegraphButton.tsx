@@ -52,7 +52,7 @@ export class ContextualSourcegraphButton extends React.Component<{}, {}> {
         state: GitHubBlobUrl | GitHubPullUrl | GitHubRepositoryUrl
     ): { label: string; openProps: OpenInSourcegraphProps; ariaLabel?: string } {
         const props: OpenInSourcegraphProps = {
-            repoPath: `${window.location.host}/${state.owner}/${state.repoName}`,
+            repoPath: `github.com/${state.owner}/${state.repoName}`,
             rev: state.rev || '',
         }
         return {

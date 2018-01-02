@@ -3,45 +3,30 @@ import { sourcegraphUrl } from '../../app/util/context'
 
 const telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
 
+const application = 'com.sourcegraph.browser_ext_host'
+let port: any = null
+
+if (process.env.NODE_ENV === 'development') {
+    try {
+        port = chrome.runtime.connectNative(application)
+        // port.onMessage.addListener((e) => console.log("port connected", e));
+        port.onDisconnect.addListener(e => {
+            console.error('unexpected disconnect', e)
+            port = null
+        })
+    } catch (err) {
+        console.error(err)
+    }
+}
+
 let trackingEnabled = true
-let customGitHubOrigins = {}
 chrome.storage.sync.get(items => {
     trackingEnabled = items.eventTrackingEnabled
-    if (items.gitHubEnterpriseURL) {
-        customGitHubOrigins[items.gitHubEnterpriseURL] = true
-    }
-    if (items.sourcegraphURL) {
-        customGitHubOrigins[items.sourcegraphURL] = true
-    }
 })
 chrome.storage.onChanged.addListener(change => {
     chrome.storage.sync.get(items => {
-        customGitHubOrigins = {}
         trackingEnabled = items.eventTrackingEnabled
-        if (items.gitHubEnterpriseURL) {
-            customGitHubOrigins[items.gitHubEnterpriseURL] = true
-        }
-        if (items.sourcegraphURL) {
-            customGitHubOrigins[items.sourcegraphURL] = true
-        }
     })
-})
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete') {
-        for (const origin of Object.keys(customGitHubOrigins)) {
-            if (!tab.url || !(tab.url as string).startsWith(origin)) {
-                continue
-            }
-            chrome.tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end' }, res =>
-                console.log('injected JavaScript bundle on tab ' + tabId)
-            )
-            chrome.tabs.insertCSS(tabId, { file: 'css/style.bundle.css', runAt: 'document_end' }, res =>
-                console.log('injected CSS bundle on tab ' + tabId)
-            )
-        }
-    }
-    // console.log('added perms!!!', perms)
 })
 
 chrome.runtime.onMessage.addListener((message, _, cb) => {
@@ -65,6 +50,15 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 
         case 'openSourcegraphTab':
             chrome.tabs.create({ url: message.url })
+            return true
+
+        case 'openEditor':
+            const msg = { cmd: message.cmd }
+            if (port) {
+                port.postMessage(msg)
+            } else {
+                chrome.runtime.sendNativeMessage(application, msg, cb)
+            }
             return true
 
         case 'trackEvent':

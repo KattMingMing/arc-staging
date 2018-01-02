@@ -24,26 +24,46 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://github.com/*", "https://sourcegraph.com/*"],
+            "matches": [
+                "https://github.com/*",
+                "https://sourcegraph.com/*"
+            ],
             "run_at": "document_end",
-            "js": ["js/inject.bundle.js"]
+            "js": [
+                "js/inject.bundle.js"
+            ]
         },
         {
-            "matches": ["https://github.com/*"],
+            "matches": [
+                "https://github.com/*"
+            ],
             "run_at": "document_end",
-            "css": ["css/style.bundle.css"]
+            "css": [
+                "css/style.bundle.css"
+            ]
         }
     ],
     "background": {
-        "scripts": ["js/background.bundle.js"]
+        "scripts": [
+            "js/background.bundle.js"
+        ]
     },
     "options_ui": {
         "page": "options.html",
         "chrome_style": true
     },
-    "permissions": ["cookies", "storage", "https://github.com/*", "https://sourcegraph.com/*"],
-    "optional_permissions": ["tabs", "http://*/", "https://*/"],
-    "content_security_policy":
-        "default-src 'self'; script-src 'self'; connect-src 'self' https://sourcegraph-logging.telligentdata.com; img-src 'self' data:;",
-    "web_accessible_resources": ["img/*"]
+    "permissions": [
+        "cookies",
+        "storage",
+        "https://github.com/*",
+        "https://sourcegraph.com/*"
+    ],
+    "optional_permissions": [
+        "http://*/",
+        "https://*/"
+    ],
+    "content_security_policy": "default-src 'self'; script-src 'self'; connect-src 'self' https://sourcegraph-logging.telligentdata.com; img-src 'self' data:;",
+    "web_accessible_resources": [
+        "img/*"
+    ]
 }

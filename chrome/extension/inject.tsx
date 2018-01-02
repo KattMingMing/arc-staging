@@ -1,4 +1,5 @@
 import { injectGitHubApplication } from '../../app/github/inject'
+import { injectPhabricatorApplication } from '../../app/phabricator/inject'
 import { injectSourcegraphApp } from '../../app/sourcegraph/inject'
 import { ExtensionEventLogger } from '../../app/tracking/ExtensionEventLogger'
 import {
@@ -24,37 +25,29 @@ function injectApplication(): void {
     extensionMarker.style.display = 'none'
 
     const href = window.location.href
-    if (/^https?:\/\/(www.)?sourcegraph.com/.test(href)) {
-        setSourcegraphUrl('https://sourcegraph.com')
-        injectSourcegraphApp(extensionMarker)
-    } else {
+    if (/^https?:\/\/(www.)?github.com/.test(href)) {
         chrome.storage.sync.get(items => {
             const sgurl = items.sourcegraphURL ? items.sourcegraphURL : 'https://sourcegraph.com'
-            const githubEnterpriseURL = items.gitHubEnterpriseURL
-
-            const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
-            const isGitHubEnterprise = Boolean(githubEnterpriseURL) && href.startsWith(githubEnterpriseURL)
-
-            if (isGitHub || isGitHubEnterprise) {
-                setSourcegraphUrl(sgurl)
-                setRepositoryFileTreeEnabled(
-                    items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled
-                )
-                setRepositorySearchEnabled(
-                    items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled
-                )
-                setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled)
-                setEventTrackingEnabled(items.eventTrackingEnabled)
-                setOpenInEditorEnabled(items.openInEditorEnabled)
-                injectGitHubApplication(extensionMarker)
-            }
+            setSourcegraphUrl(sgurl)
+            setRepositoryFileTreeEnabled(
+                items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled
+            )
+            setRepositorySearchEnabled(
+                items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled
+            )
+            setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled)
+            setEventTrackingEnabled(items.eventTrackingEnabled)
+            setOpenInEditorEnabled(items.openInEditorEnabled)
+            injectGitHubApplication(extensionMarker)
         })
+    } else if (/^https?:\/\/(www.)?sourcegraph.com/.test(href)) {
+        setSourcegraphUrl('https://sourcegraph.com')
+        injectSourcegraphApp(extensionMarker)
+    } else if (/^https?:\/\/phabricator.aws.sgdev.org/.test(href)) {
+        setSourcegraphUrl('http://node.aws.sgdev.org:30000')
+        injectPhabricatorApplication()
     }
 }
 
-if (document.readyState === 'complete' || document.readyState === 'loaded') {
-    // document is already ready to go
-    injectApplication()
-} else {
-    document.addEventListener('DOMContentLoaded', injectApplication)
-}
+// Inject the application.
+injectApplication()
