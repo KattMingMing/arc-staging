@@ -100,6 +100,8 @@ export const listAllFiles = memoizeAsync(
     makeRepoURI
 )
 
+const trimRepoPath = ({ repoPath, ...rest }) => ({ ...rest, repoPath: repoPath.replace(/.git$/, '') })
+
 export const fetchBlobContentLines = memoizeAsync(
     (ctx: AbsoluteRepoFile): Promise<string[]> =>
         queryGraphQL(
@@ -114,7 +116,7 @@ export const fetchBlobContentLines = memoizeAsync(
                     }
                 }
             }`,
-            ctx
+            trimRepoPath(ctx)
         )
             .toPromise()
             .then(result => {

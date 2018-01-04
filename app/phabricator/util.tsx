@@ -555,14 +555,8 @@ export function normalizeRepoPath(origin: string): string {
     if (origin.startsWith('git@')) {
         repoPath = origin.substr('git@'.length)
         repoPath = repoPath.replace(':', '/')
-        if (!repoPath.endsWith('.git')) {
-            repoPath += '.git'
-        }
     } else if (origin.startsWith('git://')) {
         repoPath = origin.substr('git://'.length)
-        if (!repoPath.endsWith('.git')) {
-            repoPath += '.git'
-        }
     } else if (origin.startsWith('https://')) {
         repoPath = origin.substr('https://'.length)
     } else if (origin.includes('@')) {
@@ -572,5 +566,5 @@ export function normalizeRepoPath(origin: string): string {
         repoPath = repoPath.replace(':', '/')
     }
 
-    return repoPath
+    return repoPath.replace(/.git$/, '')
 }
