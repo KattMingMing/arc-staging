@@ -410,7 +410,7 @@ function injectCodeSnippetAnnotator(
                 filterTarget={defaultFilterTarget}
                 getNodeToConvert={identityFunction}
                 fileElement={file}
-                repoPath={`github.com/${gitHubState.owner}/${gitHubState.repoName}`}
+                repoPath={`${window.location.host}/${gitHubState.owner}/${gitHubState.repoName}`}
                 rev={gitHubState.rev}
                 filePath={gitHubState.filePath}
                 isPullRequest={false}

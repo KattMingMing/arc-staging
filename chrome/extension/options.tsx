@@ -4,6 +4,10 @@ function getSourcegraphURLInput(): HTMLInputElement {
     return document.getElementById('sg-url') as HTMLInputElement
 }
 
+function getGitHubEnterpriseURLInput(): HTMLInputElement {
+    return document.getElementById('sg-github-enterprise-url') as HTMLInputElement
+}
+
 // Initially focus this input.
 getSourcegraphURLInput().focus()
 
@@ -11,8 +15,18 @@ function getSourcegraphURLForm(): HTMLFormElement {
     return document.getElementById('sg-url-form') as HTMLFormElement
 }
 
-function getSaveButton(): HTMLInputElement {
-    return getSourcegraphURLForm().querySelector('input[type="submit"]') as HTMLInputElement
+function getGithubEnterpriseURLForm(): HTMLFormElement {
+    return document.getElementById('sg-github-enterprise-form') as HTMLFormElement
+}
+
+function getSourcegraphURLSaveButton(): HTMLInputElement {
+    return getSourcegraphURLForm().querySelector('input.sg-url-save-button[type="submit"]') as HTMLInputElement
+}
+
+function getGitHubEnterpriseSaveButton(): HTMLInputElement {
+    return getSourcegraphURLForm().querySelector(
+        'input.sg-github-enterprise-save-button[type="submit"]'
+    ) as HTMLInputElement
 }
 
 function getEnableEventTrackingCheckbox(): HTMLInputElement {
@@ -42,6 +56,7 @@ function getOpenInEditorCheckbox(): HTMLInputElement {
 function syncInputsToLocalStorage(): void {
     chrome.storage.sync.get(items => {
         getSourcegraphURLInput().value = items.sourcegraphURL
+        getGithubEnterpriseURLForm().value = items.gitHubEnterpriseURL
         getEnableEventTrackingCheckbox().checked = items.eventTrackingEnabled
         getRepositorySearchCheckbox().checked = items.repositorySearchEnabled
         getFileTreeNavigationCheckbox().checked = items.repositoryFileTreeEnabled
@@ -68,6 +83,12 @@ chrome.storage.sync.get(items => {
         chrome.storage.sync.set({ sourcegraphURL: 'https://sourcegraph.com' })
     } else {
         getSourcegraphURLInput().value = items.sourcegraphURL
+    }
+
+    if (items.gitHubEnterpriseURL === undefined) {
+        chrome.storage.sync.set({ gitHubEnterpriseURL: '' })
+    } else {
+        getGitHubEnterpriseURLInput().value = items.gitHubEnterpriseURL
     }
 
     if (items.eventTrackingEnabled === undefined) {
@@ -123,7 +144,40 @@ getSourcegraphURLForm().addEventListener('submit', evt => {
 getSourcegraphURLInput().addEventListener('keydown', evt => {
     if (evt.keyCode === 13) {
         evt.preventDefault()
-        getSaveButton().click()
+        getSourcegraphURLSaveButton().click()
+    }
+})
+
+getGithubEnterpriseURLForm().addEventListener('submit', evt => {
+    evt.preventDefault()
+
+    let url = getGitHubEnterpriseURLInput().value
+    if (url.endsWith('/')) {
+        // Trim trailing slash.
+        url = url.substr(url.length - 1)
+    }
+
+    chrome.permissions.request(
+        {
+            origins: [url + '/*'],
+            permissions: ['tabs'],
+        },
+        granted => {
+            if (granted) {
+                chrome.storage.sync.set({ gitHubEnterpriseURL: url })
+            } else {
+                syncInputsToLocalStorage()
+                // Note: it would be nice to display an alert here with an error, but the alert API doesn't work in the options panel
+                // (see https://bugs.chromium.org/p/chromium/issues/detail?id=476350)
+            }
+        }
+    )
+})
+
+getGithubEnterpriseURLForm().addEventListener('keydown', evt => {
+    if (evt.keyCode === 13) {
+        evt.preventDefault()
+        getGitHubEnterpriseSaveButton().click()
     }
 })
 
