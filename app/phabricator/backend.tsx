@@ -285,7 +285,6 @@ interface CreatePhabricatorRepoOptions {
     phabricatorURL: string
 }
 
-// export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Observable<void> {
 export const createPhabricatorRepo = memoizeObservable(
     (options: CreatePhabricatorRepoOptions): Observable<void> =>
         mutateGraphQL(
