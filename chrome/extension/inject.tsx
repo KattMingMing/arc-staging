@@ -52,7 +52,7 @@ function injectApplication(): void {
     }
 }
 
-if (document.readyState === 'complete' || document.readyState === 'loaded') {
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
     // document is already ready to go
     injectApplication()
 } else {

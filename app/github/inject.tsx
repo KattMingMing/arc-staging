@@ -53,7 +53,9 @@ function refreshModules(): void {
     hideTooltip()
     inject()
     selectTreeNodeForURL()
-    updateHeaderMargin()
+    if (document.getElementsByClassName('sg-tree__container').length > 0) {
+        updateHeaderMargin()
+    }
 }
 const injectModulesAfterPjaxNavigation = _.debounce(refreshModules, 200, { leading: true, trailing: true })
 
