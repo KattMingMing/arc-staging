@@ -2,6 +2,7 @@ import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/toPromise'
 import { Observable } from 'rxjs/Observable'
 import { mutateGraphQL } from '../backend/graphql'
+import { memoizeObservable } from '../util/memoize'
 import { normalizeRepoPath } from './util'
 
 interface PhabEntity {
@@ -284,19 +285,22 @@ interface CreatePhabricatorRepoOptions {
     phabricatorURL: string
 }
 
-export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Observable<void> {
-    return mutateGraphQL(
-        `mutation addPhabricatorRepo(
+// export function createPhabricatorRepo(options: CreatePhabricatorRepoOptions): Observable<void> {
+export const createPhabricatorRepo = memoizeObservable(
+    (options: CreatePhabricatorRepoOptions): Observable<void> =>
+        mutateGraphQL(
+            `mutation addPhabricatorRepo(
             $callsign: String!,
             $uri: String!
             $url: String!
         ) {
             addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabricatorURL) { }
         }`,
-        options
-    ).map(({ data, errors }) => {
-        if (!data || (errors && errors.length > 0)) {
-            throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
-        }
-    })
-}
+            options
+        ).map(({ data, errors }) => {
+            if (!data || (errors && errors.length > 0)) {
+                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
+            }
+        }),
+    ({ callsign }) => callsign
+)
