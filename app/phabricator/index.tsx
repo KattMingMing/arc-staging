@@ -57,7 +57,7 @@ export interface ChangeState {
 }
 
 function convertSpacesToTabs(realLineContent: string, domContent: string): boolean {
-    return realLineContent.startsWith('\t') && !domContent.startsWith('\t')
+    return !!realLineContent && !!domContent && realLineContent.startsWith('\t') && !domContent.startsWith('\t')
 }
 
 /**
