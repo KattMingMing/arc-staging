@@ -154,6 +154,41 @@ export async function getDiffDetailsFromConduit(diffID: number, differentialID: 
     return res.result['' + diffID]
 }
 
+interface ConduitCommit {
+    fields: {
+        identifier: string
+    }
+}
+
+interface ConduitDiffusionCommitQueryResponse {
+    error_code?: string
+    error_info?: string
+    result: {
+        data: ConduitCommit[]
+    }
+}
+
+export async function searchForCommitID(props: any): Promise<string> {
+    const form = createConduitRequestForm()
+    form.set('params[constraints]', `{"ids":[${props.diffID}]}`)
+
+    const resp: ConduitDiffusionCommitQueryResponse = await fetch(
+        window.location.origin + '/api/diffusion.commit.search',
+        {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+            headers: new Headers({ Accept: 'application/json' }),
+        }
+    ).then(resp => resp.json())
+
+    if (resp.error_code) {
+        throw new Error(`error ${resp.error_code}: ${resp.error_info}`)
+    }
+
+    return resp.result.data[0].fields.identifier
+}
+
 interface ConduitDifferentialQueryResponse {
     error_code?: string
     error_info?: string

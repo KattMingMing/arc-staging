@@ -340,7 +340,60 @@ export async function getPhabricatorState(
 
     const changesetMatch = PHAB_CHANGESET_REGEX.exec(loc.href)
     if (changesetMatch) {
-        // TODO(john): implement...I'm not sure how
+        const crumbs = document.querySelector('.phui-crumbs-view')
+        if (!crumbs) {
+            throw new Error('failed parsing changeset dom')
+        }
+
+        const [, differentialHref, diffHref] = crumbs.querySelectorAll('a')
+
+        const differentialMatch = differentialHref.getAttribute('href')!.match(/D(\d+)/)
+        if (!differentialMatch) {
+            throw new Error('failed parsing differentialID')
+        }
+        const differentialID = parseInt(differentialMatch[1], 10)
+
+        const diffMatch = diffHref.getAttribute('href')!.match(/\/differential\/diff\/(\d+)/)
+        if (!diffMatch) {
+            throw new Error('failed parsing diffID')
+        }
+        const diffID = parseInt(diffMatch[1], 10)
+
+        const { callsign } = await getRepoDetailsFromDifferentialID(differentialID)
+        if (!callsign) {
+            console.error(`callsign not found`)
+            return null
+        }
+
+        const repoPath = (await getRepoDetailsFromCallsign(callsign)).repoPath
+        let baseRev = `phabricator/base/${diffID}`
+        let headRev = `phabricator/diff/${diffID}`
+
+        const maxDiff = getMaxDiffFromTabView()
+        const diffLanded = isDifferentialLanded()
+        if (diffLanded && !maxDiff) {
+            console.error(
+                'looking for the final diff id in the revision contents table failed. expected final row to have the commit in the description field.'
+            )
+            return null
+        }
+
+        // check if the diff we are viewing is the max diff. if so,
+        // right is the merged rev into master, and left is master~1
+        if (diffLanded && maxDiff && diffID === maxDiff.diffID) {
+            headRev = maxDiff.revDescription
+            baseRev = maxDiff.revDescription.concat('~1')
+        }
+
+        return {
+            baseRepoPath: repoPath,
+            baseRev,
+            headRepoPath: repoPath,
+            headRev, // This will be blank on GitHub, but on a manually staged instance should exist
+            differentialID,
+            diffID,
+            mode: PhabricatorMode.Differential,
+        }
     }
 
     return null

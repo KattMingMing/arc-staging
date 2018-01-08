@@ -4,7 +4,7 @@ import 'rxjs/add/operator/toPromise'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { fetchBlobContentLines, resolveRev } from '../repo/backend'
 import { getTableDataCell } from '../repo/tooltips'
-import { ConduitDiffChange, getDiffDetailsFromConduit } from './backend'
+import { ConduitDiffChange, getDiffDetailsFromConduit, searchForCommitID } from './backend'
 import {
     ChangeState,
     DifferentialState,
@@ -486,6 +486,20 @@ async function resolveDiff(props: ResolveDiffOpt): Promise<ResolvedDiff> {
             }
             return { commitID: ref.commit, stagingRepoPath }
         }
+    }
+
+    if (!propsWithInfo.isBase) {
+        for (const cmit of Object.keys(propsWithInfo.info.properties['local:commits'])) {
+            return { commitID: cmit }
+        }
+    }
+
+    // last ditch effort to search conduit API for commit ID
+    try {
+        const commitID = await searchForCommitID(propsWithInfo)
+        return { commitID }
+    } catch (e) {
+        // ignore
     }
 
     throw new Error('did not find commitID')
