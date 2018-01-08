@@ -409,6 +409,9 @@ export function getTableDataCell(target: HTMLElement): HTMLTableDataCellElement 
         // Find ancestor which wraps the whole line of code, not just the target token.
         target = target.parentNode as HTMLElement
     }
+    if (!target) {
+        return undefined
+    }
     if (target.tagName === 'TD') {
         return target as HTMLTableDataCellElement
     }
