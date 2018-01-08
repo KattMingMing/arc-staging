@@ -484,6 +484,7 @@ async function resolveDiff(props: ResolveDiffOpt): Promise<ResolvedDiff> {
             if (remote) {
                 stagingRepoPath = normalizeRepoPath(remote)
             }
+            console.log(propsWithInfo, ref.commit, stagingRepoPath)
             return { commitID: ref.commit, stagingRepoPath }
         }
     }

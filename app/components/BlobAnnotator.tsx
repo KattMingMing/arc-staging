@@ -348,16 +348,6 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     this.fixedTooltip.next(nextProps)
                 })
         )
-
-        this.subscriptions.add(
-            Observable.fromEvent<MouseEvent>(document.body, 'click')
-                .map(e => e.target as HTMLElement)
-                .filter(
-                    target =>
-                        !document.getElementsByClassName('sg-tooltip')[0].contains(target) && !ref.contains(target)
-                )
-                .subscribe(hideTooltip)
-        )
     }
 
     private logTelemetryOnTooltip = (data: TooltipData) => {

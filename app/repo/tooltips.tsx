@@ -278,6 +278,12 @@ window.addEventListener('keyup', (e: KeyboardEvent) => {
     }
 })
 
+document.body.addEventListener('click', (e: MouseEvent) => {
+    if (!getTableDataCell(e.target as HTMLElement)) {
+        hideTooltip()
+    }
+})
+
 window.addEventListener('resize', () => {
     if (tooltipTarget) {
         const targetBound = tooltipTarget.getBoundingClientRect()
