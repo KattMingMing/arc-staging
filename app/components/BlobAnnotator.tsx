@@ -88,6 +88,14 @@ export class BlobAnnotator extends React.Component<Props, State> {
         this.updateCodeCells()
     }
 
+    // BlobAnnotator will only ever recieve new props when it is being rendered
+    // from a component that is monitoring for a table change(split diff <-> unified diff)
+    public componentWillReceiveProps(nextProps: Props): void {
+        this.subscriptions.unsubscribe()
+        this.subscriptions = new Subscription()
+        this.addTooltipEventListeners(nextProps.getTableElement())
+    }
+
     public componentDidMount(): void {
         createTooltips()
         this.addTooltipEventListeners(this.props.getTableElement())
