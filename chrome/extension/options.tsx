@@ -101,7 +101,7 @@ getSourcegraphURLForm().addEventListener('submit', evt => {
     let url = getSourcegraphURLInput().value
     if (url.endsWith('/')) {
         // Trim trailing slash.
-        url = url.substr(url.length - 1)
+        url = url.substr(0, url.length - 1)
     }
 
     chrome.permissions.request(
