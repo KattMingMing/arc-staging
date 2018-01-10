@@ -490,7 +490,10 @@ export function getCodeCellsForDifferentialAnnotations(
         } else {
             const baseLine = parseInt(row.cells[0].textContent as string, 10)
             const headLine = parseInt(row.cells[1].textContent as string, 10)
-            const codeCell = row.cells[3]
+
+            // find first cell that is not <th> and also has code in it
+            const codeCell = Array.from(row.cells).find((c, idx) => c.tagName !== 'TH' && !c.matches('td.copy'))
+
             if (isBase && baseLine && codeCell) {
                 cells.push({
                     cell: codeCell,
@@ -500,10 +503,6 @@ export function getCodeCellsForDifferentialAnnotations(
                     isDeletion: false,
                 })
             } else if (!isBase && headLine && codeCell) {
-                if (!codeCell.classList.contains('old') && !codeCell.classList.contains('new')) {
-                    // We don't want to add the white lines (unchanged) for head and base both times, so opt for base.
-                    continue
-                }
                 cells.push({
                     cell: codeCell,
                     eventHandler: codeCell, // TODO(john): fix

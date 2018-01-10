@@ -3,8 +3,8 @@ import { render } from 'react-dom'
 import 'rxjs/add/operator/toPromise'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { fetchBlobContentLines, resolveRev } from '../repo/backend'
-import { getTableDataCell } from '../repo/tooltips'
 import { ConduitDiffChange, getDiffDetailsFromConduit, searchForCommitID } from './backend'
+import { MonitoredBlobAnnotator } from './components/MonitoredBlobAnnotator'
 import {
     ChangeState,
     DifferentialState,
@@ -17,7 +17,6 @@ import {
 import {
     expanderListen,
     getCodeCellsForAnnotation,
-    getCodeCellsForDifferentialAnnotations,
     getFilepathFromFile,
     getPhabricatorState,
     javelinPierce,
@@ -115,48 +114,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                     return
                 }
 
-                const getTableElement = () => file.querySelector('table')!
-                if (!getTableElement()) {
-                    // TODO(john): figure out something better to do
-                    continue
-                }
                 file.className = `${file.className} sg-blob-annotated`
-                const isSplitDiff = getTableElement()!.classList.contains('diff-2up')
-
-                const getCodeCellsBase = () => {
-                    const table = getTableElement()
-                    if (!table) {
-                        return []
-                    }
-                    return getCodeCellsForDifferentialAnnotations(table, isSplitDiff, true)
-                }
-
-                const getCodeCellsHead = () => {
-                    const table = getTableElement()
-                    if (!table) {
-                        return []
-                    }
-                    return getCodeCellsForDifferentialAnnotations(table, isSplitDiff, false)
-                }
-
-                const filterTarget = (isBase: boolean) => (target: HTMLElement) => {
-                    const td = getTableDataCell(target)
-                    if (!td) {
-                        return false
-                    }
-                    if (isSplitDiff) {
-                        if (isBase) {
-                            return td.colSpan === 1
-                        } else {
-                            return td.colSpan === 2
-                        }
-                    }
-                    if (isBase) {
-                        return td.classList.contains('left')
-                    } else {
-                        return !td.classList.contains('left')
-                    }
-                }
 
                 const mountBase = createBlobAnnotatorMount(file, '.differential-changeset-buttons', true)
                 if (!mountBase) {
@@ -218,19 +176,15 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                         ])
                         if (baseFile.length > 0) {
                             render(
-                                <BlobAnnotator
+                                <MonitoredBlobAnnotator
                                     {...resolveBaseRevOpt}
                                     repoPath={actualBaseRepoPath}
                                     commitID={baseRev.commitID}
-                                    getTableElement={getTableElement}
-                                    getCodeCells={getCodeCellsBase}
                                     getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                     findElementWithOffset={findElementWithOffset(baseFile)}
-                                    filterTarget={filterTarget(true)}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     isPullRequest={true}
-                                    isSplitDiff={isSplitDiff}
                                     isCommit={false}
                                     buttonProps={differentialButtonProps}
                                 />,
@@ -239,19 +193,15 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                         }
                         if (headFile.length > 0) {
                             render(
-                                <BlobAnnotator
+                                <MonitoredBlobAnnotator
                                     {...resolveHeadRevOpt}
                                     repoPath={actualHeadRepoPath}
                                     commitID={headRev.commitID}
-                                    getTableElement={getTableElement}
-                                    getCodeCells={getCodeCellsHead}
                                     getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                     findElementWithOffset={findElementWithOffset(headFile)}
-                                    filterTarget={filterTarget(false)}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     isPullRequest={true}
-                                    isSplitDiff={isSplitDiff}
                                     isCommit={false}
                                     buttonProps={differentialButtonProps}
                                 />,
@@ -269,12 +219,9 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                         ])
                         if (baseFile.length > 0) {
                             render(
-                                <BlobAnnotator
-                                    getTableElement={getTableElement}
-                                    getCodeCells={getCodeCellsBase}
+                                <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                     findElementWithOffset={findElementWithOffset(baseFile)}
-                                    filterTarget={filterTarget(true)}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}
@@ -282,7 +229,6 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     filePath={filePath}
                                     isPullRequest={true}
                                     isCommit={true}
-                                    isSplitDiff={isSplitDiff}
                                     isBase={true}
                                     buttonProps={differentialButtonProps}
                                 />,
@@ -291,12 +237,9 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                         }
                         if (headFile.length > 0) {
                             render(
-                                <BlobAnnotator
-                                    getTableElement={getTableElement}
-                                    getCodeCells={getCodeCellsHead}
+                                <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                     findElementWithOffset={findElementWithOffset(headFile)}
-                                    filterTarget={filterTarget(false)}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}
@@ -304,7 +247,6 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     filePath={filePath}
                                     isPullRequest={false}
                                     isCommit={true}
-                                    isSplitDiff={isSplitDiff}
                                     isBase={false}
                                     buttonProps={differentialButtonProps}
                                 />,
@@ -324,12 +266,9 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
 
                         if (baseFile.length > 0) {
                             render(
-                                <BlobAnnotator
-                                    getTableElement={getTableElement}
-                                    getCodeCells={getCodeCellsBase}
+                                <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                     findElementWithOffset={findElementWithOffset(baseFile)}
-                                    filterTarget={filterTarget(true)}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}
@@ -337,7 +276,6 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     filePath={filePath}
                                     isPullRequest={true}
                                     isCommit={true}
-                                    isSplitDiff={isSplitDiff}
                                     isBase={true}
                                     buttonProps={differentialButtonProps}
                                 />,
@@ -346,12 +284,9 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                         }
                         if (headFile.length > 0) {
                             render(
-                                <BlobAnnotator
-                                    getTableElement={getTableElement}
-                                    getCodeCells={getCodeCellsHead}
+                                <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                     findElementWithOffset={findElementWithOffset(headFile)}
-                                    filterTarget={filterTarget(false)}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}
@@ -359,7 +294,6 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     filePath={filePath}
                                     isPullRequest={false}
                                     isCommit={true}
-                                    isSplitDiff={isSplitDiff}
                                     isBase={false}
                                     buttonProps={differentialButtonProps}
                                 />,
