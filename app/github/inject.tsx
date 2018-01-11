@@ -53,7 +53,9 @@ function refreshModules(): void {
     hideTooltip()
     inject()
     selectTreeNodeForURL()
-    updateHeaderMargin()
+    if (document.getElementsByClassName('sg-tree__container').length > 0) {
+        updateHeaderMargin()
+    }
 }
 const injectModulesAfterPjaxNavigation = _.debounce(refreshModules, 200, { leading: true, trailing: true })
 
@@ -410,7 +412,7 @@ function injectCodeSnippetAnnotator(
                 filterTarget={defaultFilterTarget}
                 getNodeToConvert={identityFunction}
                 fileElement={file}
-                repoPath={`github.com/${gitHubState.owner}/${gitHubState.repoName}`}
+                repoPath={`${window.location.host}/${gitHubState.owner}/${gitHubState.repoName}`}
                 rev={gitHubState.rev}
                 filePath={gitHubState.filePath}
                 isPullRequest={false}
