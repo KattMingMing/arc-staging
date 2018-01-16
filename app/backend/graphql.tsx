@@ -20,7 +20,7 @@ export interface MutationResult {
     errors?: GQL.IGraphQLResponseError[]
 }
 
-const trace = (name, x) => {
+const trace = (x) => {
     console.log('graphQL Response', x)
 
     return x
