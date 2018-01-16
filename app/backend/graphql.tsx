@@ -20,6 +20,12 @@ export interface MutationResult {
     errors?: GQL.IGraphQLResponseError[]
 }
 
+const trace = (x) => {
+    console.log('graphQL Response', x)
+
+    return x
+}
+
 /**
  * Does a GraphQL request to the Sourcegraph GraphQL API running under `/.api/graphql`
  *
@@ -36,7 +42,7 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
         crossDomain: true,
         withCredentials: true,
         body: JSON.stringify({ query: request, variables }),
-    }).map(({ response }) => response)
+    }).map(({ response }) => trace(response))
 }
 
 /**

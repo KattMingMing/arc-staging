@@ -86,6 +86,7 @@ export async function getRepoListFromConduit(): Promise<ConduitRepo[]> {
             throw e
         }
     }
+    console.log('getRepoListFromConduit', results)
 
     return results
 }
@@ -147,6 +148,7 @@ export async function getDiffDetailsFromConduit(diffID: number, differentialID: 
         credentials: 'include',
         headers: new Headers({ Accept: 'application/json' }),
     }).then(resp => resp.json())
+    console.log('getRepoDetailsFromCallsign', res)
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -181,6 +183,7 @@ export async function searchForCommitID(props: any): Promise<string> {
             headers: new Headers({ Accept: 'application/json' }),
         }
     ).then(resp => resp.json())
+    console.log('searchForCommitID', resp)
 
     if (resp.error_code) {
         throw new Error(`error ${resp.error_code}: ${resp.error_info}`)
@@ -210,6 +213,7 @@ export async function getRepoPHIDForDifferentialID(differentialID: number): Prom
         credentials: 'include',
         headers: new Headers({ Accept: 'application/json' }),
     }).then(resp => resp.json())
+    console.log('getRepoPHIDForDifferentialID', res)
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -233,6 +237,7 @@ export async function getRepoDetailsFromCallsign(callsign: string): Promise<Phab
         credentials: 'include',
         headers: new Headers({ Accept: 'application/json' }),
     }).then(resp => resp.json())
+    console.log('getRepoDetailsFromCallsign', res)
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
@@ -265,6 +270,7 @@ export async function getRepoDetailsFromRepoPHID(phid: string): Promise<Phabrica
         credentials: 'include',
         headers: new Headers({ Accept: 'application/json' }),
     }).then(resp => resp.json())
+    console.log('getRepoDetailsFromRepoPHID', phid)
 
     if (res.error_code) {
         throw new Error(`error ${res.error_code}: ${res.error_info}`)
