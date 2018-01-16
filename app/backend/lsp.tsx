@@ -73,20 +73,6 @@ export const fetchHover = memoizeAsync((pos: AbsoluteRepoFilePosition): Promise<
         credentials: 'include',
     })
         .then(resp => resp.json())
-        .then(resp => {
-            console.log(
-                'lsp -> req, resp',
-                `${sourcegraphUrl}/.api/xlang/textDocument/hover`,
-                {
-                    method: 'POST',
-                    body: JSON.stringify(body),
-                    headers: getHeaders(),
-                    credentials: 'include',
-                },
-                resp
-            )
-            return resp
-        })
         .then(json => {
             if (!json || !json[1] || !json[1].result) {
                 return []
@@ -125,20 +111,6 @@ export const fetchDefinition = memoizeAsync((pos: AbsoluteRepoFilePosition): Pro
         credentials: 'include',
     })
         .then(resp => resp.json())
-        .then(resp => {
-            console.log(
-                'lsp -> req, resp',
-                `${sourcegraphUrl}/.api/xlang/textDocument/hover`,
-                {
-                    method: 'POST',
-                    body: JSON.stringify(body),
-                    headers: getHeaders(),
-                    credentials: 'include',
-                },
-                resp
-            )
-            return resp
-        })
         .then(json => {
             if (!json || !json[1] || !json[1].result) {
                 return []
