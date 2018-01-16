@@ -38,11 +38,9 @@ export const resolveRev = memoizeObservable(
         queryGraphQL(
             `query ResolveRev($repoPath: String, $rev: String) {
                 repository(uri: $repoPath) {
+                    cloneInProgress
                     commit(rev: $rev) {
-                        cloneInProgress,
-                        commit {
-                            sha1
-                        }
+                        oid
                     }
                 }
             }`,
@@ -54,13 +52,13 @@ export const resolveRev = memoizeObservable(
             if (!result.data.repository || !result.data.repository.commit) {
                 throw new RepoNotFoundError(ctx.repoPath)
             }
-            if (result.data.repository.commit.cloneInProgress) {
+            if (result.data.repository.cloneInProgress) {
                 throw new CloneInProgressError(ctx.repoPath)
             }
-            if (!result.data.repository.commit.commit) {
+            if (!result.data.repository.commit) {
                 throw new RevNotFoundError(ctx.rev)
             }
-            return result.data.repository.commit.commit.sha1
+            return result.data.repository.commit.oid
         }),
     makeRepoURI
 )
@@ -71,11 +69,9 @@ export const listAllFiles = memoizeAsync(
             `query FileTree($repoPath: String!, $commitID: String!) {
                 repository(uri: $repoPath) {
                     commit(rev: $commitID) {
-                        commit {
-                            tree(recursive: true) {
-                                files {
-                                    name
-                                }
+                        tree(recursive: true) {
+                            files {
+                                name
                             }
                         }
                     }
@@ -89,13 +85,12 @@ export const listAllFiles = memoizeAsync(
                     !result.data ||
                     !result.data.repository ||
                     !result.data.repository.commit ||
-                    !result.data.repository.commit.commit ||
-                    !result.data.repository.commit.commit.tree ||
-                    !result.data.repository.commit.commit.tree.files
+                    !result.data.repository.commit.tree ||
+                    !result.data.repository.commit.tree.files
                 ) {
                     throw new Error('invalid response received from graphql endpoint')
                 }
-                return result.data.repository.commit.commit.tree.files.map(file => file.name)
+                return result.data.repository.commit.tree!.files.map(file => file.name)
             }),
     makeRepoURI
 )
@@ -108,10 +103,8 @@ export const fetchBlobContentLines = memoizeAsync(
             `query BlobContent($repoPath: String, $commitID: String, $filePath: String) {
                 repository(uri: $repoPath) {
                     commit(rev: $commitID) {
-                        commit {
-                            file(path: $filePath) {
-                                content
-                            }
+                        file(path: $filePath) {
+                            content
                         }
                     }
                 }
@@ -124,13 +117,12 @@ export const fetchBlobContentLines = memoizeAsync(
                     !result.data ||
                     !result.data.repository ||
                     !result.data.repository.commit ||
-                    !result.data.repository.commit.commit ||
-                    !result.data.repository.commit.commit.file ||
-                    !result.data.repository.commit.commit.file.content
+                    !result.data.repository.commit.file ||
+                    !result.data.repository.commit.file.content
                 ) {
                     return []
                 }
-                return result.data.repository.commit.commit.file.content.split('\n')
+                return result.data.repository.commit.file!.content.split('\n')
             }),
     makeRepoURI
 )
