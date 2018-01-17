@@ -96,13 +96,10 @@ async function injectDiffusion(state: DiffusionState): Promise<void> {
  * injectPhabricatorBlobAnnotators finds file blocks on the dom that sould be annotated, and adds blob annotators to them.
  */
 export async function injectPhabricatorBlobAnnotators(): Promise<void> {
-    console.log('injecting...')
     const state = await getPhabricatorState(window.location)
     if (!state) {
-        console.log('exiting 1')
         return
     }
-    console.log('state', state)
     switch (state.mode) {
         case PhabricatorMode.Diffusion:
             return injectDiffusion(state as DiffusionState)
@@ -337,7 +334,6 @@ function createBlobAnnotatorMount(
 
 // This is injection for the chrome extension.
 export function injectPhabricatorApplication(): void {
-    console.log('init inject', 1)
     // make sure this is called before javelinPierce
     document.addEventListener(PHAB_PAGE_LOAD_EVENT_NAME, () => {
         injectModules()
