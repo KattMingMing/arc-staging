@@ -19,7 +19,7 @@ export let repositorySearchEnabled = false
 
 export let repositoryFileTreeEnabled = false
 
-export let openInEditorEnabled = false
+export let openEditorEnabled = false
 
 export function setSourcegraphUrl(url: string): void {
     sourcegraphUrl = url
@@ -45,8 +45,8 @@ export function setRepositoryFileTreeEnabled(enabled: boolean): void {
     repositoryFileTreeEnabled = enabled
 }
 
-export function setOpenInEditorEnabled(enabled: boolean): void {
-    openInEditorEnabled = enabled
+export function setOpenEditorEnabled(enabled: boolean): void {
+    openEditorEnabled = enabled
 }
 
 /**

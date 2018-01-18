@@ -4,6 +4,7 @@ import { render } from 'react-dom'
 import 'rxjs/add/operator/toPromise'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { ContextualSourcegraphButton } from '../components/ContextualSourcegraphButton'
+import { OpenPullRequestButton } from '../components/OpenPullRequestButton'
 import { injectRepositorySearchToggle } from '../components/SearchToggle'
 import { WithResolvedRev } from '../components/WithResolvedRev'
 import { findElementWithOffset, getTargetLineAndOffset, GitHubBlobUrl } from '../github/index'
@@ -147,6 +148,7 @@ function inject(): void {
     injectCodeSnippetAnnotator(getRepoCodeSearchContainers(), '.d-inline-block', true)
     injectFileTree()
     progressiveContainerObserver()
+    injectOpenPullRequestButton()
 }
 
 function hideFileTree(): void {
@@ -665,4 +667,26 @@ function openOnSourcegraphURL(): string | undefined {
         }
         return `${url}?utm_source=${getPlatformName()}`
     }
+}
+
+function injectOpenPullRequestButton(): void {
+    const container = createOpenPullRequestButton()
+    const headerActions = document.querySelector('.gh-header-actions')
+    if (!headerActions) {
+        return
+    }
+    headerActions.insertBefore(container, headerActions.firstChild)
+    render(<OpenPullRequestButton />, container)
+}
+
+const OPEN_PULL_REQUEST_BUTTON_ID = 'sg-editor-open-pull-request'
+
+function createOpenPullRequestButton(): HTMLElement {
+    let container = document.getElementById(OPEN_PULL_REQUEST_BUTTON_ID)
+    if (container) {
+        container.remove()
+    }
+    container = document.createElement('span')
+    container.id = OPEN_PULL_REQUEST_BUTTON_ID
+    return container
 }

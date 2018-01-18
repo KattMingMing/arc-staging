@@ -4,7 +4,7 @@ import { ExtensionEventLogger } from '../../app/tracking/ExtensionEventLogger'
 import {
     setEventLogger,
     setEventTrackingEnabled,
-    setOpenInEditorEnabled,
+    setOpenEditorEnabled,
     setRepositoryFileTreeEnabled,
     setRepositorySearchEnabled,
     setSourcegraphRepoSearchToggled,
@@ -45,7 +45,7 @@ function injectApplication(): void {
                 )
                 setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled)
                 setEventTrackingEnabled(items.eventTrackingEnabled)
-                setOpenInEditorEnabled(items.openInEditorEnabled)
+                setOpenEditorEnabled(items.openEditorEnabled)
                 injectGitHubApplication(extensionMarker)
             }
         })

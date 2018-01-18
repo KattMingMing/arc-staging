@@ -45,12 +45,8 @@ function getFileTreeNavigationCheckbox(): HTMLInputElement {
     return document.getElementById('sg-file-tree-navigation') as HTMLInputElement
 }
 
-function getSourcegraphEditorOptionsContainer(): HTMLElement {
-    return document.getElementById('sg-editor-container') as HTMLElement
-}
-
-function getOpenInEditorCheckbox(): HTMLInputElement {
-    return document.getElementById('sg-open-in-editor') as HTMLInputElement
+function getOpenEditorCheckbox(): HTMLInputElement {
+    return document.getElementById('sg-editor-open') as HTMLInputElement
 }
 
 function syncInputsToLocalStorage(): void {
@@ -60,7 +56,7 @@ function syncInputsToLocalStorage(): void {
         getEnableEventTrackingCheckbox().checked = items.eventTrackingEnabled
         getRepositorySearchCheckbox().checked = items.repositorySearchEnabled
         getFileTreeNavigationCheckbox().checked = items.repositoryFileTreeEnabled
-        getOpenInEditorCheckbox().checked = items.openInEditorEnabled
+        getOpenEditorCheckbox().checked = items.openEditorEnabled
     })
 }
 
@@ -75,9 +71,6 @@ chrome.storage.sync.get(items => {
     if (!isFirefoxExtension() && getEnableEventTrackingContainer()) {
         getEnableEventTrackingContainer().style.display = 'none'
     }
-
-    // Currently hide the ability to set editor features until editor is released.
-    getSourcegraphEditorOptionsContainer().style.display = 'none'
 
     if (items.sourcegraphURL === undefined) {
         chrome.storage.sync.set({ sourcegraphURL: 'https://sourcegraph.com' })
@@ -109,10 +102,10 @@ chrome.storage.sync.get(items => {
         getFileTreeNavigationCheckbox().checked = items.repositoryFileTreeEnabled
     }
 
-    if (items.openInEditorEnabled === undefined) {
-        chrome.storage.sync.set({ openInEditorEnabled: false })
+    if (items.openEditorEnabled === undefined) {
+        chrome.storage.sync.set({ openEditorEnabled: false })
     } else {
-        getOpenInEditorCheckbox().checked = items.openInEditorEnabled
+        getOpenEditorCheckbox().checked = items.openEditorEnabled
     }
 })
 
@@ -193,6 +186,6 @@ getFileTreeNavigationCheckbox().addEventListener('click', () => {
     chrome.storage.sync.set({ repositoryFileTreeEnabled: getFileTreeNavigationCheckbox().checked })
 })
 
-getOpenInEditorCheckbox().addEventListener('click', () => {
-    chrome.storage.sync.set({ openInEditorEnabled: getOpenInEditorCheckbox().checked })
+getOpenEditorCheckbox().addEventListener('click', () => {
+    chrome.storage.sync.set({ openEditorEnabled: getOpenEditorCheckbox().checked })
 })

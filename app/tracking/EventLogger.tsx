@@ -49,6 +49,10 @@ export abstract class EventLogger {
         this.logEventForCategory('BrowserExtension', 'Click', 'ViewPullRequestClicked', eventProperties)
     }
 
+    public logOpenPullRequestClicked(eventProperties: any = {}): void {
+        this.logEventForCategory('BrowserExtension', 'Click', 'OpenPullRequestClicked', eventProperties)
+    }
+
     public logSourcegraphRepoSearchToggled(eventProperties: any = {}): void {
         this.logEventForCategory('BrowserExtension', 'Click', 'SourcegraphRepoSearchToggleClicked', eventProperties)
     }
