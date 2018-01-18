@@ -73,6 +73,17 @@ interface State {
     fixedTooltip?: TooltipData
 }
 
+// Tokens that are in diffs may have multiple <span>s.
+// Ensure that we have the span that is the token by
+// finding the span that is a direct child of the <td>
+const findTokenCell = (td: HTMLElement, target: HTMLElement) => {
+    let curr = target
+    while (curr.parentElement && curr.parentElement !== td) {
+        curr = curr.parentElement
+    }
+    return curr
+}
+
 export class BlobAnnotator extends React.Component<Props, State> {
     public state: State = {}
     public fileExtension: string
@@ -203,7 +214,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
                             this.diffSpec()
                         )
                         if (el) {
-                            el.classList.add('selection-highlight-sticky')
+                            const tokenCell = findTokenCell(cell, el)
+                            tokenCell.classList.add('selection-highlight-sticky')
                             return true
                         }
                     }
@@ -264,17 +276,19 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 .debounceTime(50)
                 .map(e => e.target as HTMLElement)
                 .filter(this.props.filterTarget)
-                .do(target => {
+                .map(target => {
                     const td = getTableDataCell(target)
                     if (!td) {
-                        return
+                        return target
                     }
+
                     const cell = this.props.getNodeToConvert(td)
                     if (cell && !cell.classList.contains('annotated')) {
                         cell.classList.add('annotated')
                         convertNode(cell)
-                        return
                     }
+
+                    return findTokenCell(td, target)
                 })
                 .map(target => ({ target, loc: this.props.getTargetLineAndOffset(target, this.diffSpec()) }))
                 .filter(data => Boolean(data.loc))
@@ -459,7 +473,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
         }
         if (data) {
             eventLogger.logClick(this.getEventLoggerProps())
-            data.target.classList.add('selection-highlight-sticky')
+            const td = this.getCodeCell(data.ctx.position.line)
+            findTokenCell(td, data.target).classList.add('selection-highlight-sticky')
         } else {
             if (isTooltipVisible(this.props, this.props.isBase)) {
                 hideTooltip()
@@ -491,8 +506,9 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 ? this.props.commitID === defCtx.commitID ? this.props.rev : defCtx.commitID || defCtx.rev
                 : defCtx.commitID || defCtx.rev
             // tslint:disable-next-line
-            const url = `https://${defCtx.repoPath}/blob/${rev || 'master'}/${defCtx.filePath}#L${defCtx.position
-                .line}${defCtx.position.character ? ':' + defCtx.position.character : ''}`
+            const url = `https://${defCtx.repoPath}/blob/${rev || 'master'}/${defCtx.filePath}#L${
+                defCtx.position.line
+            }${defCtx.position.character ? ':' + defCtx.position.character : ''}`
             window.location.href = url
         }
     }
