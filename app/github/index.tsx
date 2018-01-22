@@ -99,7 +99,7 @@ export function getTargetLineAndOffset(
     // Iterate recursively over the current target's children until we find the original target;
     // count characters along the way. Return true if the original target is found.
     function findOrigTarget(root: HTMLElement): boolean {
-        // tslint:disable-next-line
+        // tslint:disable-next-line prefer-for-of
         for (let i = 0; i < root.childNodes.length; ++i) {
             const child = root.childNodes[i] as HTMLElement
             if (child === origTarget) {

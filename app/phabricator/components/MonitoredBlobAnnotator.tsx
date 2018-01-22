@@ -16,6 +16,7 @@ export interface Props extends AbsoluteRepoFile, Partial<PositionSpec> {
         offset: number,
         opt: MaybeDiffSpec
     ) => HTMLElement | undefined
+    findTokenCell: (td: HTMLElement, target: HTMLElement) => HTMLElement
     getNodeToConvert: (td: HTMLTableDataCellElement) => HTMLElement
     isCommit: boolean
     isPullRequest: boolean

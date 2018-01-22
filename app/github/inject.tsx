@@ -359,6 +359,17 @@ function selectTreeNodeForURL(): void {
     tree.select_node(gitHubState.filePath)
 }
 
+const findTokenCell = (td: HTMLElement, target: HTMLElement) => {
+    let curr = target
+    while (
+        curr.parentElement &&
+        (curr.parentElement === td || curr.parentElement.classList.contains('blob-code-inner'))
+    ) {
+        curr = curr.parentElement
+    }
+    return curr
+}
+
 /**
  * injectCodeSnippetAnnotator annotates the given containers and adds a view file button.
  * @param containers The blob containers that holds the code snippet to be annotated.
@@ -411,6 +422,7 @@ function injectCodeSnippetAnnotator(
                 getCodeCells={getCodeCellsCb}
                 getTargetLineAndOffset={getTargetLineAndOffset}
                 findElementWithOffset={findElementWithOffset}
+                findTokenCell={findTokenCell}
                 filterTarget={defaultFilterTarget}
                 getNodeToConvert={identityFunction}
                 fileElement={file}
@@ -460,6 +472,7 @@ function injectBlobAnnotators(): void {
                     getCodeCells={getCodeCellsCb}
                     getTargetLineAndOffset={getTargetLineAndOffset}
                     findElementWithOffset={findElementWithOffset}
+                    findTokenCell={findTokenCell}
                     filterTarget={defaultFilterTarget}
                     getNodeToConvert={identityFunction}
                     fileElement={file}
@@ -577,6 +590,7 @@ function injectBlobAnnotators(): void {
                 getCodeCells={getCodeCellsHead}
                 getTargetLineAndOffset={getTargetLineAndOffset}
                 findElementWithOffset={findElementWithOffset}
+                findTokenCell={findTokenCell}
                 filterTarget={filterTarget(false, isSplitDiff)}
                 getNodeToConvert={getNodeToConvert}
                 fileElement={file}
@@ -604,6 +618,7 @@ function injectBlobAnnotators(): void {
                 getCodeCells={getCodeCellsBase}
                 getTargetLineAndOffset={getTargetLineAndOffset}
                 findElementWithOffset={findElementWithOffset}
+                findTokenCell={findTokenCell}
                 filterTarget={filterTarget(true, isSplitDiff)}
                 getNodeToConvert={getNodeToConvert}
                 fileElement={file}
