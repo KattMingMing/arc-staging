@@ -42,6 +42,14 @@ const differentialButtonProps = {
 const noFilterFunction = () => true
 const identityFunction = (a: any) => a
 
+const findTokenCell = (td: HTMLElement, target: HTMLElement) => {
+    let curr = target
+    while (curr.parentElement && curr.parentElement !== td) {
+        curr = curr.parentElement
+    }
+    return curr
+}
+
 async function injectDiffusion(state: DiffusionState): Promise<void> {
     const file = document.getElementsByClassName('phui-main-column')[0] as HTMLElement
     const blob = tryGetBlobElement(file)
@@ -76,6 +84,7 @@ async function injectDiffusion(state: DiffusionState): Promise<void> {
             getCodeCells={getCodeCells}
             getTargetLineAndOffset={getTargetLineAndOffset(blobLines)}
             findElementWithOffset={findElementWithOffset(blobLines)}
+            findTokenCell={findTokenCell}
             filterTarget={noFilterFunction}
             getNodeToConvert={identityFunction}
             fileElement={file}
@@ -182,6 +191,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     commitID={baseRev.commitID}
                                     getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                     findElementWithOffset={findElementWithOffset(baseFile)}
+                                    findTokenCell={findTokenCell}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     isPullRequest={true}
@@ -199,6 +209,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                     commitID={headRev.commitID}
                                     getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                     findElementWithOffset={findElementWithOffset(headFile)}
+                                    findTokenCell={findTokenCell}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     isPullRequest={true}
@@ -222,6 +233,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                 <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                     findElementWithOffset={findElementWithOffset(baseFile)}
+                                    findTokenCell={findTokenCell}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}
@@ -240,6 +252,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                 <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                     findElementWithOffset={findElementWithOffset(headFile)}
+                                    findTokenCell={findTokenCell}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}
@@ -269,6 +282,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                 <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                     findElementWithOffset={findElementWithOffset(baseFile)}
+                                    findTokenCell={findTokenCell}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}
@@ -287,6 +301,7 @@ export async function injectPhabricatorBlobAnnotators(): Promise<void> {
                                 <MonitoredBlobAnnotator
                                     getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                     findElementWithOffset={findElementWithOffset(headFile)}
+                                    findTokenCell={findTokenCell}
                                     getNodeToConvert={identityFunction}
                                     fileElement={file}
                                     repoPath={repoPath}

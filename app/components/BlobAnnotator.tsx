@@ -60,6 +60,7 @@ interface Props extends AbsoluteRepoFile, Partial<PositionSpec> {
         offset: number,
         opt: MaybeDiffSpec
     ) => HTMLElement | undefined
+    findTokenCell: (td: HTMLElement, target: HTMLElement) => HTMLElement
     filterTarget: (target: HTMLElement) => boolean
     getNodeToConvert: (td: HTMLTableDataCellElement) => HTMLElement
     isCommit: boolean
@@ -71,17 +72,6 @@ interface Props extends AbsoluteRepoFile, Partial<PositionSpec> {
 
 interface State {
     fixedTooltip?: TooltipData
-}
-
-// Tokens that are in diffs may have multiple <span>s.
-// Ensure that we have the span that is the token by
-// finding the span that is a direct child of the <td>
-const findTokenCell = (td: HTMLElement, target: HTMLElement) => {
-    let curr = target
-    while (curr.parentElement && curr.parentElement !== td) {
-        curr = curr.parentElement
-    }
-    return curr
 }
 
 export class BlobAnnotator extends React.Component<Props, State> {
@@ -214,7 +204,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                             this.diffSpec()
                         )
                         if (el) {
-                            const tokenCell = findTokenCell(cell, el)
+                            const tokenCell = this.props.findTokenCell(cell, el)
                             tokenCell.classList.add('selection-highlight-sticky')
                             return true
                         }
@@ -288,7 +278,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                         convertNode(cell)
                     }
 
-                    return findTokenCell(td, target)
+                    return this.props.findTokenCell(td, target)
                 })
                 .map(target => ({ target, loc: this.props.getTargetLineAndOffset(target, this.diffSpec()) }))
                 .filter(data => Boolean(data.loc))
@@ -474,7 +464,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
         if (data) {
             eventLogger.logClick(this.getEventLoggerProps())
             const td = this.getCodeCell(data.ctx.position.line)
-            findTokenCell(td, data.target).classList.add('selection-highlight-sticky')
+            this.props.findTokenCell(td, data.target).classList.add('selection-highlight-sticky')
         } else {
             if (isTooltipVisible(this.props, this.props.isBase)) {
                 hideTooltip()
