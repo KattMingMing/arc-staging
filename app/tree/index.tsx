@@ -1,60 +1,112 @@
+import flatten from 'lodash/flatten'
+import groupBy from 'lodash/groupBy'
+import sortBy from 'lodash/sortBy'
+import { BehaviorSubject } from 'rxjs/BehaviorSubject'
+
 export interface TreeNode {
     text: string
-    children: any[] | undefined
-    state: NodeState | undefined
+    children: TreeNode[]
+    state: BehaviorSubject<TreeNodeState>
     id?: string
     a_attr?: {
         href: string
     }
+    filePath: string
 }
 
-interface NodeState {
-    selected?: boolean
-    opened?: boolean
+interface TreeNodeState {
+    collapsed: boolean
+    selected: boolean
 }
 
-/**
- * buildFileTree is responsible for taking the graphql response from listFiles and building it into
- * the tree structure. It takes an optional parameter of a path that should be the selected node.
- * @param data Array of file names in the form of {name: "path/to/file" }
- */
-export function buildFileTree(baseURL: string, data: string[]): any[] {
-    const output = []
-    let k = 0
-    // tslint:disable-next-line
-    for (let i = 0; i < data.length; i++) {
-        const chain: any[] = data[i].split('/')
-        let currentNode: TreeNode[] | undefined = output
-        // tslint:disable-next-line
-        for (let j = 0; j < chain.length; j++) {
-            const wantedNode: string = chain[j]
-            const lastNode = currentNode
-            if (currentNode) {
-                for (k = 0; k < currentNode.length; k++) {
-                    if (currentNode[k].text === wantedNode && currentNode[k].children !== undefined) {
-                        currentNode = currentNode[k].children
-                        break
-                    }
-                }
-            }
-            // If we couldn't find an item in this list of children
-            // that has the right name, create one:
-            if (lastNode === currentNode) {
-                if (chain[chain.length - 1] === wantedNode) {
-                    const newNode = (currentNode![k] = {
-                        text: wantedNode,
-                        children: undefined,
-                        id: data[i],
-                        state: {},
-                        a_attr: { href: `${baseURL}${data[i]}` },
-                    })
-                    currentNode = newNode.children
-                } else {
-                    const newNode = (currentNode![k] = { text: wantedNode, children: [], state: {} })
-                    currentNode = newNode.children
-                }
-            }
+export function parseNodes(paths: string[], selectedPath: string): any {
+    const getFilePath = (prefix: string, restParts: string[]) => {
+        if (prefix === '') {
+            return restParts.join('/')
         }
+        return prefix + '/' + restParts.join('/')
     }
-    return output
+
+    const parseHelper = (
+        splits: string[][],
+        subpath = '',
+        nodeMap = new Map<string, TreeNode>()
+    ): { nodes: TreeNode[]; nodeMap: Map<string, TreeNode> } => {
+        const splitsByDir = groupBy(splits, split => {
+            if (split.length === 1) {
+                return ''
+            }
+            return split[0]
+        })
+
+        const entries = flatten<TreeNode>(
+            Object.entries(splitsByDir).map(([dir, pathSplits]) => {
+                if (dir === '') {
+                    return pathSplits.map(split => {
+                        const filePath = getFilePath(subpath, split)
+                        const node: TreeNode = {
+                            text: filePath.split('/').pop()!,
+                            children: [],
+                            filePath,
+                            state: new BehaviorSubject<TreeNodeState>({
+                                selected: filePath === selectedPath,
+                                collapsed: true,
+                            }),
+                            id: filePath,
+                        }
+                        nodeMap.set(filePath, node)
+                        return node
+                    })
+                }
+
+                const dirPath = getFilePath(subpath, [dir])
+                const dirNode: TreeNode = {
+                    text: dirPath.split('/').pop()!,
+                    children: parseHelper(
+                        pathSplits.map(split => split.slice(1)),
+                        subpath ? subpath + '/' + dir : dir,
+                        nodeMap
+                    ).nodes,
+                    filePath: dirPath,
+                    state: new BehaviorSubject<TreeNodeState>({
+                        selected: dirPath === selectedPath,
+                        collapsed: true,
+                    }),
+                }
+                nodeMap.set(dirPath, dirNode)
+                return [dirNode]
+            })
+        )
+
+        // filter entries to those that are siblings to the selectedPath
+        let filter = entries
+        const selectedPathParts = selectedPath.split('/')
+        let part = 0
+        while (true) {
+            if (part >= selectedPathParts.length) {
+                break
+            }
+            let matchedDir: TreeNode | undefined
+            // let matchedFile: TreeNode | undefined
+            for (const entry of filter) {
+                if (entry.filePath.split('/').pop() === selectedPathParts[part] && entry.children.length > 0) {
+                    matchedDir = entry
+                    break
+                }
+            }
+            if (matchedDir) {
+                filter = matchedDir.children
+            }
+            if (part === selectedPathParts.length - 1) {
+                // on the last part, filter either contains the matched file + siblings, or the matched directories children
+                break
+            }
+            ++part
+        }
+
+        // directories first (nodes w/ children), then sort lexicographically
+        return { nodes: sortBy(filter, [(e: TreeNode) => (e.children.length > 0 ? 0 : 1), 'text']), nodeMap }
+    }
+
+    return parseHelper(paths.map(path => path.split('/')))
 }

@@ -2,19 +2,23 @@ import * as _ from 'lodash'
 import * as React from 'react'
 import { render } from 'react-dom'
 import 'rxjs/add/operator/toPromise'
+import { switchMap } from 'rxjs/operators/switchMap'
+import { Subject } from 'rxjs/Subject'
+import { Subscription } from 'rxjs/Subscription'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { ContextualSourcegraphButton } from '../components/ContextualSourcegraphButton'
 import { OpenPullRequestButton } from '../components/OpenPullRequestButton'
 import { injectRepositorySearchToggle } from '../components/SearchToggle'
 import { WithResolvedRev } from '../components/WithResolvedRev'
 import { findElementWithOffset, getTargetLineAndOffset, GitHubBlobUrl } from '../github/index'
-import { listAllFiles, resolveRev } from '../repo/backend'
+import { fetchTree } from '../repo/backend'
 import { CodeCell } from '../repo/index'
 import { getTableDataCell, hideTooltip } from '../repo/tooltips'
 import { ExtensionEventLogger } from '../tracking/ExtensionEventLogger'
-import { buildFileTree } from '../tree/index'
+import { parseNodes } from '../tree/index'
 import { TreeViewer } from '../tree/TreeViewer'
 import { eventLogger, getPlatformName, repositoryFileTreeEnabled, sourcegraphUrl } from '../util/context'
+
 import {
     createBlobAnnotatorMount,
     getCodeCells,
@@ -161,6 +165,12 @@ function hideFileTree(): void {
 }
 
 let isTreeViewToggled = false
+chrome.storage.sync.get(items => {
+    isTreeViewToggled = items.treeViewToggled === undefined ? true : items.treeViewToggled
+})
+
+const specChanges = new Subject<{ repoPath: string; commitID: string }>()
+const subscriptions = new Subscription()
 
 function injectFileTree(): void {
     if (!repositoryFileTreeEnabled) {
@@ -185,71 +195,54 @@ function injectFileTree(): void {
     if (!gitHubState) {
         return
     }
-    resolveRev({ repoPath, rev: gitHubState.rev || '' })
-        .toPromise()
-        .then(resolvedRev => {
-            let commit = gitHubState.rev
-            if (!commit && resolvedRev) {
-                commit = resolvedRev
+    subscriptions.add(
+        specChanges.pipe(switchMap(({ repoPath, commitID }) => fetchTree({ repoPath, commitID }))).subscribe(files => {
+            if (files.length === 0) {
+                return
             }
-            listAllFiles({ repoPath, commitID: commit || '' })
-                .then(resp => {
-                    if (resp.length === 0) {
-                        return
+            if (document.querySelector('.octotree')) {
+                chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
+                hideFileTree()
+                return
+            }
+            const parsedNodes = parseNodes(files, '')
+            render(
+                <WithResolvedRev
+                    repoPath={repoPath}
+                    component={TreeViewer}
+                    onToggled={treeViewToggled}
+                    toggled={isTreeViewToggled}
+                    onSelected={handleSelected}
+                    treeData={parsedNodes.nodes}
+                    parentRef={mount}
+                    uri={repoPath}
+                />,
+                mount
+            )
+            updateTreeViewLayout()
+            selectTreeNodeForURL()
+            const opt = {
+                onDrag(__: any, $el: any, newWidth: number): boolean {
+                    if (newWidth < 280) {
+                        newWidth = 280
                     }
-                    const treeData = buildFileTree(
-                        `https://com/${gitHubState.owner}/${gitHubState.repoName}/blob/${commit}/`,
-                        resp
-                    )
-                    if (document.querySelector('.octotree')) {
-                        chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
-                        hideFileTree()
-                        return
-                    }
-                    chrome.storage.sync.get(items => {
-                        isTreeViewToggled = items.treeViewToggled === undefined ? true : items.treeViewToggled
-                        if (!isCodePage) {
-                            isTreeViewToggled = false
-                        }
-                        render(
-                            <TreeViewer
-                                onToggled={treeViewToggled}
-                                toggled={isTreeViewToggled}
-                                onSelected={handleSelected}
-                                treeData={treeData}
-                                parentRef={mount}
-                                uri={repoPath}
-                                rev={commit!}
-                            />,
-                            mount
-                        )
-                        updateTreeViewLayout()
-                        selectTreeNodeForURL()
-                        const opt = {
-                            onDrag(__: any, $el: any, newWidth: number): boolean {
-                                if (newWidth < 280) {
-                                    newWidth = 280
-                                }
-                                $el.width(newWidth)
-                                updateMarginForWidth()
-                                return false
-                            },
-                            resizeWidth: true,
-                            resizeHeight: false,
-                            resizeWidthFrom: 'right',
-                            handleSelector: '.sg-tree__splitter',
-                        }
-                        $(mount).resizable(opt)
-                        updateHeaderMargin()
-                    })
-                })
-                .catch(e => {
-                    // ignore
-                })
+                    $el.width(newWidth)
+                    updateMarginForWidth()
+                    return false
+                },
+                resizeWidth: true,
+                resizeHeight: false,
+                resizeWidthFrom: 'right',
+                handleSelector: '.sg-tree__splitter',
+            }
+            $(mount).resizable(opt)
+            updateHeaderMargin()
         })
-        .catch(e => {
-            // ignore
-        })
+    )
+    if (!isCodePage) {
+        isTreeViewToggled = false
+    }
+    specChanges.next({ repoPath, commitID: gitHubState.rev || '' })
 }
 
 function treeViewToggled(toggleState: boolean): void {

@@ -61,7 +61,7 @@
     "jquery": "^3.2.1",
     "jquery-pjax": "^2.0.1",
     "jquery-resizable-dom": "^0.20.0",
-    "jstree": "^3.3.4",
+    "jstree": "^3.3.5",
     "lodash": "^4.17.4",
     "marked": "^0.3.6",
     "query-string": "^4.3.4",

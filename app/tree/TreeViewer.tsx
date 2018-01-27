@@ -7,7 +7,7 @@ import { TreeHeader } from './TreeHeader'
 
 interface Props {
     uri: string
-    rev: string
+    commitID: string
     parentRef: HTMLElement
     treeData: TreeNode[]
     onSelected: (url: string, tab: boolean) => void
@@ -49,7 +49,7 @@ export class TreeViewer extends React.Component<Props, State> {
                 <TreeHeader
                     toggled={this.state.toggled}
                     uri={this.props.uri}
-                    rev={this.props.rev}
+                    rev={this.props.commitID}
                     onClick={this.toggleTreeViewer}
                 />
                 <ReactTree
@@ -59,7 +59,7 @@ export class TreeViewer extends React.Component<Props, State> {
                         force_text: true,
                         dblclick_toggle: false,
                         multiple: false,
-                        worker: false,
+                        worker: true,
                         data: this.props.treeData,
                     }}
                 />
@@ -79,7 +79,7 @@ export class TreeViewer extends React.Component<Props, State> {
     }
 
     private handleSelection = (path: string, tab: boolean) => {
-        const url = `https://${this.props.uri}/blob/${this.props.rev}/${path}`
+        const url = `https://${this.props.uri}/blob/${this.props.commitID}/${path}`
         this.props.onSelected(url, tab)
     }
 
