@@ -6,41 +6,47 @@ html
     link(href='/css/style.bundle.css', rel='stylesheet', type='text/css')
   body
     div(class="sg-options")
-      div(id="sg-repository-search-container")
-        h4(class="sg-section-header") Search:
-        p(class="sg-section-subheader") Display Sourcegraph search toggle in repository search input.
-        div(class="sg-option-container")
-          input(type="checkbox", id="sg-repository-search")
-          label(class="sg-options-label") Enable Sourcegraph search toggle
-      div(id="sg-file-tree-container")
-        h4(class="sg-section-header") Navigation:
-        p(class="sg-section-subheader") Display repository file tree navigation (Use "Option + T" to toggle visibility)
-        div(class="sg-option-container")
-          input(type="checkbox", id="sg-file-tree-navigation")
-          label(class="sg-options-label") Enable repository file tree
-      div(id="sg-editor-container")
-        h4(class="sg-section-header") Editor (BETA):
-        p(class="sg-section-subheader") Integrations with 
-          a(href='https://about.sourcegraph.com/products/editor/') Sourcegraph Editor
-        div(class="sg-option-container")
-          input(type="checkbox", id="sg-editor-open")
-          label(class="sg-options-label") Enable links that open Sourcegraph Editor
-      h4(class="sg-section-header") Advanced options
-      p(class="sg-section-subheader") Warning: changing these options may break your Chrome extension.
-      form#sg-url-form
-        div(class="sg-option-container")
-          label(class="sg-advanced-options-label") Sourcegraph URL:
-          input(id="sg-url", class="sg-url-input")
-          input(type="submit", value="Save", class="sg-url-save-button")
-      form#sg-github-enterprise-form
-        div(class="sg-option-container")
-          label(class="sg-advanced-options-label") GitHub Enterprise URL:
-          input(id="sg-github-enterprise-url", class="sg-url-input")
-          input(type="submit", value="Save", class="sg-github-enterprise-save-button")
-      div(id="sg-event-tracking-container")
-        h4(class="sg-section-header") Data collection:
-        p(class="sg-section-subheader") Allow data collection for an improved user experience and personalization.
-        div(class="sg-option-container")
-          input(type="checkbox", id="sg-enable-event-tracking")
-          label(class="sg-options-label") Enable event logging
+      div(id="sg-options-container")
+        div(id="sg-repository-search-container")
+          h4(class="sg-section-header") Search:
+          p(class="sg-section-subheader") Display Sourcegraph search toggle in repository search input.
+          div(class="sg-option-container")
+            input(type="checkbox", id="sg-repository-search")
+            label(class="sg-options-label") Enable Sourcegraph search toggle
+        div(id="sg-file-tree-container")
+          h4(class="sg-section-header") Navigation:
+          p(class="sg-section-subheader") Display repository file tree navigation (Use "Option + T" to toggle visibility)
+          div(class="sg-option-container")
+            input(type="checkbox", id="sg-file-tree-navigation")
+            label(class="sg-options-label") Enable repository file tree
+        div(id="sg-editor-container")
+          h4(class="sg-section-header") Editor (BETA):
+          p(class="sg-section-subheader") Integrations with 
+            a(href='https://about.sourcegraph.com/products/editor/') Sourcegraph Editor
+          div(class="sg-option-container")
+            input(type="checkbox", id="sg-editor-open")
+            label(class="sg-options-label") Enable links that open Sourcegraph Editor
+        h4(class="sg-section-header") Advanced options
+        p(class="sg-section-subheader") Warning: changing these options may break your Chrome extension.
+        form#sg-url-form
+          div(class="sg-option-container")
+            label(class="sg-advanced-options-label") Sourcegraph URL:
+            input(id="sg-url", class="sg-url-input")
+            input(type="submit", value="Save", class="sg-url-save-button")
+        form#sg-github-enterprise-form
+          div(class="sg-option-container")
+            label(class="sg-advanced-options-label") GitHub Enterprise URL:
+            input(id="sg-github-enterprise-url", class="sg-url-input")
+            input(type="submit", value="Save", class="sg-github-enterprise-save-button")
+        div(id="sg-event-tracking-container")
+          h4(class="sg-section-header") Data collection:
+          p(class="sg-section-subheader") Allow data collection for an improved user experience and personalization.
+          div(class="sg-option-container")
+            input(type="checkbox", id="sg-enable-event-tracking")
+            label(class="sg-options-label") Enable event logging
+      div(id="sg-server-configuration-container")
+          h4(class="sg-section-header") Connect to Sourcegraph Server instance:
+          div(class="sg-option-container")
+            button(id="sg-url-connect-button", class="sg-configure-button") Connect
+            button(id="sg-url-cancel-button", class="sg-cancel-button") Not now
       script(src='/js/options.bundle.js')

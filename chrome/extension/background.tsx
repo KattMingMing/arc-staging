@@ -41,7 +41,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             )
         }
     }
-    // console.log('added perms!!!', perms)
 })
 
 chrome.runtime.onMessage.addListener((message, _, cb) => {

@@ -41,7 +41,7 @@
         "page": "options.html",
         "chrome_style": true
     },
-    "permissions": ["cookies", "storage", "https://github.com/*", "https://sourcegraph.com/*"],
+    "permissions": ["cookies", "activeTab", "storage", "https://github.com/*", "https://sourcegraph.com/*"],
     "optional_permissions": ["tabs", "http://*/", "https://*/"],
     "content_security_policy":
         "default-src 'self'; script-src 'self'; connect-src 'self' https://sourcegraph-logging.telligentdata.com; img-src 'self' data:;",

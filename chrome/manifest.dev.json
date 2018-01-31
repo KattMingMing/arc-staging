@@ -46,6 +46,7 @@
     "permissions": [
         "cookies",
         "storage",
+        "activeTab",
         "nativeMessaging",
         "https://github.com/*",
         "https://localhost:3443/*",

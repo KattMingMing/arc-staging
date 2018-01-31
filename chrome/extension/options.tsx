@@ -49,6 +49,24 @@ function getOpenEditorCheckbox(): HTMLInputElement {
     return document.getElementById('sg-editor-open') as HTMLInputElement
 }
 
+function configurationOptionsContainer(): HTMLElement {
+    return document.getElementById('sg-options-container') as HTMLElement
+}
+
+/**
+ * Auto-configure Sourcegraph Url for Sourcegraph Server cancel button.
+ */
+function getSourcegraphURLCancelButton(): HTMLButtonElement {
+    return document.getElementById('sg-url-cancel-button') as HTMLButtonElement
+}
+
+/**
+ * Auto-configure Sourcegraph Url for Sourcegraph Server connect button.
+ */
+function getAutoConfigureSourcegraphButton(): HTMLButtonElement {
+    return document.getElementById('sg-url-connect-button') as HTMLButtonElement
+}
+
 function syncInputsToLocalStorage(): void {
     chrome.storage.sync.get(items => {
         getSourcegraphURLInput().value = items.sourcegraphURL
@@ -161,4 +179,107 @@ getFileTreeNavigationCheckbox().addEventListener('click', () => {
 
 getOpenEditorCheckbox().addEventListener('click', () => {
     chrome.storage.sync.set({ openEditorEnabled: getOpenEditorCheckbox().checked })
+})
+
+function setBrowserExtensionOptionsHidden(hidden: boolean): void {
+    configurationOptionsContainer().style.display = hidden ? 'none' : 'block'
+}
+
+function setConfigureSourcegraphURLOptionsHidden(hidden: boolean): void {
+    getConfigureSourcegraphURLContainer().style.display = hidden ? 'none' : 'block'
+}
+
+function getConfigureSourcegraphURLContainer(): HTMLElement {
+    return document.getElementById('sg-server-configuration-container') as HTMLElement
+}
+
+/**
+ * Content script injected into webpages through "activeTab" permission to determine if webpage is a Sourcegraph Server instance.
+ */
+const isSourcegraphServerCheckScript = `chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (!request.data || request.data !== 'isSGServerInstance') {
+        return
+    }
+    const data = request.data || {}
+    const isSourcegraphDomain = document.getElementById('sourcegraph-chrome-webstore-item');
+    sendResponse(Boolean(isSourcegraphDomain))
+    return true
+})`
+
+/**
+ * Render Browser Extension configuration page when the browser_action is clicked.
+ * Using the "activeTab" permission, we are able to attempt to inject a simple function onto any webpage,
+ * without requiring additional permissions. If the page is a Sourcegraph Server and the user does not have the
+ * remote url configured already, we will prompt the user to link their extension and server instance.
+ */
+chrome.tabs.getSelected(tab => {
+    const urlElement = document.createElement('a') as HTMLAnchorElement
+    urlElement.href = tab.url!
+    const url = `${urlElement.protocol}//${urlElement.host}`
+
+    chrome.permissions.contains({ origins: [url + '/*'] }, result => {
+        if (result) {
+            setBrowserExtensionOptionsHidden(false)
+            setConfigureSourcegraphURLOptionsHidden(true)
+            return
+        }
+        chrome.tabs.executeScript(tab.id!, { code: isSourcegraphServerCheckScript }, result => {
+            chrome.tabs.sendMessage(tab.id!, { data: 'isSGServerInstance' }, isSGServerInstance => {
+                if (isSGServerInstance) {
+                    setBrowserExtensionOptionsHidden(true)
+                    setConfigureSourcegraphURLOptionsHidden(false)
+                    return
+                }
+                setBrowserExtensionOptionsHidden(false)
+                setConfigureSourcegraphURLOptionsHidden(true)
+            })
+        })
+    })
+})
+
+/**
+ * Add a click handler that requests permissions for the current URL tab. Our extension only requests the
+ * "activeTab" permission so it is only possible for us to retrieve the URL or any details about the page
+ * when a browser action is triggered.
+ */
+getAutoConfigureSourcegraphButton().addEventListener('click', evt => {
+    evt.preventDefault()
+    chrome.tabs.getSelected(tab => {
+        const { url } = tab
+        if (!url) {
+            return
+        }
+        const urlElement = document.createElement('a') as HTMLAnchorElement
+        urlElement.href = url
+
+        const baseUrl = `${urlElement.protocol}//${urlElement.host}`
+        chrome.runtime.sendMessage({ type: 'setSourcegraphUrl', payload: baseUrl }, () => {
+            setBrowserExtensionOptionsHidden(false)
+            setConfigureSourcegraphURLOptionsHidden(true)
+            return true
+        })
+    })
+})
+
+/**
+ * Update the UI to show default Sourcegraph Server options if the user does not want to add their Sourcegraph Server instance.
+ */
+getSourcegraphURLCancelButton().addEventListener('click', () => {
+    setBrowserExtensionOptionsHidden(false)
+    setConfigureSourcegraphURLOptionsHidden(true)
+})
+
+/**
+ * The options menu does not properly resize when content is changed. The easiest work around is to set the
+ * display to 'none' in the options.scss and update it to 'block' inside a timeout. This ensures there isn't
+ * any jumpiness.
+ */
+window.setTimeout(() => {
+    const options = document.querySelector('.sg-options') as HTMLElement
+    if (!options) {
+        return
+    }
+    setTimeout(() => {
+        options.style.display = 'block'
+    })
 })
