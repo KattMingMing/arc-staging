@@ -24,7 +24,7 @@ function getSourcegraphURLSaveButton(): HTMLInputElement {
 }
 
 function getGitHubEnterpriseSaveButton(): HTMLInputElement {
-    return getSourcegraphURLForm().querySelector(
+    return getGithubEnterpriseURLForm().querySelector(
         'input.sg-github-enterprise-save-button[type="submit"]'
     ) as HTMLInputElement
 }
@@ -118,20 +118,7 @@ getSourcegraphURLForm().addEventListener('submit', evt => {
         url = url.substr(0, url.length - 1)
     }
 
-    chrome.permissions.request(
-        {
-            origins: [url + '/*'],
-        },
-        granted => {
-            if (granted) {
-                chrome.storage.sync.set({ sourcegraphURL: url })
-            } else {
-                syncInputsToLocalStorage()
-                // Note: it would be nice to display an alert here with an error, but the alert API doesn't work in the options panel
-                // (see https://bugs.chromium.org/p/chromium/issues/detail?id=476350)
-            }
-        }
-    )
+    chrome.runtime.sendMessage({ type: 'setSourcegraphUrl', payload: url }, () => true)
 })
 
 getSourcegraphURLInput().addEventListener('keydown', evt => {
@@ -147,24 +134,10 @@ getGithubEnterpriseURLForm().addEventListener('submit', evt => {
     let url = getGitHubEnterpriseURLInput().value
     if (url.endsWith('/')) {
         // Trim trailing slash.
-        url = url.substr(url.length - 1)
+        url = url.substr(0, url.length - 1)
     }
 
-    chrome.permissions.request(
-        {
-            origins: [url + '/*'],
-            permissions: ['tabs'],
-        },
-        granted => {
-            if (granted) {
-                chrome.storage.sync.set({ gitHubEnterpriseURL: url })
-            } else {
-                syncInputsToLocalStorage()
-                // Note: it would be nice to display an alert here with an error, but the alert API doesn't work in the options panel
-                // (see https://bugs.chromium.org/p/chromium/issues/detail?id=476350)
-            }
-        }
-    )
+    chrome.runtime.sendMessage({ type: 'setGitHubEnterpriseUrl', payload: url }, () => true)
 })
 
 getGithubEnterpriseURLForm().addEventListener('keydown', evt => {

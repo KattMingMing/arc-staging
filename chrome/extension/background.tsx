@@ -96,8 +96,40 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
                 telligentWrapper.addStaticMetadataObject({ deviceInfo: { GAClientId: message.payload } })
             }
             return
+        case 'setGitHubEnterpriseUrl':
+            setGitHubEnterpriseUrl(message.payload)
+            return
+        case 'setSourcegraphUrl':
+            setSourcegraphUrl(message.payload)
+            return
     }
 })
+
+function setGitHubEnterpriseUrl(url: string): void {
+    chrome.permissions.request(
+        {
+            origins: [url + '/*'],
+        },
+        granted => {
+            if (granted) {
+                chrome.storage.sync.set({ gitHubEnterpriseURL: url })
+            }
+        }
+    )
+}
+
+function setSourcegraphUrl(url: string): void {
+    chrome.permissions.request(
+        {
+            origins: [url + '/*'],
+        },
+        granted => {
+            if (granted) {
+                chrome.storage.sync.set({ sourcegraphURL: url })
+            }
+        }
+    )
+}
 
 if (chrome.runtime.setUninstallURL) {
     chrome.runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
