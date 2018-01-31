@@ -1,4 +1,5 @@
 import * as github from '../github/util'
+import { listAllSearchResults, resolveRev } from '../repo/backend'
 import { eventLogger, getPlatformName, repositorySearchEnabled, sourcegraphUrl } from '../util/context'
 import { insertAfter } from '../util/dom'
 
@@ -22,6 +23,10 @@ export function injectRepositorySearchToggle(): void {
         chrome.storage.sync.get(items => {
             sourcegraphSearchToggle(items.sourcegraphRepoSearchToggled)
         })
+    }
+
+    if (canRenderSourcegraphSearchResults()) {
+        renderSourcegraphSearchResultCountItem()
     }
 }
 
@@ -114,6 +119,53 @@ function sourcegraphSearchToggle(toggled: boolean): void {
     }
 }
 
+function canRenderSourcegraphSearchResults(): boolean {
+    return Boolean(document.querySelector('.codesearch-results'))
+}
+
+function renderSourcegraphSearchResultCountItem(): void {
+    const menuContainer = document.querySelector('.menu.border') as HTMLElement
+    if (!menuContainer) {
+        return
+    }
+    const labelInput = document.querySelector('.form-control.header-search-input') as HTMLInputElement
+    if (!labelInput) {
+        return
+    }
+
+    const searchQuery = labelInput.value
+    const linkProps = getSourcegraphURLProps(searchQuery)
+    if (linkProps) {
+        eventLogger.logSourcegraphRepoSearchSubmitted({ ...linkProps, query: searchQuery })
+        resolveRev({ repoPath: linkProps.repo, rev: linkProps.rev || '' })
+            .toPromise()
+            .then(resolvedRev => {
+                let resultListItem = document.getElementById('sourcegraph-search-result-count') as HTMLAnchorElement
+                const resultCount = document.createElement('span') as HTMLSpanElement
+                if (!resultListItem) {
+                    resultListItem = document.createElement('a') as HTMLAnchorElement
+                    resultListItem.className = 'menu-item'
+                    resultListItem.id = 'sourcegraph-search-result-count'
+                    resultListItem.textContent = 'Code (Sourcegraph)'
+                    resultListItem.appendChild(resultCount)
+                    insertAfter(resultListItem, menuContainer.firstElementChild!)
+                }
+                resultListItem.href = linkProps.url
+                listAllSearchResults({ query: linkProps.query })
+                    .then(count => {
+                        resultCount.innerText = count.toString()
+                        resultCount.className = 'Counter ml-1 mt-1'
+                    })
+                    .catch(() => {
+                        resultListItem.style.display = 'none'
+                    })
+            })
+            .catch(() => {
+                /** noop */
+            })
+    }
+}
+
 function scopedRepoSearchFormContainer(): HTMLElement | null {
     return document.querySelector(SCOPED_REPO_SEARCH_CLASS) as HTMLElement
 }
@@ -122,7 +174,9 @@ function canRenderRepositorySearch(): boolean {
     return Boolean(document.querySelector('.header-search-scope')) && repositorySearchEnabled
 }
 
-function getSourcegraphURLProps(query: string): { url: string; repo: string; rev: string | undefined } | undefined {
+function getSourcegraphURLProps(
+    query: string
+): { url: string; repo: string; rev: string | undefined; query: string } | undefined {
     const { repoPath, rev } = github.parseURL()
     if (repoPath) {
         const url = `${sourcegraphUrl}/search`
@@ -133,6 +187,9 @@ function getSourcegraphURLProps(query: string): { url: string; repo: string; rev
                 )}%24@${encodeURIComponent(rev)}&utm_source=${getPlatformName()}`,
                 repo: repoPath,
                 rev,
+                query: `${encodeURIComponent(query)} ${encodeURIComponent(
+                    repoPath.replace(/\./g, '\\.')
+                )}%24@${encodeURIComponent(rev)}`,
             }
         }
         return {
@@ -141,6 +198,7 @@ function getSourcegraphURLProps(query: string): { url: string; repo: string; rev
             )}%24&utm_source=${getPlatformName()}`,
             repo: repoPath,
             rev,
+            query: `repo:^${repoPath.replace(/\./g, '\\.')}$ ${query}`,
         }
     }
 }

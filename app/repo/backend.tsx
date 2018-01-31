@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { queryGraphQL } from '../backend/graphql'
 import { memoizeAsync, memoizeObservable } from '../util/memoize'
-import { AbsoluteRepoFile, makeRepoURI } from './index'
+import { AbsoluteRepoFile, makeRepoURI, parseBrowserRepoURL } from './index'
 
 export const ECLONEINPROGESS = 'ECLONEINPROGESS'
 class CloneInProgressError extends Error {
@@ -98,17 +98,13 @@ export const fetchTree = memoizeObservable(
     makeRepoURI
 )
 
-export const listAllFiles = memoizeAsync(
-    (ctx: { repoPath: string; commitID: string }): Promise<string[]> =>
+export const listAllSearchResults = memoizeAsync(
+    (ctx: { query: string }): Promise<number> =>
         queryGraphQL(
-            `query FileTree($repoPath: String!, $commitID: String!) {
-                repository(uri: $repoPath) {
-                    commit(rev: $commitID) {
-                        tree(recursive: true) {
-                            files {
-                                name
-                            }
-                        }
+            `query Search($query: String!) {
+                search(query: $query) {
+                    results {
+                        resultCount
                     }
                 }
             }`,
@@ -116,18 +112,15 @@ export const listAllFiles = memoizeAsync(
         )
             .toPromise()
             .then(result => {
-                if (
-                    !result.data ||
-                    !result.data.repository ||
-                    !result.data.repository.commit ||
-                    !result.data.repository.commit.tree ||
-                    !result.data.repository.commit.tree.files
-                ) {
+                if (!result.data || !result.data.search || !result.data.search.results) {
                     throw new Error('invalid response received from graphql endpoint')
                 }
-                return result.data.repository.commit.tree!.files.map(file => file.name)
+                return result.data.search.results.resultCount
             }),
-    makeRepoURI
+    () => {
+        const { repoPath } = parseBrowserRepoURL(window.location.href, window)
+        return `${repoPath}:${window.location.search}`
+    }
 )
 
 const trimRepoPath = ({ repoPath, ...rest }) => ({ ...rest, repoPath: repoPath.replace(/.git$/, '') })
