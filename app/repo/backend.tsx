@@ -37,7 +37,7 @@ class RevNotFoundError extends Error {
 export const resolveRev = memoizeObservable(
     (ctx: { repoPath: string; rev?: string }): Observable<string> =>
         queryGraphQL(
-            `query ResolveRev($repoPath: String, $rev: String) {
+            `query ResolveRev($repoPath: String!, $rev: String!) {
                 repository(uri: $repoPath) {
                     cloneInProgress
                     commit(rev: $rev) {
