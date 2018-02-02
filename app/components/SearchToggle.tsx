@@ -147,6 +147,7 @@ function renderSourcegraphSearchResultCountItem(): void {
                     resultListItem.className = 'menu-item'
                     resultListItem.id = 'sourcegraph-search-result-count'
                     resultListItem.textContent = 'Code (Sourcegraph)'
+                    resultListItem.target = '_blank'
                     resultListItem.appendChild(resultCount)
                     insertAfter(resultListItem, menuContainer.firstElementChild!)
                 }
