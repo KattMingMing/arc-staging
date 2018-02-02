@@ -24,19 +24,20 @@ function injectApplication(): void {
     extensionMarker.style.display = 'none'
 
     const href = window.location.href
-    if (/^https?:\/\/(www.)?sourcegraph.com/.test(href)) {
-        setSourcegraphUrl('https://sourcegraph.com')
-        injectSourcegraphApp(extensionMarker)
-    } else {
-        chrome.storage.sync.get(items => {
-            const sgurl = items.sourcegraphURL ? items.sourcegraphURL : 'https://sourcegraph.com'
+    chrome.storage.sync.get(items => {
+        const sourcegraphServerUrl = items.sourcegraphURL || 'https://sourcegraph.com'
+        const isSourcegraphServer = window.location.origin === sourcegraphServerUrl
+        if (isSourcegraphServer || /^https?:\/\/(www.)?sourcegraph.com/.test(href)) {
+            setSourcegraphUrl(sourcegraphServerUrl)
+            injectSourcegraphApp(extensionMarker)
+        } else {
             const githubEnterpriseURL = items.gitHubEnterpriseURL
 
             const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
             const isGitHubEnterprise = Boolean(githubEnterpriseURL) && href.startsWith(githubEnterpriseURL)
 
             if (isGitHub || isGitHubEnterprise) {
-                setSourcegraphUrl(sgurl)
+                setSourcegraphUrl(sourcegraphServerUrl)
                 setRepositoryFileTreeEnabled(
                     items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled
                 )
@@ -48,8 +49,8 @@ function injectApplication(): void {
                 setOpenEditorEnabled(items.openEditorEnabled)
                 injectGitHubApplication(extensionMarker)
             }
-        })
-    }
+        }
+    })
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {

@@ -18,4 +18,8 @@ export function injectSourcegraphApp(marker: HTMLElement): void {
             console.error('sourcegraph:identify missing details')
         }
     })
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        document.dispatchEvent(new CustomEvent('sourcegraph:browser-extension-registration'))
+    }
 }
