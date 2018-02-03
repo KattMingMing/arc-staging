@@ -202,6 +202,9 @@ const isSourcegraphServerCheckScript = `chrome.runtime.onMessage.addListener((re
     }
     const data = request.data || {}
     const isSourcegraphDomain = document.getElementById('sourcegraph-chrome-webstore-item');
+    if (isSourcegraphDomain) {
+        document.dispatchEvent(new CustomEvent('sourcegraph:server-instance-configuration-clicked', {}))
+    }
     sendResponse(Boolean(isSourcegraphDomain))
     return true
 })`

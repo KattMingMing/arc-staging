@@ -124,7 +124,16 @@ function setSourcegraphUrl(url: string): void {
         },
         granted => {
             if (granted) {
-                chrome.storage.sync.set({ sourcegraphURL: url })
+                chrome.storage.sync.set({ sourcegraphURL: url }, () => {
+                    if (telligentWrapper && trackingEnabled) {
+                        telligentWrapper.track('Click', {
+                            eventAction: 'Click',
+                            eventLabel: 'SourcegraphServerBrowserExtensionConnected',
+                            eventCategory: 'BrowserExtension',
+                            eventProperties: {},
+                        })
+                    }
+                })
             }
         }
     )

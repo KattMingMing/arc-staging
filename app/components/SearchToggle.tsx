@@ -136,7 +136,6 @@ function renderSourcegraphSearchResultCountItem(): void {
     const searchQuery = labelInput.value
     const linkProps = getSourcegraphURLProps(searchQuery)
     if (linkProps) {
-        eventLogger.logSourcegraphRepoSearchSubmitted({ ...linkProps, query: searchQuery })
         resolveRev({ repoPath: linkProps.repo, rev: linkProps.rev || '' })
             .toPromise()
             .then(resolvedRev => {
@@ -148,6 +147,9 @@ function renderSourcegraphSearchResultCountItem(): void {
                     resultListItem.id = 'sourcegraph-search-result-count'
                     resultListItem.textContent = 'Code (Sourcegraph)'
                     resultListItem.target = '_blank'
+                    resultListItem.onclick = () => {
+                        eventLogger.logSourcegraphRepoSearchSubmitted({ ...linkProps, query: searchQuery })
+                    }
                     resultListItem.appendChild(resultCount)
                     insertAfter(resultListItem, menuContainer.firstElementChild!)
                 }
