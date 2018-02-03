@@ -325,10 +325,10 @@ export const createPhabricatorRepo = memoizeObservable(
         mutateGraphQL(
             `mutation addPhabricatorRepo(
             $callsign: String!,
-            $uri: String!
-            $url: String!
+            $repoPath: String!
+            $phabricatorURL: String!
         ) {
-            addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabricatorURL) { }
+            addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabricatorURL) { alwaysNil }
         }`,
             options
         ).map(({ data, errors }) => {
