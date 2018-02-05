@@ -1,5 +1,5 @@
 import { TelligentWrapper } from '../../app/tracking/TelligentWrapper'
-import { sourcegraphUrl } from '../../app/util/context'
+import { setSourcegraphUrl, sourcegraphUrl } from '../../app/util/context'
 
 const telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
 
@@ -14,6 +14,7 @@ chrome.storage.sync.get(items => {
         customGitHubOrigins[items.sourcegraphURL] = true
     }
 })
+
 chrome.storage.onChanged.addListener(change => {
     chrome.storage.sync.get(items => {
         customGitHubOrigins = {}
@@ -23,6 +24,7 @@ chrome.storage.onChanged.addListener(change => {
         }
         if (items.sourcegraphURL) {
             customGitHubOrigins[items.sourcegraphURL] = true
+            setSourcegraphUrl(items.sourcegraphURL)
         }
     })
 })
@@ -96,15 +98,15 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
             }
             return
         case 'setGitHubEnterpriseUrl':
-            setGitHubEnterpriseUrl(message.payload)
+            requestPermissionsForGitHubEnterpriseUrl(message.payload)
             return
         case 'setSourcegraphUrl':
-            setSourcegraphUrl(message.payload)
+            requestPermissionsForSourcegraphUrl(message.payload)
             return
     }
 })
 
-function setGitHubEnterpriseUrl(url: string): void {
+function requestPermissionsForGitHubEnterpriseUrl(url: string): void {
     chrome.permissions.request(
         {
             origins: [url + '/*'],
@@ -117,7 +119,7 @@ function setGitHubEnterpriseUrl(url: string): void {
     )
 }
 
-function setSourcegraphUrl(url: string): void {
+function requestPermissionsForSourcegraphUrl(url: string): void {
     chrome.permissions.request(
         {
             origins: [url + '/*'],
