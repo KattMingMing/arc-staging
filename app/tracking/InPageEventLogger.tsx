@@ -8,14 +8,12 @@ export class InPageEventLogger extends EventLogger {
 
     constructor() {
         super()
-        // remove http or https from address since telligent adds it back in
-        const telligentUrl = sourcegraphUrl.replace('http://', '').replace('https://', '')
         this.telligentWrapper = new TelligentWrapper(
             'SourcegraphExtension',
             'PhabricatorExtension',
             false,
             false,
-            `${telligentUrl}/.bi-logger`
+            `${sourcegraphUrl}/.bi-logger`
         )
     }
 

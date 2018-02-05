@@ -1,35 +1,62 @@
 import { EventLogger } from '../tracking/EventLogger'
-import { isE2ETest } from '../util/context'
+import { TelligentWrapper } from '../tracking/TelligentWrapper'
+import { isConnectedToSourcegraphDotCom, isE2ETest } from '../util/context'
 
 export class ExtensionEventLogger extends EventLogger {
+    private telligentWrapper: TelligentWrapper
+    private trackingEnabled = true
+
     constructor() {
         super()
-        this.updateIdentity()
-    }
 
-    public updateIdentity(): void {
         if (isE2ETest()) {
             return
         }
+        this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
+
         chrome.runtime.sendMessage({ type: 'getIdentity' }, this.updatePropsForUser)
+
+        chrome.storage.sync.get(items => {
+            this.trackingEnabled = items.eventTrackingEnabled
+            if (items.sourcegraphURL) {
+                this.telligentWrapper.setUrl(items.sourcegraphURL)
+            }
+        })
+
+        chrome.storage.onChanged.addListener(changes => {
+            for (const key of Object.keys(changes)) {
+                if (key === 'sourcegraphURL') {
+                    this.telligentWrapper.setUrl(changes[key].newValue)
+                    this.logExtensionConnected({
+                        isConnectedToSourcegraphDotCom: isConnectedToSourcegraphDotCom(changes[key].newValue),
+                    })
+                }
+                if (key === 'eventTrackingEnabled') {
+                    this.trackingEnabled = changes[key].newValue
+                }
+            }
+        })
     }
 
     public updatePropsForUser(identity?: any): void {
         if (isE2ETest()) {
             return
         }
+
         if (identity && identity.userId) {
-            chrome.runtime.sendMessage({ type: 'setTrackerUserId', payload: identity.userId })
+            this.telligentWrapper.setUserId(identity.userId)
         }
         if (identity && identity.deviceId) {
-            chrome.runtime.sendMessage({ type: 'setTrackerDeviceId', payload: identity.deviceId })
+            this.telligentWrapper.addStaticMetadataObject({ deviceInfo: { TelligentWebDeviceId: identity.deviceId } })
         }
         if (identity && identity.gaClientId) {
-            chrome.runtime.sendMessage({ type: 'setTrackerGAClientId', payload: identity.gaClientId })
+            this.telligentWrapper.addStaticMetadataObject({ deviceInfo: { GAClientId: identity.gaClientId } })
         }
     }
 
-    protected sendEvent(_: string, eventProps: any): void {
-        chrome.runtime.sendMessage({ type: 'trackEvent', payload: eventProps })
+    protected sendEvent(eventAction: string, eventProps: any): void {
+        if (this.trackingEnabled) {
+            this.telligentWrapper.track(eventAction, eventProps)
+        }
     }
 }

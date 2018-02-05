@@ -69,6 +69,10 @@ export abstract class EventLogger {
         this.logEventForCategory('BrowserExtension', 'Click', 'FileTreeItemSelected', eventProperties)
     }
 
+    public logExtensionConnected(eventProperties: any = {}): void {
+        this.logEventForCategory('BrowserExtension', 'Success', 'BrowserExtensionConnectedToServer', eventProperties)
+    }
+
     protected abstract sendEvent(eventAction: string, eventProps: any): void
 
     private defaultProperties(): any {
