@@ -1,12 +1,7 @@
-import { TelligentWrapper } from '../../app/tracking/TelligentWrapper'
-import { setSourcegraphUrl, sourcegraphUrl } from '../../app/util/context'
+import { setSourcegraphUrl } from '../../app/util/context'
 
-const telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
-
-let trackingEnabled = true
 let customGitHubOrigins = {}
 chrome.storage.sync.get(items => {
-    trackingEnabled = items.eventTrackingEnabled
     if (items.gitHubEnterpriseURL) {
         customGitHubOrigins[items.gitHubEnterpriseURL] = true
     }
@@ -14,11 +9,9 @@ chrome.storage.sync.get(items => {
         customGitHubOrigins[items.sourcegraphURL] = true
     }
 })
-
-chrome.storage.onChanged.addListener(change => {
+chrome.storage.onChanged.addListener(changes => {
     chrome.storage.sync.get(items => {
         customGitHubOrigins = {}
-        trackingEnabled = items.eventTrackingEnabled
         if (items.gitHubEnterpriseURL) {
             customGitHubOrigins[items.gitHubEnterpriseURL] = true
         }
@@ -58,48 +51,10 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
             })
             return true
 
-        case 'getSessionToken':
-            chrome.cookies.get({ url: sourcegraphUrl, name: 'sg-session' }, sessionToken => {
-                cb(sessionToken ? sessionToken.value : null)
-            })
-            return true
-
-        case 'openSourcegraphTab':
-            chrome.tabs.create({ url: message.url })
-            return true
-
-        case 'trackEvent':
-            if (telligentWrapper && trackingEnabled) {
-                telligentWrapper.track(message.payload.eventAction, message.payload)
-            }
-            return
-
-        case 'trackView':
-            if (telligentWrapper) {
-                telligentWrapper.track('view', message.payload)
-            }
-            return
-
-        case 'setTrackerUserId':
-            if (telligentWrapper) {
-                telligentWrapper.setUserId(message.payload)
-            }
-            return
-
-        case 'setTrackerDeviceId':
-            if (telligentWrapper) {
-                telligentWrapper.addStaticMetadataObject({ deviceInfo: { TelligentWebDeviceId: message.payload } })
-            }
-            return
-
-        case 'setTrackerGAClientId':
-            if (telligentWrapper) {
-                telligentWrapper.addStaticMetadataObject({ deviceInfo: { GAClientId: message.payload } })
-            }
-            return
         case 'setGitHubEnterpriseUrl':
             requestPermissionsForGitHubEnterpriseUrl(message.payload)
             return
+
         case 'setSourcegraphUrl':
             requestPermissionsForSourcegraphUrl(message.payload)
             return
@@ -126,16 +81,7 @@ function requestPermissionsForSourcegraphUrl(url: string): void {
         },
         granted => {
             if (granted) {
-                chrome.storage.sync.set({ sourcegraphURL: url }, () => {
-                    if (telligentWrapper && trackingEnabled) {
-                        telligentWrapper.track('Click', {
-                            eventAction: 'Click',
-                            eventLabel: 'SourcegraphServerBrowserExtensionConnected',
-                            eventCategory: 'BrowserExtension',
-                            eventProperties: {},
-                        })
-                    }
-                })
+                chrome.storage.sync.set({ sourcegraphURL: url })
             }
         }
     )

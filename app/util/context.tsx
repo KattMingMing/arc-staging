@@ -29,6 +29,10 @@ export function isBrowserExtension(): boolean {
     return window.SOURCEGRAPH_PHABRICATOR_EXTENSION || false
 }
 
+export function isConnectedToSourcegraphDotCom(url?: string): boolean {
+    return /^https?:\/\/(www.)?sourcegraph.com/.test(url || sourcegraphUrl)
+}
+
 export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
     sourcegraphRepoSearchToggled = enabled
 }
