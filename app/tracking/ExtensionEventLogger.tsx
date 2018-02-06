@@ -39,7 +39,7 @@ export class ExtensionEventLogger extends EventLogger {
     }
 
     public updatePropsForUser(identity?: any): void {
-        if (isE2ETest()) {
+        if (isE2ETest() || !this.telligentWrapper) {
             return
         }
 
@@ -55,7 +55,7 @@ export class ExtensionEventLogger extends EventLogger {
     }
 
     protected sendEvent(eventAction: string, eventProps: any): void {
-        if (this.trackingEnabled) {
+        if (this.trackingEnabled && this.telligentWrapper) {
             this.telligentWrapper.track(eventAction, eventProps)
         }
     }

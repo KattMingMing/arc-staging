@@ -19,11 +19,17 @@ export class InPageEventLogger extends EventLogger {
 
     public setUserId(userId: string | null): void {
         this.userId = userId
+        if (!this.telligentWrapper) {
+            return
+        }
         this.telligentWrapper.setUserId(userId)
     }
 
     protected sendEvent(eventAction: string, eventProps: any): void {
         eventProps.userId = this.userId
+        if (!this.telligentWrapper) {
+            return
+        }
         this.telligentWrapper.track(eventAction, eventProps)
     }
 }
