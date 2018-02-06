@@ -14,7 +14,7 @@ export class ExtensionEventLogger extends EventLogger {
         }
         this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
 
-        chrome.runtime.sendMessage({ type: 'getIdentity' }, this.updatePropsForUser)
+        chrome.runtime.sendMessage({ type: 'getIdentity' }, this.updatePropsForUser.bind(this))
 
         chrome.storage.sync.get(items => {
             this.trackingEnabled = items.eventTrackingEnabled
