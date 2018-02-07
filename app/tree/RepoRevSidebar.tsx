@@ -1,6 +1,5 @@
 import CloseIcon from '@sourcegraph/icons/lib/Close'
 import ListIcon from '@sourcegraph/icons/lib/List'
-import * as H from 'history'
 import * as React from 'react'
 import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
@@ -60,8 +59,6 @@ interface Props {
     filePath: string
     defaultBranch: string
     className: string
-    history: H.History
-    location: H.Location
 }
 
 interface State {
@@ -172,7 +169,6 @@ export class RepoRevSidebar extends React.PureComponent<Props, State> {
                                 key="files"
                                 repoPath={this.props.repoPath}
                                 rev={this.props.commitID}
-                                history={history}
                                 scrollRootSelector="#explorer"
                                 selectedPath={this.props.filePath || ''}
                                 paths={this.state.files}

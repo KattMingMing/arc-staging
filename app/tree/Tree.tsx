@@ -2,7 +2,6 @@
 
 import ChevronDownIcon from '@sourcegraph/icons/lib/ChevronDown'
 import ChevronRightIcon from '@sourcegraph/icons/lib/ChevronRight'
-import * as H from 'history'
 import flatten from 'lodash/flatten'
 import groupBy from 'lodash/groupBy'
 import sortBy from 'lodash/sortBy'
@@ -10,11 +9,10 @@ import * as React from 'react'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Subscription } from 'rxjs/Subscription'
 import { Repo } from '../repo/index'
-import { toBlobURL, toTreeURL } from '../util/url'
+import { toTreeURL } from '../util/url'
 import { getParentDir, scrollIntoView } from './util'
 
 export interface Props extends Repo {
-    history: H.History
     paths: string[]
     scrollRootSelector?: string
     selectedPath: string
@@ -83,7 +81,7 @@ export class Tree extends React.PureComponent<Props, State> {
         if (this.props.selectedPath) {
             setTimeout(() => {
                 const el = this.locateDomNode(this.props.selectedPath!)
-                if (el) {
+                if (el && !this.elementInViewport(el)) {
                     el.scrollIntoView({ behavior: 'instant', inline: 'nearest' })
                 }
             }, 500)
@@ -127,7 +125,6 @@ export class Tree extends React.PureComponent<Props, State> {
         return (
             <div className="github-tree" tabIndex={1} onKeyDown={this.onKeyDown}>
                 <TreeLayer
-                    history={this.props.history}
                     repoPath={this.props.repoPath}
                     rev={this.props.rev}
                     store={this.state.store}
@@ -244,12 +241,10 @@ export class Tree extends React.PureComponent<Props, State> {
                 }
             }
             node.state.next({ collapsed: false, selected: true })
-            const urlProps = {
-                repoPath: this.props.repoPath,
-                rev: this.props.rev,
-                filePath: selectedPath,
+            const element = this.locateDomNode(selectedPath) as HTMLElement
+            if (element && !isDir) {
+                element.click()
             }
-            this.props.history.push(isDir ? toTreeURL(urlProps) : toBlobURL(urlProps))
         }
     }
 
@@ -267,7 +262,9 @@ export class Tree extends React.PureComponent<Props, State> {
         const root = (this.props.scrollRootSelector
             ? document.querySelector(this.props.scrollRootSelector)
             : document.querySelector('.tree-container')) as HTMLElement
-        scrollIntoView(el, root)
+        if (!this.elementInViewport(el)) {
+            scrollIntoView(el, root)
+        }
         const path = el.getAttribute('data-tree-path')!
         selectRow(this.state.store, path)
     }
@@ -360,7 +357,6 @@ export class Tree extends React.PureComponent<Props, State> {
 }
 
 interface TreeLayerProps extends Repo {
-    history: H.History
     currSubpath: string
     relativeDir?: string
     store: Store
@@ -489,7 +485,6 @@ class TreeRow extends React.PureComponent<TreeRowProps, TreeNodeState> {
                             <tr key={'layer-' + node.filePath}>
                                 <td>
                                     <TreeLayer
-                                        history={this.props.history}
                                         repoPath={this.props.repoPath}
                                         rev={this.props.rev}
                                         store={this.props.store}

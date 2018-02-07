@@ -342,6 +342,9 @@ export function getCodeCells(table: HTMLTableElement, opt: MaybeDiffSpec): CodeC
             line = parseInt(lineData, 10)
         } else {
             const lineCell = row.cells[0]
+            if (!lineCell) {
+                continue
+            }
             // Some blob views do not user the data-line-number attribute and instead use a specific class.
             if (lineCell.className === 'blob-num') {
                 line = parseInt(lineCell.innerText, 10)
@@ -349,6 +352,9 @@ export function getCodeCells(table: HTMLTableElement, opt: MaybeDiffSpec): CodeC
                 line = parseInt(lineCell.getAttribute('data-line-number') as string, 10)
             }
             codeCell = row.cells[1]
+        }
+        if (!codeCell) {
+            continue
         }
 
         const innerCode = codeCell.querySelector('.blob-code-inner') // ignore extraneous inner elements, like "comment" button on diff views

@@ -1,4 +1,3 @@
-import * as _ from 'lodash'
 import * as React from 'react'
 import { render } from 'react-dom'
 import 'rxjs/add/operator/toPromise'
@@ -51,7 +50,9 @@ function refreshModules(): void {
     inject()
 }
 
-const injectModulesAfterPjaxNavigation = _.debounce(refreshModules, 200, { leading: true, trailing: true })
+window.addEventListener('pjax:end', () => {
+    refreshModules()
+})
 
 export function injectGitHubApplication(marker: HTMLElement): void {
     document.body.appendChild(marker)
@@ -62,15 +63,6 @@ export function injectGitHubApplication(marker: HTMLElement): void {
             e.updatePropsForUser(identity)
         }
     })
-
-    // Add page mutation observer to detect URL changes from PJAX.
-    const pageChangeMutationObserver = new (window as any).MutationObserver(injectModulesAfterPjaxNavigation)
-    const container = document.getElementById('js-repo-pjax-container')
-    if (container) {
-        pageChangeMutationObserver.observe(container, {
-            childList: true,
-        })
-    }
 }
 
 function progressiveContainerObserver(): void {
@@ -149,24 +141,24 @@ function injectFileTree(): void {
     if (!repoPath) {
         return
     }
-    let mount = document.getElementById('sourcegraph-file-tree') as HTMLElement
-    if (mount) {
-        return
-    }
-
-    mount = document.createElement('div')
-    mount.id = 'sourcegraph-file-tree'
-    mount.className = 'tree-mount'
-    mount.setAttribute('data-pjax', 'true')
-    const container = document.createElement('div')
-    container.id = 'sourcegraph-file-tree-container'
-    container.className = 'repo-rev-container'
-    mount.appendChild(container)
     const pjaxContainer = document.getElementById('js-repo-pjax-container')
     if (!pjaxContainer) {
         return
     }
-    pjaxContainer.insertBefore(mount, pjaxContainer.firstElementChild!)
+
+    let container = document.getElementById('sourcegraph-file-tree-container') as HTMLElement
+    let mount = document.getElementById('sourcegraph-file-tree') as HTMLElement
+    if (!mount) {
+        mount = document.createElement('div')
+        mount.id = 'sourcegraph-file-tree'
+        mount.className = 'tree-mount'
+        mount.setAttribute('data-pjax', 'true')
+        container = document.createElement('div')
+        container.id = 'sourcegraph-file-tree-container'
+        container.className = 'repo-rev-container'
+        mount.appendChild(container)
+        pjaxContainer.insertBefore(mount, pjaxContainer.firstElementChild!)
+    }
 
     const gitHubState = getGitHubState(window.location.href)
     if (!gitHubState) {
