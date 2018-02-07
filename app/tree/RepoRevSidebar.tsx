@@ -87,7 +87,7 @@ export class RepoRevSidebar extends React.PureComponent<Props, State> {
 
     public state: State = {
         loading: true,
-        showSidebar: localStorage.getItem(RepoRevSidebar.HIDDEN_STORAGE_KEY) === null,
+        showSidebar: localStorage.getItem(RepoRevSidebar.HIDDEN_STORAGE_KEY) === 'true',
     }
 
     private specChanges = new Subject<{ repoPath: string; commitID: string }>()
@@ -181,7 +181,7 @@ export class RepoRevSidebar extends React.PureComponent<Props, State> {
     }
 
     private onSidebarToggle = () => {
-        if (this.state.showSidebar) {
+        if (!this.state.showSidebar) {
             localStorage.setItem(RepoRevSidebar.HIDDEN_STORAGE_KEY, 'true')
         } else {
             localStorage.removeItem(RepoRevSidebar.HIDDEN_STORAGE_KEY)
