@@ -183,6 +183,9 @@ export class BlobAnnotator extends React.Component<Props, State> {
     }
 
     private addTooltipEventListeners = (ref: HTMLElement): void => {
+        if (!ref) {
+            return
+        }
         this.subscriptions.add(
             this.fixedTooltip
                 .do(() => {
@@ -496,9 +499,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 ? this.props.commitID === defCtx.commitID ? this.props.rev : defCtx.commitID || defCtx.rev
                 : defCtx.commitID || defCtx.rev
             // tslint:disable-next-line
-            const url = `https://${defCtx.repoPath}/blob/${rev || 'master'}/${defCtx.filePath}#L${
-                defCtx.position.line
-            }${defCtx.position.character ? ':' + defCtx.position.character : ''}`
+            const url = `https://${defCtx.repoPath}/blob/${rev || 'master'}/${defCtx.filePath}#L${defCtx.position.line}${defCtx.position.character ? ':' + defCtx.position.character : ''}`
             window.location.href = url
         }
     }

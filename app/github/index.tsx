@@ -26,6 +26,7 @@ export interface GitHubPullUrl {
     view: string
     rev: string
     id: number
+    filePath?: string
 }
 
 export interface GitHubRepositoryUrl {
@@ -33,6 +34,7 @@ export interface GitHubRepositoryUrl {
     owner: string
     repoName: string
     rev?: string
+    filePath?: string
 }
 
 export enum GitHubMode {

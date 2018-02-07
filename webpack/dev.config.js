@@ -26,12 +26,7 @@ module.exports = {
 		new ExtractTextPlugin({
 			filename: '../css/[name].bundle.css',
 			allChunks: true
-		}),
-		new webpack.ProvidePlugin({
-			$: 'jquery',
-			jQuery: 'jquery',
-			'$.fn.pjax': 'jquery-pjax'
-		}),
+		})
 	],
 	resolve: {
 		extensions: ['.ts', '.tsx', '.js'],

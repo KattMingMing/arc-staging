@@ -5,9 +5,6 @@ chrome.storage.sync.get(items => {
     if (items.gitHubEnterpriseURL) {
         customGitHubOrigins[items.gitHubEnterpriseURL] = true
     }
-    if (items.sourcegraphURL) {
-        customGitHubOrigins[items.sourcegraphURL] = true
-    }
 })
 chrome.storage.onChanged.addListener(changes => {
     chrome.storage.sync.get(items => {
@@ -16,7 +13,6 @@ chrome.storage.onChanged.addListener(changes => {
             customGitHubOrigins[items.gitHubEnterpriseURL] = true
         }
         if (items.sourcegraphURL) {
-            customGitHubOrigins[items.sourcegraphURL] = true
             setSourcegraphUrl(items.sourcegraphURL)
         }
     })

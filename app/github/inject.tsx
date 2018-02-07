@@ -2,21 +2,17 @@ import * as _ from 'lodash'
 import * as React from 'react'
 import { render } from 'react-dom'
 import 'rxjs/add/operator/toPromise'
-import { switchMap } from 'rxjs/operators/switchMap'
 import { Subject } from 'rxjs/Subject'
-import { Subscription } from 'rxjs/Subscription'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { ContextualSourcegraphButton } from '../components/ContextualSourcegraphButton'
 import { OpenPullRequestButton } from '../components/OpenPullRequestButton'
 import { injectRepositorySearchToggle } from '../components/SearchToggle'
 import { WithResolvedRev } from '../components/WithResolvedRev'
 import { findElementWithOffset, getTargetLineAndOffset, GitHubBlobUrl } from '../github/index'
-import { fetchTree } from '../repo/backend'
 import { CodeCell } from '../repo/index'
 import { getTableDataCell, hideTooltip } from '../repo/tooltips'
 import { ExtensionEventLogger } from '../tracking/ExtensionEventLogger'
-import { parseNodes } from '../tree/index'
-import { TreeViewer } from '../tree/TreeViewer'
+import { RepoRevSidebar } from '../tree/RepoRevSidebar'
 import { eventLogger, getPlatformName, repositoryFileTreeEnabled, sourcegraphUrl } from '../util/context'
 
 import {
@@ -32,10 +28,6 @@ import {
     isDomSplitDiff,
     parseURL,
 } from './util'
-
-const $ = require('jquery')
-require('jquery-pjax')
-require('jquery-resizable-dom')
 
 const defaultFilterTarget = () => true
 const identityFunction = (a: any) => a
@@ -57,17 +49,11 @@ function refreshModules(): void {
     }
     hideTooltip()
     inject()
-    selectTreeNodeForURL()
-    if (document.getElementsByClassName('sg-tree__container').length > 0) {
-        updateHeaderMargin()
-    }
 }
+
 const injectModulesAfterPjaxNavigation = _.debounce(refreshModules, 200, { leading: true, trailing: true })
 
 export function injectGitHubApplication(marker: HTMLElement): void {
-    $.pjax.defaults.maxCacheLength = 0
-    $.pjax.defaults.timeout = 0
-
     document.body.appendChild(marker)
     inject()
     chrome.runtime.sendMessage({ type: 'getIdentity' }, identity => {
@@ -85,18 +71,6 @@ export function injectGitHubApplication(marker: HTMLElement): void {
             childList: true,
         })
     }
-
-    window.addEventListener(
-        'resize',
-        _.debounce(
-            () => {
-                updateMarginForWidth()
-            },
-            500,
-            { trailing: true }
-        ),
-        true
-    )
 }
 
 function progressiveContainerObserver(): void {
@@ -164,192 +138,61 @@ function hideFileTree(): void {
     tree.parentNode.removeChild(tree)
 }
 
-let isTreeViewToggled = false
-chrome.storage.sync.get(items => {
-    isTreeViewToggled = items.treeViewToggled === undefined ? true : items.treeViewToggled
-})
-
 const specChanges = new Subject<{ repoPath: string; commitID: string }>()
-const subscriptions = new Subscription()
 
 function injectFileTree(): void {
     if (!repositoryFileTreeEnabled) {
         return
     }
-    const { repoPath, isCodePage } = parseURL()
+    const { repoPath } = parseURL()
 
     if (!repoPath) {
         return
     }
     let mount = document.getElementById('sourcegraph-file-tree') as HTMLElement
     if (mount) {
-        selectTreeNodeForURL()
         return
     }
 
-    mount = document.createElement('nav')
+    mount = document.createElement('div')
     mount.id = 'sourcegraph-file-tree'
-    document.body.appendChild(mount)
+    mount.className = 'tree-mount'
+    mount.setAttribute('data-pjax', 'true')
+    const container = document.createElement('div')
+    container.id = 'sourcegraph-file-tree-container'
+    container.className = 'repo-rev-container'
+    mount.appendChild(container)
+    const pjaxContainer = document.getElementById('js-repo-pjax-container')
+    if (!pjaxContainer) {
+        return
+    }
+    pjaxContainer.insertBefore(mount, pjaxContainer.firstElementChild!)
 
     const gitHubState = getGitHubState(window.location.href)
     if (!gitHubState) {
         return
     }
-    subscriptions.add(
-        specChanges.pipe(switchMap(({ repoPath, commitID }) => fetchTree({ repoPath, commitID }))).subscribe(files => {
-            if (files.length === 0) {
-                return
-            }
-            if (document.querySelector('.octotree')) {
-                chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
-                hideFileTree()
-                return
-            }
-            const parsedNodes = parseNodes(files, '')
-            render(
-                <WithResolvedRev
-                    repoPath={repoPath}
-                    component={TreeViewer}
-                    onToggled={treeViewToggled}
-                    toggled={isTreeViewToggled}
-                    onSelected={handleSelected}
-                    treeData={parsedNodes.nodes}
-                    parentRef={mount}
-                    uri={repoPath}
-                />,
-                mount
-            )
-            updateTreeViewLayout()
-            selectTreeNodeForURL()
-            const opt = {
-                onDrag(__: any, $el: any, newWidth: number): boolean {
-                    if (newWidth < 280) {
-                        newWidth = 280
-                    }
-                    $el.width(newWidth)
-                    updateMarginForWidth()
-                    return false
-                },
-                resizeWidth: true,
-                resizeHeight: false,
-                resizeWidthFrom: 'right',
-                handleSelector: '.sg-tree__splitter',
-            }
-            $(mount).resizable(opt)
-            updateHeaderMargin()
-        })
+    if (document.querySelector('.octotree')) {
+        chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
+        hideFileTree()
+        return
+    }
+    render(
+        <WithResolvedRev
+            component={RepoRevSidebar}
+            className="repo-rev-container__sidebar"
+            repoPath={repoPath}
+            rev={gitHubState.rev}
+            history={history}
+            scrollRootSelector="#explorer"
+            selectedPath={gitHubState.filePath}
+            filePath={gitHubState.filePath}
+            location={window.location}
+            defaultBranch={'HEAD'}
+        />,
+        container
     )
-    if (!isCodePage) {
-        isTreeViewToggled = false
-    }
     specChanges.next({ repoPath, commitID: gitHubState.rev || '' })
-}
-
-function treeViewToggled(toggleState: boolean): void {
-    isTreeViewToggled = toggleState
-    updateTreeViewLayout()
-    selectTreeNodeForURL()
-    updateHeaderMargin()
-    chrome.storage.sync.set({ treeViewToggled: isTreeViewToggled })
-}
-
-function updateMarginForWidth(): void {
-    const fileTree = document.getElementById('sourcegraph-file-tree')
-    if (!fileTree) {
-        document.body.style.marginLeft = '0px'
-        return
-    }
-    const repoContent = document.querySelector('.repository-content') as HTMLElement
-    if (!repoContent) {
-        document.body.style.marginLeft = '0px'
-        return
-    }
-    const widthDiff = window.innerWidth - repoContent.clientWidth
-    document.body.style.marginLeft =
-        widthDiff / 2 > fileTree.clientWidth || !isTreeViewToggled ? '0px' : `${fileTree.clientWidth}px`
-}
-
-function updateHeaderMargin(): void {
-    const header = document.querySelector('.Header') as HTMLElement
-    if (header && repositoryFileTreeEnabled) {
-        header.style.marginLeft = '0px'
-        if (document.body.classList.contains('full-width')) {
-            if (isTreeViewToggled) {
-                header.style.marginLeft = '0px'
-                return
-            }
-            header.style.marginLeft = '45px'
-        }
-    }
-}
-
-function updateTreeViewLayout(): void {
-    const parent = document.getElementById('sourcegraph-file-tree')
-    if (!parent) {
-        return
-    }
-    parent.style.zIndex = '100002'
-    parent.style.position = 'fixed'
-    parent.style.top = '0px'
-    parent.style.display = 'flex'
-    parent.style.width = '280px'
-    parent.style.height = '100%'
-    parent.style.left = '0px'
-    parent.style.background = 'rgb(36, 41, 46)'
-    if (!isTreeViewToggled) {
-        parent.style.height = '54px'
-        parent.style.width = '45px'
-        document.body.style.marginLeft = '0px'
-        return
-    }
-    updateMarginForWidth()
-}
-
-function handleSelected(url: string, newTab: boolean): void {
-    const gitHubState = getGitHubState(window.location.href)
-    if (!gitHubState) {
-        return
-    }
-    // Check if the item is already selected and the same path - happens on popstate.
-    const tree = $('.jstree').jstree(true)
-    if (!tree) {
-        return
-    }
-    // Do not update URL to the same URL if the item is selected and we are on the page.
-    const selected = tree.get_selected()
-    if (selected && selected[0] === (gitHubState as any).path) {
-        return
-    }
-    eventLogger.logFileTreeItemClicked({ repo: gitHubState.repoName })
-    if (newTab) {
-        window.open(url, '_blank')
-        selectTreeNodeForURL()
-        return
-    }
-    $.pjax({
-        url,
-        container: '#js-repo-pjax-container, .context-loader-container, [data-pjax-container]',
-    })
-}
-
-function selectTreeNodeForURL(): void {
-    const tree = $('.jstree').jstree(true)
-    if (!tree) {
-        return
-    }
-
-    const gitHubState = getGitHubState(window.location.href) as GitHubBlobUrl
-    if (!gitHubState || !gitHubState.filePath) {
-        $('.jstree').jstree('deselect_all')
-        return
-    }
-
-    const selected = tree.get_selected()
-    if (selected && selected[0] === gitHubState.filePath) {
-        return
-    }
-    $('.jstree').jstree('deselect_all')
-    tree.select_node(gitHubState.filePath)
 }
 
 const findTokenCell = (td: HTMLElement, target: HTMLElement) => {

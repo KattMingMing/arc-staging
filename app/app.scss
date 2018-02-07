@@ -25,9 +25,9 @@
     background-color: rgba(3, 102, 214, 0.3);
 }
 
-@import './tree/jstree';
-@import './tree/jstreeDark';
-@import './tree/tree';
 @import './repo/tooltips';
 @import './highlight';
 @import './options';
+@import './tree/tree';
+@import './tree/repoRevSidebar';
+@import './tree/resizable'
