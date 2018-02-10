@@ -119,7 +119,9 @@ export function getTargetLineAndOffset(
                 // Child is not the original target, but has no chidren to recurse on. Add to character offset.
                 character += (child.textContent as string).length // TODO(john): I think this needs to be escaped before we add its length...
                 if (isDelta) {
-                    character -= 1 // make sure not to count weird diff prefix
+                    if (!isRefinedGitHubExtensionRemoveDiffSignsEnabled(target)) {
+                        character -= 1 // make sure not to count weird diff prefix
+                    }
                     isDelta = false
                 }
             }
@@ -131,6 +133,22 @@ export function getTargetLineAndOffset(
     if (findOrigTarget(target)) {
         return { line, character, word: origTarget.innerText }
     }
+}
+
+/**
+ * If the Refined GitHub extension is installed, it changes the DOM of a commit/PR diff (as part of the extension's
+ * "No Whitespace" functionality). It removes the diff marker ('+'/'-'/' '), which means we need to add 1 to the
+ * character to compensate. Otherwise, hovers and definitions would all be off-by-one and would usually return no
+ * results.
+ */
+function isRefinedGitHubExtensionRemoveDiffSignsEnabled(target: HTMLElement): boolean {
+    try {
+        const tr = target.parentElement!.parentElement!
+        return tr.classList.contains('refined-github-diff-signs')
+    } catch (err) {
+        // noop
+    }
+    return false
 }
 
 /**
