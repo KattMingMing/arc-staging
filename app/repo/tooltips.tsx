@@ -241,10 +241,14 @@ export function updateTooltip(data: TooltipData, docked: boolean, actions: Actio
             // Handle scrolling ourselves so that scrolling to the bottom of
             // the tooltip documentation does not cause the page to start
             // scrolling (which is a very jarring experience).
-            tooltip.addEventListener('wheel', (e: WheelEvent) => {
-                e.preventDefault()
-                tooltipDoc.scrollTop += e.deltaY
-            })
+            tooltip.addEventListener(
+                'wheel',
+                (e: WheelEvent) => {
+                    e.preventDefault()
+                    tooltipDoc.scrollTop += e.deltaY
+                },
+                { passive: true } as any
+            )
         }
     } else {
         loadingTooltip.style.visibility = 'visible'

@@ -4,6 +4,21 @@ import { without } from 'lodash'
 let customGitHubOrigins = {}
 let customServerOrigins: string[] = []
 
+const contentScripts = chrome.runtime.getManifest().content_scripts
+
+// jsContentScriptOrigins are the required URLs inside of the manifest. When checking for permissions to inject
+// the content script on optional pages (inside chrome.tabs.onUpdated) we need to skip manual injection of the
+// script since the browser extension will automatically inject it.
+const jsContentScriptOrigins: string[] = []
+if (contentScripts) {
+    for (const contentScript of contentScripts) {
+        if (!contentScript || !contentScript.js || !contentScript.matches) {
+            continue
+        }
+         jsContentScriptOrigins.push(...contentScript.matches)
+    }
+}
+
 chrome.storage.sync.get(items => {
     if (items.gitHubEnterpriseURL) {
         customGitHubOrigins[items.gitHubEnterpriseURL] = true
@@ -27,12 +42,13 @@ chrome.permissions.getAll(permissions => {
         customServerOrigins = []
         return
     }
-    customServerOrigins = permissions.origins
+    customServerOrigins = without(permissions.origins, ...jsContentScriptOrigins)
 })
 
 chrome.permissions.onAdded.addListener(permissions => {
     if (permissions.origins) {
-        customServerOrigins.push(...permissions.origins)
+        const origins = without(permissions.origins, ...jsContentScriptOrigins)
+        customServerOrigins.push(...origins)
     }
 })
 
