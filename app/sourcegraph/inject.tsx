@@ -2,6 +2,10 @@ import { ExtensionEventLogger } from '../../app/tracking/ExtensionEventLogger'
 import { eventLogger } from '../../app/util/context'
 
 export function injectSourcegraphApp(marker: HTMLElement): void {
+    if (document.getElementById(marker.id)){
+        return
+    }
+
     window.addEventListener('load', () => {
         dispatchSourcegraphEvents(marker)
     })

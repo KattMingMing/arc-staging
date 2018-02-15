@@ -1,11 +1,15 @@
 import { setSourcegraphUrl } from '../../app/util/context'
+import { without } from 'lodash'
 
 let customGitHubOrigins = {}
+let customServerOrigins: string[] = []
+
 chrome.storage.sync.get(items => {
     if (items.gitHubEnterpriseURL) {
         customGitHubOrigins[items.gitHubEnterpriseURL] = true
     }
 })
+
 chrome.storage.onChanged.addListener(changes => {
     chrome.storage.sync.get(items => {
         customGitHubOrigins = {}
@@ -18,6 +22,26 @@ chrome.storage.onChanged.addListener(changes => {
     })
 })
 
+chrome.permissions.getAll(permissions => {
+    if (!permissions.origins) {
+        customServerOrigins = []
+        return
+    }
+    customServerOrigins = permissions.origins
+})
+
+chrome.permissions.onAdded.addListener(permissions => {
+    if (permissions.origins) {
+        customServerOrigins.push(...permissions.origins)
+    }
+})
+
+chrome.permissions.onRemoved.addListener(permissions => {
+    if (permissions.origins) {
+        customServerOrigins = without(customServerOrigins, ...permissions.origins)
+    }
+})
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete') {
         for (const origin of Object.keys(customGitHubOrigins)) {
@@ -27,9 +51,16 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             chrome.tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end' }, res =>
                 console.log('injected JavaScript bundle on tab ' + tabId)
             )
+            // Do not injectCSS into Sourcegraph or Sourcegraph Server urls.
             chrome.tabs.insertCSS(tabId, { file: 'css/style.bundle.css', runAt: 'document_end' }, res =>
                 console.log('injected CSS bundle on tab ' + tabId)
             )
+        }
+        for (const origin of customServerOrigins) {
+            if (!tab.url || !tab.url.startsWith(origin.replace('/*', ''))) {
+                continue
+            }
+            chrome.tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end' })
         }
     }
 })
@@ -54,6 +85,9 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
         case 'setSourcegraphUrl':
             requestPermissionsForSourcegraphUrl(message.payload)
             return
+        case 'containsPermission':
+            chrome.permissions.contains({ origins: [message.payload] }, result => cb(result))
+            return true
     }
 })
 

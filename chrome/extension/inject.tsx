@@ -8,7 +8,7 @@ import {
     setRepositoryFileTreeEnabled,
     setRepositorySearchEnabled,
     setSourcegraphRepoSearchToggled,
-    setSourcegraphUrl,
+    setSourcegraphUrl
 } from '../../app/util/context'
 import '../../app/util/polyfill'
 
@@ -22,20 +22,19 @@ function injectApplication(): void {
     const extensionMarker = document.createElement('div')
     extensionMarker.id = 'sourcegraph-app-background'
     extensionMarker.style.display = 'none'
+    if (document.getElementById(extensionMarker.id)) {
+        return
+    }
 
     const href = window.location.href
     chrome.storage.sync.get(items => {
-        const sourcegraphServerUrl = items.sourcegraphURL || 'https://sourcegraph.com'
-        const isSourcegraphServer = window.location.origin === sourcegraphServerUrl
-        if (isSourcegraphServer || /^https?:\/\/(www.)?sourcegraph.com/.test(href)) {
-            setSourcegraphUrl(sourcegraphServerUrl)
-            injectSourcegraphApp(extensionMarker)
-        } else {
+        chrome.runtime.sendMessage({type: 'containsPermission', payload: window.location.origin + '/*' }, result => {
+            const sourcegraphServerUrl = items.sourcegraphURL || 'https://sourcegraph.com'
+            const isSourcegraphServer = result || window.location.origin === sourcegraphServerUrl
             const githubEnterpriseURL = items.gitHubEnterpriseURL
 
             const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
             const isGitHubEnterprise = Boolean(githubEnterpriseURL) && href.startsWith(githubEnterpriseURL)
-
             if (isGitHub || isGitHubEnterprise) {
                 setSourcegraphUrl(sourcegraphServerUrl)
                 setRepositoryFileTreeEnabled(
@@ -48,8 +47,11 @@ function injectApplication(): void {
                 setEventTrackingEnabled(items.eventTrackingEnabled)
                 setOpenEditorEnabled(items.openEditorEnabled)
                 injectGitHubApplication(extensionMarker)
+            } else if (isSourcegraphServer || /^https?:\/\/(www.)?sourcegraph.com/.test(href)) {
+                setSourcegraphUrl(sourcegraphServerUrl)
+                injectSourcegraphApp(extensionMarker)
             }
-        }
+        })
     })
 }
 
