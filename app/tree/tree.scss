@@ -6,6 +6,10 @@
     width: 100%;
     pointer-events: none;
     height: 100%;
+    backface-visibility: hidden;
+    &::before {
+        will-change: transform;
+    }
 }
 
 .tree {
