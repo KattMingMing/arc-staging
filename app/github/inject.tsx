@@ -2,6 +2,7 @@ import * as React from 'react'
 import { render } from 'react-dom'
 import 'rxjs/add/operator/toPromise'
 import { Subject } from 'rxjs/Subject'
+import { Alerts } from '../components/Alerts'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { ContextualSourcegraphButton } from '../components/ContextualSourcegraphButton'
 import { OpenPullRequestButton } from '../components/OpenPullRequestButton'
@@ -112,6 +113,7 @@ function progressiveContainerObserver(): void {
 
 function inject(): void {
     injectBlobAnnotators()
+    injectServerBanner()
     injectOpenOnSourcegraphButton()
     injectRepositorySearchToggle()
     injectCodeSnippetAnnotator(getCodeCommentContainers(), '.border.rounded-1.my-2', false)
@@ -266,6 +268,30 @@ function injectCodeSnippetAnnotator(
             mountEl
         )
     }
+}
+
+function injectServerBanner(): void {
+    const { isPullRequest, repoPath } = parseURL()
+    if (!isPullRequest) {
+        return
+    }
+    // Check which files were modified.
+    const files = getFileContainers()
+    if (!files.length) {
+        return
+    }
+
+    let mount = document.getElementById('server-alert-mount')
+    if (!mount) {
+        mount = document.createElement('div')
+        mount.id = 'server-alert-mount'
+        const container = document.getElementById('partial-discussion-header')
+        if (!container) {
+            return
+        }
+        container.appendChild(mount)
+    }
+    render(<Alerts repoPath={repoPath} />, mount)
 }
 
 function injectBlobAnnotators(): void {

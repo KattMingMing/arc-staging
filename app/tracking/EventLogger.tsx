@@ -73,6 +73,35 @@ export abstract class EventLogger {
         this.logEventForCategory('BrowserExtension', 'Success', 'BrowserExtensionConnectedToServer', eventProperties)
     }
 
+    public logServerInstallBannerViewed(eventProperties: any = {}): void {
+        this.logEventForCategory('BrowserExtension', 'View', 'ServerInstallBannerViewed', eventProperties)
+    }
+
+    public logServerInstallBannerClicked(eventProperties: any = {}): void {
+        this.logEventForCategory('BrowserExtension', 'Click', 'ServerInstallBannerClicked', eventProperties)
+    }
+
+    public logServerInstallBannerDismissed(eventProperties: any = {}): void {
+        this.logEventForCategory('BrowserExtension', 'Click', 'ServerInstallBannerDismissClicked', eventProperties)
+    }
+
+    public logServerEnableRepositoryBannerViewed(eventProperties: any = {}): void {
+        this.logEventForCategory('BrowserExtension', 'View', 'ServerEnableRepositoryBannerViewed', eventProperties)
+    }
+
+    public logServerEnableRepositoryBannerClicked(eventProperties: any = {}): void {
+        this.logEventForCategory('BrowserExtension', 'Click', 'ServerEnableRepositoryBannerClicked', eventProperties)
+    }
+
+    public logServerEnableRepositoryBannerDismissClicked(eventProperties: any = {}): void {
+        this.logEventForCategory(
+            'BrowserExtension',
+            'Click',
+            'ServerEnableRepositoryBannerDismissClicked',
+            eventProperties
+        )
+    }
+
     protected abstract sendEvent(eventAction: string, eventProps: any): void
 
     private defaultProperties(): any {
