@@ -27,11 +27,6 @@
             "matches": ["https://github.com/*", "https://sourcegraph.com/*"],
             "run_at": "document_end",
             "js": ["js/inject.bundle.js"]
-        },
-        {
-            "matches": ["https://github.com/*"],
-            "run_at": "document_end",
-            "css": ["css/style.bundle.css"]
         }
     ],
     "background": {

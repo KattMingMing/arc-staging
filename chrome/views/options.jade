@@ -21,7 +21,7 @@ html
             label(class="sg-options-label") Enable repository file tree
         div(id="sg-editor-container")
           h4(class="sg-section-header") Editor (BETA):
-          p(class="sg-section-subheader") Integrations with 
+          p(class="sg-section-subheader") Integrations with
             a(href='https://about.sourcegraph.com/products/editor/') Sourcegraph Editor
           div(class="sg-option-container")
             input(type="checkbox", id="sg-editor-open")
@@ -38,6 +38,11 @@ html
             label(class="sg-advanced-options-label") GitHub Enterprise URL:
             input(id="sg-github-enterprise-url", class="sg-url-input")
             input(type="submit", value="Save", class="sg-github-enterprise-save-button")
+        form#sg-phabricator-form
+          div(class="sg-option-container")
+            label(class="sg-advanced-options-label") Phabricator URL:
+            input(id="sg-phabricator-url", class="sg-url-input")
+            input(type="submit", value="Save", class="sg-url-save-button")
         div(id="sg-event-tracking-container")
           h4(class="sg-section-header") Data collection:
           p(class="sg-section-subheader") Allow data collection for an improved user experience and personalization.

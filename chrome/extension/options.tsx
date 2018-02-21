@@ -1,15 +1,20 @@
 import { isFirefoxExtension } from '../../app/util/context'
+import { isSourcegraphServerCheck } from './background'
 
 function getSourcegraphURLInput(): HTMLInputElement {
     return document.getElementById('sg-url') as HTMLInputElement
 }
 
+// Initially focus this input.
+getSourcegraphURLInput().focus()
+
 function getGitHubEnterpriseURLInput(): HTMLInputElement {
     return document.getElementById('sg-github-enterprise-url') as HTMLInputElement
 }
 
-// Initially focus this input.
-getSourcegraphURLInput().focus()
+function getPhabricatorURLInput(): HTMLInputElement {
+    return document.getElementById('sg-phabricator-url') as HTMLInputElement
+}
 
 function getSourcegraphURLForm(): HTMLFormElement {
     return document.getElementById('sg-url-form') as HTMLFormElement
@@ -17,6 +22,10 @@ function getSourcegraphURLForm(): HTMLFormElement {
 
 function getGithubEnterpriseURLForm(): HTMLFormElement {
     return document.getElementById('sg-github-enterprise-form') as HTMLFormElement
+}
+
+function getPhabricatorURLForm(): HTMLFormElement {
+    return document.getElementById('sg-phabricator-form') as HTMLFormElement
 }
 
 function getSourcegraphURLSaveButton(): HTMLInputElement {
@@ -27,6 +36,10 @@ function getGitHubEnterpriseSaveButton(): HTMLInputElement {
     return getGithubEnterpriseURLForm().querySelector(
         'input.sg-github-enterprise-save-button[type="submit"]'
     ) as HTMLInputElement
+}
+
+function getPhabricatorSaveButton(): HTMLInputElement {
+    return getPhabricatorURLForm().querySelector('input.sg-save-button[type="submit"]') as HTMLInputElement
 }
 
 function getEnableEventTrackingCheckbox(): HTMLInputElement {
@@ -71,6 +84,7 @@ function syncInputsToLocalStorage(): void {
     chrome.storage.sync.get(items => {
         getSourcegraphURLInput().value = items.sourcegraphURL
         getGithubEnterpriseURLForm().value = items.gitHubEnterpriseURL
+        getPhabricatorURLInput().value = items.phabricatorURL
         getEnableEventTrackingCheckbox().checked = items.eventTrackingEnabled
         getRepositorySearchCheckbox().checked = items.repositorySearchEnabled
         getFileTreeNavigationCheckbox().checked = items.repositoryFileTreeEnabled
@@ -100,6 +114,12 @@ chrome.storage.sync.get(items => {
         chrome.storage.sync.set({ gitHubEnterpriseURL: '' })
     } else {
         getGitHubEnterpriseURLInput().value = items.gitHubEnterpriseURL
+    }
+
+    if (items.phabricatorURL === undefined) {
+        chrome.storage.sync.set({ phabricatorURL: '' })
+    } else {
+        getPhabricatorURLInput().value = items.phabricatorURL
     }
 
     if (items.eventTrackingEnabled === undefined) {
@@ -165,6 +185,25 @@ getGithubEnterpriseURLForm().addEventListener('keydown', evt => {
     }
 })
 
+getPhabricatorURLForm().addEventListener('submit', evt => {
+    evt.preventDefault()
+
+    let url = getPhabricatorURLInput().value
+    if (url.endsWith('/')) {
+        // Trim trailing slash.
+        url = url.substr(0, url.length - 1)
+    }
+
+    chrome.runtime.sendMessage({ type: 'setPhabricatorUrl', payload: url }, () => true)
+})
+
+getPhabricatorURLForm().addEventListener('keydown', evt => {
+    if (evt.keyCode === 13) {
+        evt.preventDefault()
+        getPhabricatorSaveButton().click()
+    }
+})
+
 getEnableEventTrackingCheckbox().addEventListener('click', () => {
     chrome.storage.sync.set({ eventTrackingEnabled: getEnableEventTrackingCheckbox().checked })
 })
@@ -194,50 +233,40 @@ function getConfigureSourcegraphURLContainer(): HTMLElement {
 }
 
 /**
- * Content script injected into webpages through "activeTab" permission to determine if webpage is a Sourcegraph Server instance.
- */
-const isSourcegraphServerCheckScript = `chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (!request.data || request.data !== 'isSGServerInstance') {
-        return
-    }
-    const data = request.data || {}
-    const isSourcegraphDomain = document.getElementById('sourcegraph-chrome-webstore-item');
-    if (isSourcegraphDomain) {
-        document.dispatchEvent(new CustomEvent('sourcegraph:server-instance-configuration-clicked', {}))
-    }
-    sendResponse(Boolean(isSourcegraphDomain))
-    return true
-})`
-
-/**
  * Render Browser Extension configuration page when the browser_action is clicked.
  * Using the "activeTab" permission, we are able to attempt to inject a simple function onto any webpage,
  * without requiring additional permissions. If the page is a Sourcegraph Server and the user does not have the
  * remote url configured already, we will prompt the user to link their extension and server instance.
  */
-chrome.tabs.getSelected(tab => {
-    const urlElement = document.createElement('a') as HTMLAnchorElement
-    urlElement.href = tab.url!
-    const url = `${urlElement.protocol}//${urlElement.host}`
-
-    chrome.permissions.contains({ origins: [url + '/*'] }, result => {
-        if (result) {
-            setBrowserExtensionOptionsHidden(false)
-            setConfigureSourcegraphURLOptionsHidden(true)
-            return
+chrome.tabs.query({ active: true }, tabs => {
+    for (const tab of tabs) {
+        if (!tab.url) {
+            continue
         }
-        chrome.tabs.executeScript(tab.id!, { code: isSourcegraphServerCheckScript }, result => {
-            chrome.tabs.sendMessage(tab.id!, { data: 'isSGServerInstance' }, isSGServerInstance => {
-                if (isSGServerInstance) {
-                    setBrowserExtensionOptionsHidden(true)
-                    setConfigureSourcegraphURLOptionsHidden(false)
-                    return
-                }
+
+        const urlElement = document.createElement('a') as HTMLAnchorElement
+        urlElement.href = tab.url
+        const url = `${urlElement.protocol}//${urlElement.host}`
+
+        chrome.permissions.contains({ origins: [url + '/*'] }, result => {
+            if (result) {
                 setBrowserExtensionOptionsHidden(false)
                 setConfigureSourcegraphURLOptionsHidden(true)
+                return
+            }
+            chrome.tabs.executeScript(tab.id!, { code: isSourcegraphServerCheck.toString() }, result => {
+                chrome.tabs.sendMessage(tab.id!, { data: 'isSGServerInstance' }, isSGServerInstance => {
+                    if (isSGServerInstance) {
+                        setBrowserExtensionOptionsHidden(true)
+                        setConfigureSourcegraphURLOptionsHidden(false)
+                        return
+                    }
+                    setBrowserExtensionOptionsHidden(false)
+                    setConfigureSourcegraphURLOptionsHidden(true)
+                })
             })
         })
-    })
+    }
 })
 
 /**
@@ -247,20 +276,22 @@ chrome.tabs.getSelected(tab => {
  */
 getAutoConfigureSourcegraphButton().addEventListener('click', evt => {
     evt.preventDefault()
-    chrome.tabs.getSelected(tab => {
-        const { url } = tab
-        if (!url) {
-            return
-        }
-        const urlElement = document.createElement('a') as HTMLAnchorElement
-        urlElement.href = url
+    chrome.tabs.query({ active: true }, tabs => {
+        for (const tab of tabs) {
+            const { url } = tab
+            if (!url) {
+                return
+            }
+            const urlElement = document.createElement('a') as HTMLAnchorElement
+            urlElement.href = url
 
-        const baseUrl = `${urlElement.protocol}//${urlElement.host}`
-        chrome.runtime.sendMessage({ type: 'setSourcegraphUrl', payload: baseUrl }, () => {
-            setBrowserExtensionOptionsHidden(false)
-            setConfigureSourcegraphURLOptionsHidden(true)
-            return true
-        })
+            const baseUrl = `${urlElement.protocol}//${urlElement.host}`
+            chrome.runtime.sendMessage({ type: 'setSourcegraphUrl', payload: baseUrl }, () => {
+                setBrowserExtensionOptionsHidden(false)
+                setConfigureSourcegraphURLOptionsHidden(true)
+                return true
+            })
+        }
     })
 })
 

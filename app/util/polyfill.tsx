@@ -1,3 +1,4 @@
+import 'babel-polyfill'
 import { URL, URLSearchParams } from 'whatwg-url'
 
 const GLOBAL = global as any

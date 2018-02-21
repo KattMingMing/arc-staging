@@ -21,19 +21,9 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "https://github.com/*",
-                "https://sourcegraph.com/*",
-                "https://localhost:3443/*",
-                "http://phabricator.aws.sgdev.org/*"
-            ],
+            "matches": ["https://github.com/*", "https://sourcegraph.com/*", "https://localhost:3443/*"],
             "run_at": "document_end",
             "js": ["js/inject.bundle.js"]
-        },
-        {
-            "matches": ["https://github.com/*"],
-            "run_at": "document_end",
-            "css": ["css/style.bundle.css"]
         }
     ],
     "background": {
@@ -49,8 +39,7 @@
         "activeTab",
         "https://github.com/*",
         "https://localhost:3443/*",
-        "https://sourcegraph.com/*",
-        "http://phabricator.aws.sgdev.org/*"
+        "https://sourcegraph.com/*"
     ],
     "optional_permissions": ["tabs", "http://*/", "https://*/"],
     "content_security_policy":

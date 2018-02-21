@@ -1,4 +1,3 @@
-import 'babel-polyfill'
 import '../util/polyfill'
 
 import { InPageEventLogger } from '../tracking/InPageEventLogger'
@@ -8,6 +7,11 @@ import { expanderListen, getPhabricatorUsername, metaClickOverride, setupPageLoa
 
 // NOTE: injectModules is idempotent, so safe to call multiple times on the same page.
 function injectModules(): void {
+    const extensionMarker = document.createElement('div')
+    extensionMarker.id = 'sourcegraph-app-background'
+    extensionMarker.style.display = 'none'
+    document.body.appendChild(extensionMarker)
+
     injectPhabricatorBlobAnnotators().catch(e => console.error(e))
 }
 
