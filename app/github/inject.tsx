@@ -271,6 +271,10 @@ function injectCodeSnippetAnnotator(
 }
 
 function injectServerBanner(): void {
+    if (window.localStorage["server-banner-enabled"] !== "true") {
+        return
+    }
+
     const { isPullRequest, repoPath } = parseURL()
     if (!isPullRequest) {
         return
