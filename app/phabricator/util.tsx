@@ -433,7 +433,12 @@ export function getCodeCellsForAnnotation(table: HTMLTableElement): CodeCell[] {
         if (row.cells[0].classList.contains('diffusion-blame-link')) {
             isBlameEnabled = true
         }
-        line = parseInt(row.cells[isBlameEnabled ? 2 : 0].children[0].textContent as string, 10)
+        const lineElem = row.cells[isBlameEnabled ? 2 : 0].childNodes[0]
+        if (!lineElem) {
+            // No line number; this is likely the empty side of an added or removed file in a diff
+            continue
+        }
+        line = parseInt(lineElem.textContent as string, 10)
         codeCell = row.cells[isBlameEnabled ? 3 : 1]
         if (!codeCell) {
             continue

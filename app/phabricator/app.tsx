@@ -12,8 +12,6 @@ export function injectPhabricatorApplication(): void {
         javelinPierce(metaClickOverride, 'body')
 
         injectModules()
-        setTimeout(injectModules, 1000) // extra data may be loaded asynchronously; reapply after timeout
-        setTimeout(injectModules, 5000) // extra data may be loaded asynchronously; reapply after timeout
     })
     javelinPierce(setupPageLoadListener, 'body')
 

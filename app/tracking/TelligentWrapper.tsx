@@ -6,16 +6,7 @@ const telligentFunctionName = 'telligent'
 export class TelligentWrapper {
     private t: any
 
-    // url should only be specified if not using a standard Sourcegraph Server /.api/telemetry endpoint
-    // (e.g. for a /bi-logger endpoint). Otherwise, the current sourcegraphUrl global is used to generate
-    // the correct URL for the Server instance currently being used.
-    constructor(
-        siteId: string,
-        platform: string,
-        forceSecure: boolean,
-        installedChromeExtension: boolean,
-        url?: string
-    ) {
+    constructor(siteId: string, platform: string, forceSecure: boolean, installedChromeExtension: boolean) {
         // Create the initializing function
         // tslint:disable-next-line
         window[telligentFunctionName] = function(): void {
@@ -31,10 +22,10 @@ export class TelligentWrapper {
 
         this.t = (window as any).telligent
 
-        let telemetryUrl = `${sourcegraphUrl}/.api/telemetry`
-        if (url) {
-            telemetryUrl = url
-        }
+        // Send events to the Server telemetry endpoint. If a custom bi-logger is being used, the redirect
+        // is handled on the backend.
+        const telemetryUrl = `${sourcegraphUrl}/.api/telemetry`
+
         // Must be called once upon initialization
         this.t('newTracker', 'SourcegraphExtensionTracker', prepareEndpointUrl(telemetryUrl), {
             encodeBase64: false,

@@ -2,6 +2,11 @@ import { EventLogger } from '../tracking/EventLogger'
 import { TelligentWrapper } from '../tracking/TelligentWrapper'
 import { isConnectedToSourcegraphDotCom, isE2ETest } from '../util/context'
 
+/**
+ * Event logger for user-installed browser extensions.
+ * Provides listeners for config updates in case individual users modify the "Sourcegraph URL"
+ * in their extension settings. Otherwise, behavior is nearly identical to InPageEventLogger.
+ */
 export class ExtensionEventLogger extends EventLogger {
     private telligentWrapper: TelligentWrapper
     private trackingEnabled = true

@@ -30,15 +30,14 @@ export function init(): void {
             expanderListen()
             metaClickOverride()
             injectModules()
-            setTimeout(injectModules, 1000) // extra data may be loaded asynchronously; reapply after timeout
-            setTimeout(injectModules, 5000) // extra data may be loaded asynchronously; reapply after timeout
         })
         setupPageLoadListener()
     } else {
         // tslint:disable-next-line
         console.log(
-            `Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${window
-                .localStorage.SOURCEGRAPH_DISABLED}.`
+            `Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${
+                window.localStorage.SOURCEGRAPH_DISABLED
+            }.`
         )
     }
 }
