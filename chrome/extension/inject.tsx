@@ -39,7 +39,10 @@ function injectApplication(): void {
         const isGitHubEnterprise = Boolean(githubEnterpriseURL) && href.startsWith(githubEnterpriseURL)
 
         if (!isSourcegraphServer) {
-            chrome.runtime.sendMessage({ type: 'injectCss' })
+            chrome.runtime.sendMessage({
+                type: 'injectCss',
+                payload: { origin: window.location.origin },
+            })
         }
         if (isGitHub || isGitHubEnterprise) {
             setSourcegraphUrl(sourcegraphServerUrl)

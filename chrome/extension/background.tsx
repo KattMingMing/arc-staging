@@ -104,13 +104,19 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
             return
 
         case 'injectCss':
-            chrome.tabs.query({ active: true }, tabs => {
+            const { origin } = message.payload
+            chrome.tabs.query({}, tabs => {
                 for (const tab of tabs) {
-                    if (tab.id) {
-                        chrome.tabs.insertCSS(tab.id, { file: 'css/style.bundle.css', runAt: 'document_end' }, res =>
-                            console.log('injected CSS bundle on tab ' + tab.id)
-                        )
+                    if (!tab.url || !tab.id) {
+                        continue
                     }
+                    if (!tab.url.startsWith(origin)) {
+                        continue
+                    }
+
+                    chrome.tabs.insertCSS(tab.id, { file: 'css/style.bundle.css', runAt: 'document_end' }, res =>
+                        console.log('injected CSS bundle on tab ' + tab.id)
+                    )
                 }
             })
             return true
