@@ -1,3 +1,7 @@
+// We want to polyfill first.
+// prettier-ignore
+import '../../app/util/polyfill'
+
 import { isFirefoxExtension } from '../../app/util/context'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'

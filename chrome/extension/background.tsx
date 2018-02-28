@@ -1,3 +1,7 @@
+// We want to polyfill first.
+// prettier-ignore
+import '../../app/util/polyfill'
+
 import { without } from 'lodash'
 import { setSourcegraphUrl } from '../../app/util/context'
 import * as permissions from '../../extension/permissions'
