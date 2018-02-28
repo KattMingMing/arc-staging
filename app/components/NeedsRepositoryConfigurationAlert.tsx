@@ -1,6 +1,7 @@
 import Icon from '@sourcegraph/icons/lib/CircleChevronRight'
 import CloseIcon from '@sourcegraph/icons/lib/Close'
 import * as React from 'react'
+import * as storage from '../../extension/storage'
 import { sourcegraphUrl } from '../util/context'
 import { eventLogger } from '../util/context'
 
@@ -15,13 +16,13 @@ interface Props {
  * on this site.
  */
 export class NeedsRepositoryConfigurationAlert extends React.Component<Props, {}> {
-    componentDidMount(): void {
+    public componentDidMount(): void {
         eventLogger.logServerEnableRepositoryBannerViewed()
     }
 
     private sync = () => {
         const obj = { [this.props.alertKey]: { [this.props.repoPath]: true } }
-        chrome.storage.sync.set(obj, () => {
+        storage.setSync(obj, () => {
             this.props.onClose()
         })
     }

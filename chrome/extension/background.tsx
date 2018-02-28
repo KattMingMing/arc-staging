@@ -1,12 +1,16 @@
 import { without } from 'lodash'
 import { setSourcegraphUrl } from '../../app/util/context'
+import * as permissions from '../../extension/permissions'
+import * as runtime from '../../extension/runtime'
+import * as storage from '../../extension/storage'
+import * as tabs from '../../extension/tabs'
 
 let customServerOrigins: string[] = []
 
-const contentScripts = chrome.runtime.getManifest().content_scripts
+const contentScripts = runtime.getManifest().content_scripts
 
 // jsContentScriptOrigins are the required URLs inside of the manifest. When checking for permissions to inject
-// the content script on optional pages (inside chrome.tabs.onUpdated) we need to skip manual injection of the
+// the content script on optional pages (inside browser.tabs.onUpdated) we need to skip manual injection of the
 // script since the browser extension will automatically inject it.
 const jsContentScriptOrigins: string[] = []
 if (contentScripts) {
@@ -18,15 +22,15 @@ if (contentScripts) {
     }
 }
 
-chrome.storage.onChanged.addListener(changes => {
-    chrome.storage.sync.get(items => {
+storage.onChanged(changes =>
+    storage.getSync(items => {
         if (items.sourcegraphURL) {
             setSourcegraphUrl(items.sourcegraphURL)
         }
     })
-})
+)
 
-chrome.permissions.getAll(permissions => {
+permissions.getAll().then(permissions => {
     if (!permissions.origins) {
         customServerOrigins = []
         return
@@ -34,39 +38,36 @@ chrome.permissions.getAll(permissions => {
     customServerOrigins = without(permissions.origins, ...jsContentScriptOrigins)
 })
 
-if (chrome.permissions.onAdded) {
-    chrome.permissions.onAdded.addListener(permissions => {
-        if (permissions.origins) {
-            const origins = without(permissions.origins, ...jsContentScriptOrigins)
-            customServerOrigins.push(...origins)
-        }
-    })
-}
+permissions.onAdded(permissions => {
+    if (permissions.origins) {
+        const origins = without(permissions.origins, ...jsContentScriptOrigins)
+        customServerOrigins.push(...origins)
+    }
+})
 
-if (chrome.permissions.onRemoved) {
-    chrome.permissions.onRemoved.addListener(permissions => {
-        if (permissions.origins) {
-            customServerOrigins = without(customServerOrigins, ...permissions.origins)
-        }
-    })
-}
+permissions.onRemoved(permissions => {
+    if (permissions.origins) {
+        customServerOrigins = without(customServerOrigins, ...permissions.origins)
+    }
+})
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+tabs.onUpdated((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete') {
         for (const origin of customServerOrigins) {
             if (!tab.url || !tab.url.startsWith(origin.replace('/*', ''))) {
                 continue
             }
-            chrome.tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end' })
+            tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end' })
         }
     }
 })
 
+// TODO: Figure out a way for this to work cross browser. It will work on Chrome and Firefox but not Safari.
 /**
  * Content script injected into webpages through "activeTab" permission to determine if webpage is a Sourcegraph Server instance.
  */
-export const isSourcegraphServerCheck = () =>
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+export const isSourcegraphServerCheck = () => {
+    window.chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (!request.data || request.data !== 'isSGServerInstance') {
             return
         }
@@ -77,15 +78,16 @@ export const isSourcegraphServerCheck = () =>
         sendResponse(Boolean(isSourcegraphDomain))
         return true
     })
+}
 
-chrome.runtime.onMessage.addListener((message, _, cb) => {
+runtime.onMessage((message, _, cb) => {
     switch (message.type) {
         case 'setIdentity':
-            chrome.storage.local.set({ identity: message.identity })
+            storage.setLocal({ identity: message.identity })
             return
 
         case 'getIdentity':
-            chrome.storage.local.get('identity', obj => {
+            storage.getLocalItem('identity', obj => {
                 const { identity } = obj
                 cb(identity)
             })
@@ -105,63 +107,40 @@ chrome.runtime.onMessage.addListener((message, _, cb) => {
 
         case 'injectCss':
             const { origin } = message.payload
-            chrome.tabs.query({}, tabs => {
-                for (const tab of tabs) {
-                    if (!tab.url || !tab.id) {
-                        continue
-                    }
-                    if (!tab.url.startsWith(origin)) {
-                        continue
-                    }
-
-                    chrome.tabs.insertCSS(tab.id, { file: 'css/style.bundle.css', runAt: 'document_end' }, res =>
-                        console.log('injected CSS bundle on tab ' + tab.id)
-                    )
+            tabs.getActive(tab => {
+                if (!tab.url || !tab.id) {
+                    return
                 }
+                if (!tab.url.startsWith(origin)) {
+                    return
+                }
+                tabs.insertCSS(tab.id, { file: 'css/style.bundle.css', runAt: 'document_end' }, res =>
+                    console.log('injected CSS bundle on tab ' + tab.id)
+                )
             })
             return true
     }
 })
 
-function requestPermissionsForGitHubEnterpriseUrl(url: string): void {
-    chrome.permissions.request(
-        {
-            origins: [url + '/*'],
-        },
-        granted => {
-            if (granted) {
-                chrome.storage.sync.set({ gitHubEnterpriseURL: url })
-            }
-        }
-    )
+async function requestPermissionsForGitHubEnterpriseUrl(url: string): Promise<void> {
+    const granted = await permissions.request(url)
+    if (granted) {
+        storage.setSync({ gitHubEnterpriseURL: url })
+    }
 }
 
-function requestPermissionsForPhabricatorUrl(url: string): void {
-    chrome.permissions.request(
-        {
-            origins: [url + '/*'],
-        },
-        granted => {
-            if (granted) {
-                chrome.storage.sync.set({ phabricatorURL: url })
-            }
-        }
-    )
+async function requestPermissionsForPhabricatorUrl(url: string): Promise<void> {
+    const granted = await permissions.request(url)
+    if (granted) {
+        storage.setSync({ phabricatorURL: url })
+    }
 }
 
-function requestPermissionsForSourcegraphUrl(url: string): void {
-    chrome.permissions.request(
-        {
-            origins: [url + '/*'],
-        },
-        granted => {
-            if (granted) {
-                chrome.storage.sync.set({ sourcegraphURL: url })
-            }
-        }
-    )
+async function requestPermissionsForSourcegraphUrl(url: string): Promise<void> {
+    const granted = await permissions.request(url)
+    if (granted) {
+        storage.setSync({ sourcegraphURL: url })
+    }
 }
 
-if (chrome.runtime.setUninstallURL) {
-    chrome.runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
-}
+runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')

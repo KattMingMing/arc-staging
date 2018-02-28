@@ -1,4 +1,8 @@
 import { isFirefoxExtension } from '../../app/util/context'
+import * as permissions from '../../extension/permissions'
+import * as runtime from '../../extension/runtime'
+import * as storage from '../../extension/storage'
+import * as tabs from '../../extension/tabs'
 import { isSourcegraphServerCheck } from './background'
 
 function getSourcegraphURLInput(): HTMLInputElement {
@@ -81,7 +85,7 @@ function getAutoConfigureSourcegraphButton(): HTMLButtonElement {
 }
 
 function syncInputsToLocalStorage(): void {
-    chrome.storage.sync.get(items => {
+    storage.getSync(items => {
         getSourcegraphURLInput().value = items.sourcegraphURL
         getGithubEnterpriseURLForm().value = items.gitHubEnterpriseURL
         getPhabricatorURLInput().value = items.phabricatorURL
@@ -92,56 +96,56 @@ function syncInputsToLocalStorage(): void {
     })
 }
 
-chrome.storage.onChanged.addListener(syncInputsToLocalStorage)
+storage.onChanged(syncInputsToLocalStorage)
 
 /**
  * Initialize all local storage values when the user first installs the extension.
  * This should only write values that aren't already set, else it will initialize
  * fields with previously saved values.
  */
-chrome.storage.sync.get(items => {
+storage.getSync(items => {
     if (!isFirefoxExtension() && getEnableEventTrackingContainer()) {
         getEnableEventTrackingContainer().style.display = 'none'
     }
 
     if (items.sourcegraphURL === undefined) {
-        chrome.storage.sync.set({ sourcegraphURL: 'https://sourcegraph.com' })
+        storage.setSync({ sourcegraphURL: 'https://sourcegraph.com' })
     } else {
         getSourcegraphURLInput().value = items.sourcegraphURL
     }
 
     if (items.gitHubEnterpriseURL === undefined) {
-        chrome.storage.sync.set({ gitHubEnterpriseURL: '' })
+        storage.setSync({ gitHubEnterpriseURL: '' })
     } else {
         getGitHubEnterpriseURLInput().value = items.gitHubEnterpriseURL
     }
 
     if (items.phabricatorURL === undefined) {
-        chrome.storage.sync.set({ phabricatorURL: '' })
+        storage.setSync({ phabricatorURL: '' })
     } else {
         getPhabricatorURLInput().value = items.phabricatorURL
     }
 
     if (items.eventTrackingEnabled === undefined) {
-        chrome.storage.sync.set({ eventTrackingEnabled: !isFirefoxExtension() })
+        storage.setSync({ eventTrackingEnabled: !isFirefoxExtension() })
     } else if (isFirefoxExtension()) {
         getEnableEventTrackingCheckbox().checked = items.eventTrackingEnabled
     }
 
     if (items.repositorySearchEnabled === undefined) {
-        chrome.storage.sync.set({ repositorySearchEnabled: true })
+        storage.setSync({ repositorySearchEnabled: true })
     } else {
         getRepositorySearchCheckbox().checked = items.repositorySearchEnabled
     }
 
     if (items.repositoryFileTreeEnabled === undefined) {
-        chrome.storage.sync.set({ repositoryFileTreeEnabled: true })
+        storage.setSync({ repositoryFileTreeEnabled: true })
     } else {
         getFileTreeNavigationCheckbox().checked = items.repositoryFileTreeEnabled
     }
 
     if (items.openEditorEnabled === undefined) {
-        chrome.storage.sync.set({ openEditorEnabled: false })
+        storage.setSync({ openEditorEnabled: false })
     } else {
         getOpenEditorCheckbox().checked = items.openEditorEnabled
     }
@@ -156,7 +160,7 @@ getSourcegraphURLForm().addEventListener('submit', evt => {
         url = url.substr(0, url.length - 1)
     }
 
-    chrome.runtime.sendMessage({ type: 'setSourcegraphUrl', payload: url }, () => true)
+    runtime.sendMessage({ type: 'setSourcegraphUrl', payload: url }, () => true)
 })
 
 getSourcegraphURLInput().addEventListener('keydown', evt => {
@@ -175,7 +179,7 @@ getGithubEnterpriseURLForm().addEventListener('submit', evt => {
         url = url.substr(0, url.length - 1)
     }
 
-    chrome.runtime.sendMessage({ type: 'setGitHubEnterpriseUrl', payload: url }, () => true)
+    runtime.sendMessage({ type: 'setGitHubEnterpriseUrl', payload: url }, () => true)
 })
 
 getGithubEnterpriseURLForm().addEventListener('keydown', evt => {
@@ -194,7 +198,7 @@ getPhabricatorURLForm().addEventListener('submit', evt => {
         url = url.substr(0, url.length - 1)
     }
 
-    chrome.runtime.sendMessage({ type: 'setPhabricatorUrl', payload: url }, () => true)
+    runtime.sendMessage({ type: 'setPhabricatorUrl', payload: url }, () => true)
 })
 
 getPhabricatorURLForm().addEventListener('keydown', evt => {
@@ -205,19 +209,19 @@ getPhabricatorURLForm().addEventListener('keydown', evt => {
 })
 
 getEnableEventTrackingCheckbox().addEventListener('click', () => {
-    chrome.storage.sync.set({ eventTrackingEnabled: getEnableEventTrackingCheckbox().checked })
+    storage.setSync({ eventTrackingEnabled: getEnableEventTrackingCheckbox().checked })
 })
 
 getRepositorySearchCheckbox().addEventListener('click', () => {
-    chrome.storage.sync.set({ repositorySearchEnabled: getRepositorySearchCheckbox().checked })
+    storage.setSync({ repositorySearchEnabled: getRepositorySearchCheckbox().checked })
 })
 
 getFileTreeNavigationCheckbox().addEventListener('click', () => {
-    chrome.storage.sync.set({ repositoryFileTreeEnabled: getFileTreeNavigationCheckbox().checked })
+    storage.setSync({ repositoryFileTreeEnabled: getFileTreeNavigationCheckbox().checked })
 })
 
 getOpenEditorCheckbox().addEventListener('click', () => {
-    chrome.storage.sync.set({ openEditorEnabled: getOpenEditorCheckbox().checked })
+    storage.setSync({ openEditorEnabled: getOpenEditorCheckbox().checked })
 })
 
 function setBrowserExtensionOptionsHidden(hidden: boolean): void {
@@ -238,35 +242,38 @@ function getConfigureSourcegraphURLContainer(): HTMLElement {
  * without requiring additional permissions. If the page is a Sourcegraph Server and the user does not have the
  * remote url configured already, we will prompt the user to link their extension and server instance.
  */
-chrome.tabs.query({ active: true }, tabs => {
-    for (const tab of tabs) {
-        if (!tab.url) {
-            continue
-        }
+tabs.getActive(async tab => {
+    if (!tab.url) {
+        return
+    }
 
-        const urlElement = document.createElement('a') as HTMLAnchorElement
-        urlElement.href = tab.url
-        const url = `${urlElement.protocol}//${urlElement.host}`
+    const urlElement = document.createElement('a') as HTMLAnchorElement
+    urlElement.href = tab.url
+    const url = `${urlElement.protocol}//${urlElement.host}`
 
-        chrome.permissions.contains({ origins: [url + '/*'] }, result => {
-            if (result) {
-                setBrowserExtensionOptionsHidden(false)
-                setConfigureSourcegraphURLOptionsHidden(true)
+    const containsPerms = await permissions.contains(url)
+
+    if (containsPerms) {
+        setBrowserExtensionOptionsHidden(false)
+        setConfigureSourcegraphURLOptionsHidden(true)
+        return
+    }
+
+    if (tab.url!.match(/^chrome:\/\//)) {
+        return
+    }
+
+    tabs.executeScript(tab.id!, { code: isSourcegraphServerCheck.toString() }, result => {
+        tabs.sendMessage(tab.id!, { data: 'isSGServerInstance' }, isSGServerInstance => {
+            if (isSGServerInstance) {
+                setBrowserExtensionOptionsHidden(true)
+                setConfigureSourcegraphURLOptionsHidden(false)
                 return
             }
-            chrome.tabs.executeScript(tab.id!, { code: isSourcegraphServerCheck.toString() }, result => {
-                chrome.tabs.sendMessage(tab.id!, { data: 'isSGServerInstance' }, isSGServerInstance => {
-                    if (isSGServerInstance) {
-                        setBrowserExtensionOptionsHidden(true)
-                        setConfigureSourcegraphURLOptionsHidden(false)
-                        return
-                    }
-                    setBrowserExtensionOptionsHidden(false)
-                    setConfigureSourcegraphURLOptionsHidden(true)
-                })
-            })
+            setBrowserExtensionOptionsHidden(false)
+            setConfigureSourcegraphURLOptionsHidden(true)
         })
-    }
+    })
 })
 
 /**
@@ -276,22 +283,20 @@ chrome.tabs.query({ active: true }, tabs => {
  */
 getAutoConfigureSourcegraphButton().addEventListener('click', evt => {
     evt.preventDefault()
-    chrome.tabs.query({ active: true }, tabs => {
-        for (const tab of tabs) {
-            const { url } = tab
-            if (!url) {
-                return
-            }
-            const urlElement = document.createElement('a') as HTMLAnchorElement
-            urlElement.href = url
-
-            const baseUrl = `${urlElement.protocol}//${urlElement.host}`
-            chrome.runtime.sendMessage({ type: 'setSourcegraphUrl', payload: baseUrl }, () => {
-                setBrowserExtensionOptionsHidden(false)
-                setConfigureSourcegraphURLOptionsHidden(true)
-                return true
-            })
+    tabs.getActive(tab => {
+        const { url } = tab
+        if (!url) {
+            return
         }
+        const urlElement = document.createElement('a') as HTMLAnchorElement
+        urlElement.href = url
+
+        const baseUrl = `${urlElement.protocol}//${urlElement.host}`
+        runtime.sendMessage({ type: 'setSourcegraphUrl', payload: baseUrl }, () => {
+            setBrowserExtensionOptionsHidden(false)
+            setConfigureSourcegraphURLOptionsHidden(true)
+            return true
+        })
     })
 })
 

@@ -1,3 +1,5 @@
+import { getURL } from '../../extension/extension'
+import * as storage from '../../extension/storage'
 import * as github from '../github/util'
 import { listAllSearchResults, resolveRev } from '../repo/backend'
 import { eventLogger, getPlatformName, repositorySearchEnabled, sourcegraphUrl } from '../util/context'
@@ -15,12 +17,12 @@ const DISABLED_HOVER_TEXT = 'Enable search on Sourcegraph'
  * @param img Image name
  */
 function getAssetURL(img: string): string {
-    return chrome.extension.getURL(`img/${img}`)
+    return getURL(`img/${img}`)
 }
 
 export function injectRepositorySearchToggle(): void {
     if (canRenderRepositorySearch()) {
-        chrome.storage.sync.get(items => {
+        storage.getSync(items => {
             sourcegraphSearchToggle(items.sourcegraphRepoSearchToggled)
         })
     }
@@ -71,7 +73,7 @@ function sourcegraphSearchToggle(toggled: boolean): void {
         container.onclick = () => {
             toggled = !toggled
             eventLogger.logSourcegraphRepoSearchToggled({ toggled })
-            chrome.storage.sync.set({ sourcegraphRepoSearchToggled: toggled })
+            storage.setSync({ sourcegraphRepoSearchToggled: toggled })
             a.setAttribute('aria-label', toggled ? ENABLED_HOVER_TEXT : DISABLED_HOVER_TEXT)
             icon.style.opacity = toggled ? '1.0' : '0.5'
         }

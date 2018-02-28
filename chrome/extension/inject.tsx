@@ -1,3 +1,7 @@
+// We want to polyfill first.
+// prettier-ignore
+import '../../app/util/polyfill'
+
 import { injectGitHubApplication } from '../../app/github/inject'
 import { injectPhabricatorApplication } from '../../app/phabricator/app'
 import { injectSourcegraphApp } from '../../app/sourcegraph/inject'
@@ -11,7 +15,8 @@ import {
     setSourcegraphRepoSearchToggled,
     setSourcegraphUrl,
 } from '../../app/util/context'
-import '../../app/util/polyfill'
+import * as runtime from '../../extension/runtime'
+import * as storage from '../../extension/storage'
 
 // set the event logger before anything else proceeds, to avoid logging events before we have it set
 setEventLogger(new ExtensionEventLogger())
@@ -28,7 +33,7 @@ function injectApplication(): void {
     }
 
     const href = window.location.href
-    chrome.storage.sync.get(items => {
+    storage.getSync(items => {
         const srcgEl = document.getElementById('sourcegraph-chrome-webstore-item')
         const sourcegraphServerUrl = items.sourcegraphURL || 'https://sourcegraph.com'
         const isSourcegraphServer = window.location.origin === sourcegraphServerUrl || !!srcgEl
@@ -39,10 +44,7 @@ function injectApplication(): void {
         const isGitHubEnterprise = Boolean(githubEnterpriseURL) && href.startsWith(githubEnterpriseURL)
 
         if (!isSourcegraphServer) {
-            chrome.runtime.sendMessage({
-                type: 'injectCss',
-                payload: { origin: window.location.origin },
-            })
+            runtime.sendMessage({ type: 'injectCss', payload: { origin: window.location.origin } })
         }
         if (isGitHub || isGitHubEnterprise) {
             setSourcegraphUrl(sourcegraphServerUrl)

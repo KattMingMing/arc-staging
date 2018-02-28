@@ -2,6 +2,8 @@ import * as React from 'react'
 import { render } from 'react-dom'
 import 'rxjs/add/operator/toPromise'
 import { Subject } from 'rxjs/Subject'
+import * as runtime from '../../extension/runtime'
+import * as storage from '../../extension/storage'
 import { Alerts } from '../components/Alerts'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { ContextualSourcegraphButton } from '../components/ContextualSourcegraphButton'
@@ -58,7 +60,7 @@ window.addEventListener('pjax:end', () => {
 export function injectGitHubApplication(marker: HTMLElement): void {
     document.body.appendChild(marker)
     inject()
-    chrome.runtime.sendMessage({ type: 'getIdentity' }, identity => {
+    runtime.sendMessage({ type: 'getIdentity' }, identity => {
         if (identity) {
             const e = eventLogger as ExtensionEventLogger
             e.updatePropsForUser(identity)
@@ -167,7 +169,7 @@ function injectFileTree(): void {
         return
     }
     if (document.querySelector('.octotree')) {
-        chrome.storage.sync.set({ repositoryFileTreeEnabled: false })
+        storage.setSync({ repositoryFileTreeEnabled: false })
         hideFileTree()
         return
     }
@@ -271,7 +273,7 @@ function injectCodeSnippetAnnotator(
 }
 
 function injectServerBanner(): void {
-    if (window.localStorage["server-banner-enabled"] !== "true") {
+    if (window.localStorage['server-banner-enabled'] !== 'true') {
         return
     }
 

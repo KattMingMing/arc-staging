@@ -1,4 +1,5 @@
 import * as React from 'react'
+import * as storage from '../../extension/storage'
 import { resolveRev } from '../repo/backend'
 import { sourcegraphUrl } from '../util/context'
 import { NeedsRepositoryConfigurationAlert } from './NeedsRepositoryConfigurationAlert'
@@ -35,7 +36,7 @@ export class Alerts extends React.Component<Props, State> {
     }
 
     private updateAlerts = () => {
-        chrome.storage.sync.get(items => {
+        storage.getSync(items => {
             const alerts: string[] = []
             if (!items[SERVER_CONFIGURATION_KEY]) {
                 alerts.push(SERVER_CONFIGURATION_KEY)
@@ -50,19 +51,11 @@ export class Alerts extends React.Component<Props, State> {
     public render(): JSX.Element | null {
         const isSourcegraphUrl = sourcegraphUrl === 'https://sourcegraph.com'
 
-        if (
-            this.state.needsConfig &&
-            isSourcegraphUrl &&
-            this.state.alerts.includes(SERVER_CONFIGURATION_KEY)
-        ) {
+        if (this.state.needsConfig && isSourcegraphUrl && this.state.alerts.includes(SERVER_CONFIGURATION_KEY)) {
             return <NeedsServerConfigurationAlert alertKey={SERVER_CONFIGURATION_KEY} onClose={this.updateAlerts} />
         }
 
-        if (
-            this.state.needsConfig &&
-            this.state.alerts.includes(REPO_CONFIGURATION_KEY) &&
-            !isSourcegraphUrl
-        ) {
+        if (this.state.needsConfig && this.state.alerts.includes(REPO_CONFIGURATION_KEY) && !isSourcegraphUrl) {
             return (
                 <NeedsRepositoryConfigurationAlert
                     repoPath={this.props.repoPath}

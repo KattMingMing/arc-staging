@@ -1,3 +1,5 @@
+import * as runtime from '../../extension/runtime'
+import * as storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
 import { TelligentWrapper } from '../tracking/TelligentWrapper'
 import { isConnectedToSourcegraphDotCom, isE2ETest } from '../util/context'
@@ -19,16 +21,16 @@ export class ExtensionEventLogger extends EventLogger {
         }
         this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
 
-        chrome.runtime.sendMessage({ type: 'getIdentity' }, this.updatePropsForUser.bind(this))
+        runtime.sendMessage({ type: 'getIdentity' }, this.updatePropsForUser.bind(this))
 
-        chrome.storage.sync.get(items => {
+        storage.getSync(items => {
             this.trackingEnabled = items.eventTrackingEnabled
             if (items.sourcegraphURL) {
                 this.telligentWrapper.setUrl(items.sourcegraphURL)
             }
         })
 
-        chrome.storage.onChanged.addListener(changes => {
+        storage.onChanged(changes => {
             for (const key of Object.keys(changes)) {
                 if (key === 'sourcegraphURL') {
                     this.telligentWrapper.setUrl(changes[key].newValue)
