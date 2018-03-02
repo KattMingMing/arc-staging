@@ -8,7 +8,7 @@ module.exports = {
         options: path.join(__dirname, '../chrome/extension/options.tsx'),
         inject: path.join(__dirname, '../chrome/extension/inject.tsx'),
         style: path.join(__dirname, '../app/app.scss'),
-        phabricator: ['babel-polyfill', path.join(__dirname, '../app/phabricator/extension.tsx')],
+        phabricator: path.join(__dirname, '../app/phabricator/extension.tsx'),
     },
     output: {
         path: path.join(__dirname, '../dist/js'),
