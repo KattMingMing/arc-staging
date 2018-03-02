@@ -227,6 +227,7 @@ async function injectChangeset(state: DifferentialState | RevisionState | Change
                 if (!table) {
                     return []
                 }
+
                 return getCodeCellsForDifferentialAnnotations(table, isSplitDiff, isBase)
             }
 
@@ -236,10 +237,18 @@ async function injectChangeset(state: DifferentialState | RevisionState | Change
                     return false
                 }
                 if (isSplitDiff) {
-                    if (isBase) {
-                        return td.colSpan === 1
+                    let curr = td as HTMLElement
+                    while (curr.tagName !== 'TH') {
+                        curr = curr.previousElementSibling as HTMLElement
                     }
-                    return td.colSpan === 2
+
+                    // Base's line number cell will have no more siblings
+                    // while the head's line number cell will.
+                    if (isBase) {
+                        return !curr.previousSibling
+                    }
+
+                    return !!curr.previousSibling
                 }
                 if (isBase) {
                     return td.classList.contains('left')
@@ -298,6 +307,7 @@ async function injectChangeset(state: DifferentialState | RevisionState | Change
                             filePath,
                         }),
                     ])
+
                     if (baseFile.length > 0) {
                         render(
                             <BlobAnnotator
@@ -318,6 +328,7 @@ async function injectChangeset(state: DifferentialState | RevisionState | Change
                             mountBase
                         )
                     }
+
                     if (headFile.length > 0) {
                         render(
                             <BlobAnnotator

@@ -84,6 +84,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props)
+
         this.fileExtension = getPathExtension(this.props.filePath)
         this.isDelta = this.props.isCommit || this.props.isPullRequest
         this.updateCodeCells()
@@ -346,10 +347,19 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     for (const el of document.querySelectorAll('.highlighted')) {
                         el.classList.remove('highlighted')
                     }
-                    const td = row.lastElementChild as HTMLElement
+
+                    // TODO(isaac): make a prop method for this. The .cov css class is specific to Phabricator
+                    // so theres no reason to have that in here, though this doesn't break github.
+                    let td = row.lastElementChild
                     if (td) {
-                        td.classList.add('highlighted')
+                        // Get the last element in the row that is not code coverage annotations in Phabricator.
+                        while (td!.classList.contains('cov')) {
+                            td = td!.previousElementSibling
+                        }
+
+                        td!.classList.add('highlighted')
                     }
+
                     const position = this.props.getTargetLineAndOffset(target, this.diffSpec())
                     if (position && !this.isDelta) {
                         const hash = '#L' + position.line + (position.character ? ':' + position.character : '')

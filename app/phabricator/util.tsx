@@ -474,6 +474,7 @@ export function getCodeCellsForDifferentialAnnotations(
             const headLine = parseInt(row.cells[2].textContent as string, 10)
             const baseCodeCell = row.cells[1]
             const headCodeCell = row.cells[4]
+
             if (isBase && baseLine && baseCodeCell) {
                 cells.push({
                     cell: baseCodeCell,
@@ -482,8 +483,7 @@ export function getCodeCellsForDifferentialAnnotations(
                     isAddition: false,
                     isDeletion: false,
                 })
-            }
-            if (!isBase && headLine && headCodeCell) {
+            } else if (!isBase && headLine && headCodeCell) {
                 cells.push({
                     cell: headCodeCell,
                     eventHandler: headCodeCell, // TODO(john): fix
@@ -518,6 +518,7 @@ export function getCodeCellsForDifferentialAnnotations(
             }
         }
     }
+
     return cells
 }
 
