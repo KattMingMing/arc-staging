@@ -4,7 +4,7 @@ const baseConfig = require('./base.config')
 
 const { plugins, ...base } = baseConfig
 
-export default {
+module.exports = {
     ...base,
     plugins: plugins.concat(
         ...[
