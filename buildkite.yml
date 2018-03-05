@@ -1,0 +1,7 @@
+steps:
+
+  # Run tests
+  - command: |-
+      npm run tslint
+      npm run build
+    label: ':typescript:'

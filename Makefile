@@ -6,6 +6,7 @@ install:
 	npm install
 
 build: install
+	npm run tslint
 	npm run build
 
 bundle: build
