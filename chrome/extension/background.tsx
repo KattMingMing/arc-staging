@@ -3,7 +3,7 @@
 import '../../app/util/polyfill'
 
 import { without } from 'lodash'
-import { setSourcegraphUrl } from '../../app/util/context'
+import { setSourcegraphUrl, setServerUrls } from '../../app/util/context'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'
 import * as storage from '../../extension/storage'
@@ -30,6 +30,9 @@ storage.onChanged(changes =>
     storage.getSync(items => {
         if (items.sourcegraphURL) {
             setSourcegraphUrl(items.sourcegraphURL)
+        }
+        if (items.serverUrls) {
+            setServerUrls([...new Set(items.serverUrls)])
         }
     })
 )

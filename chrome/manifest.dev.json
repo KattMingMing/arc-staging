@@ -27,7 +27,7 @@
         }
     ],
     "background": {
-        "scripts": ["js/background.bundle.js"]
+        "scripts": ["js/background.bundle.js", "js/link.bundle.js"]
     },
     "options_ui": {
         "page": "options.html",
@@ -42,7 +42,5 @@
         "https://sourcegraph.com/*"
     ],
     "optional_permissions": ["tabs", "http://*/", "https://*/"],
-    "content_security_policy":
-        "default-src 'self'; script-src 'self'; connect-src 'self' https://sourcegraph-logging.telligentdata.com https://localhost:3443; img-src 'self' data:;",
-    "web_accessible_resources": ["img/*"]
+    "web_accessible_resources": ["img/*", "js/link.bundle.js", "link.html"]
 }

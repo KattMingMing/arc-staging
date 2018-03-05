@@ -14,6 +14,7 @@ import {
     setRepositorySearchEnabled,
     setSourcegraphRepoSearchToggled,
     setSourcegraphUrl,
+    setServerUrls,
 } from '../../app/util/context'
 import * as runtime from '../../extension/runtime'
 import * as storage from '../../extension/storage'
@@ -48,6 +49,7 @@ function injectApplication(): void {
         }
         if (isGitHub || isGitHubEnterprise) {
             setSourcegraphUrl(sourcegraphServerUrl)
+            setServerUrls(items.serverUrls)
             setRepositoryFileTreeEnabled(
                 items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled
             )

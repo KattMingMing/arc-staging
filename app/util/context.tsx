@@ -12,6 +12,8 @@ export function setEventLogger(logger: EventLogger): void {
 
 export let sourcegraphUrl = window.localStorage.SOURCEGRAPH_URL || window.SOURCEGRAPH_URL || 'https://sourcegraph.com'
 
+export let serverUrls = [sourcegraphUrl]
+
 export let phabricatorUrl = ''
 
 export let eventTrackingEnabled = false
@@ -26,6 +28,10 @@ export let openEditorEnabled = false
 
 export function setSourcegraphUrl(url: string): void {
     sourcegraphUrl = url
+}
+
+export function setServerUrls(urls: string[]): void {
+    serverUrls = urls
 }
 
 export function setPhabricatorUrl(url: string): void {

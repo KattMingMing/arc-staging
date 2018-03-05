@@ -5,6 +5,7 @@ const webpack = require('webpack')
 module.exports = {
     entry: {
         background: path.join(__dirname, '../chrome/extension/background.tsx'),
+        link: path.join(__dirname, '../chrome/extension/link.tsx'),
         options: path.join(__dirname, '../chrome/extension/options.tsx'),
         inject: path.join(__dirname, '../chrome/extension/inject.tsx'),
         style: path.join(__dirname, '../app/app.scss'),

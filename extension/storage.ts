@@ -10,6 +10,7 @@ export interface StorageItems {
     eventTrackingEnabled: boolean
     openEditorEnabled: boolean
     identity: string
+    serverUrls: string[]
 }
 
 const get = (area: browser.storage.StorageArea) => (callback: (items: StorageItems) => void) => area.get(callback)

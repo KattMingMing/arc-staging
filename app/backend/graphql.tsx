@@ -1,7 +1,11 @@
 import 'rxjs/add/observable/dom/ajax'
-import 'rxjs/add/operator/map'
+import 'rxjs/add/observable/range'
+import 'rxjs/add/observable/timer'
+import 'rxjs/add/operator/mergeMap'
+import 'rxjs/add/operator/repeatWhen'
 import { Observable } from 'rxjs/Observable'
-import { sourcegraphUrl } from '../util/context'
+import { sourcegraphUrl, serverUrls } from '../util/context'
+import * as storage from '../../extension/storage'
 import { getHeaders } from './headers'
 
 /**
@@ -20,6 +24,8 @@ export interface MutationResult {
     errors?: GQL.IGraphQLResponseError[]
 }
 
+const canSyncBrowserExtension = localStorage.getItem('SYNC_BROWSER_EXT_TO_SERVER') === 'true'
+
 /**
  * Does a GraphQL request to the Sourcegraph GraphQL API running under `/.api/graphql`
  *
@@ -28,15 +34,44 @@ export interface MutationResult {
  * @return Observable That emits the result or errors if the HTTP request failed
  */
 function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IGraphQLResponseRoot> {
+    let url = sourcegraphUrl
     const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
-    return Observable.ajax({
-        method: 'POST',
-        url: `${sourcegraphUrl}/.api/graphql` + (nameMatch ? '?' + nameMatch[1] : ''),
-        headers: getHeaders(),
-        crossDomain: true,
-        withCredentials: true,
-        body: JSON.stringify({ query: request, variables }),
-    }).map(({ response }) => response)
+    return Observable.defer(() =>
+        Observable.ajax({
+            method: 'POST',
+            url: `${url}/.api/graphql` + (nameMatch ? '?' + nameMatch[1] : ''),
+            headers: getHeaders(),
+            crossDomain: true,
+            withCredentials: true,
+            body: JSON.stringify({ query: request, variables }),
+        })
+    )
+        .map(({ response }) => {
+            // If the query should return a repository and the response is null, throw an error
+            // to trigger a refetch for the next possible Server URL.
+            if (!response || !response.data || response.data.repository === null) {
+                throw response
+            }
+            if (sourcegraphUrl !== url) {
+                storage.setSync({ sourcegraphURL: url })
+            }
+            return response
+        })
+        .retryWhen(attempts => {
+            // Return early if feature flag not enabled.
+            if (!canSyncBrowserExtension) {
+                return Observable.throw({ error: 'No retry' })
+            }
+            return Observable.range(0, serverUrls.length + 1)
+                .zip(attempts, i => i)
+                .flatMap(i => {
+                    if (i === serverUrls.length) {
+                        return Observable.throw({ error: 'No retry' })
+                    }
+                    url = serverUrls[i]
+                    return Observable.timer()
+                })
+        })
 }
 
 /**
