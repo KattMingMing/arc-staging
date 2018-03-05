@@ -2,6 +2,7 @@ steps:
 
   # Run tests
   - command: |-
+      npm install
       npm run tslint
       npm run build
     label: ':typescript:'
