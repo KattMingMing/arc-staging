@@ -29,8 +29,6 @@ export interface MutationResult {
     errors?: GQL.IGraphQLResponseError[]
 }
 
-const canSyncBrowserExtension = localStorage.getItem('SYNC_BROWSER_EXT_TO_SERVER') === 'true'
-
 /**
  * Does a GraphQL request to the Sourcegraph GraphQL API running under `/.api/graphql`
  *
@@ -62,12 +60,8 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
             }
             return response
         })
-        .retryWhen(attempts => {
-            // Return early if feature flag not enabled.
-            if (!canSyncBrowserExtension) {
-                return Observable.throw({ error: 'No retry' })
-            }
-            return Observable.range(0, serverUrls.length + 1)
+        .retryWhen(attempts =>
+            Observable.range(0, serverUrls.length + 1)
                 .zip(attempts, i => i)
                 .mergeMap(i => {
                     if (i === serverUrls.length) {
@@ -76,7 +70,7 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
                     url = serverUrls[i]
                     return Observable.timer()
                 })
-        })
+        )
 }
 
 /**
