@@ -1,5 +1,5 @@
 {
-    "version": "1.6.7",
+    "version": "1.6.8",
     "name": "Sourcegraph for GitHub",
     "manifest_version": 2,
     "description": "Gives GitHub IDE powers: jump to definition and hover tooltips in code, PRs, and diffs",
@@ -38,7 +38,5 @@
     },
     "permissions": ["cookies", "activeTab", "storage", "https://github.com/*", "https://sourcegraph.com/*"],
     "optional_permissions": ["tabs", "http://*/", "https://*/"],
-    "content_security_policy":
-        "default-src 'self'; script-src 'self'; connect-src 'self' https://sourcegraph-logging.telligentdata.com; img-src 'self' data:;",
-    "web_accessible_resources": ["img/*"]
+    "web_accessible_resources": ["img/*", "js/link.bundle.js", "link.html"]
 }
