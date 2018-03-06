@@ -16,7 +16,7 @@ import {
     setSourcegraphRepoSearchToggled,
     setSourcegraphUrl,
 } from '../../app/util/context'
-import * as runtime from '../../extension/runtime'
+import { getURL } from '../../extension/extension'
 import * as storage from '../../extension/storage'
 
 // set the event logger before anything else proceeds, to avoid logging events before we have it set
@@ -44,9 +44,15 @@ function injectApplication(): void {
         const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
         const isGitHubEnterprise = Boolean(githubEnterpriseURL) && href.startsWith(githubEnterpriseURL)
 
-        if (!isSourcegraphServer) {
-            runtime.sendMessage({ type: 'injectCss', payload: { origin: window.location.origin } })
+        if (!isSourcegraphServer && !document.getElementById('ext-style-sheet')) {
+            const styleSheet = document.createElement('link') as HTMLLinkElement
+            styleSheet.id = 'ext-style-sheet'
+            styleSheet.rel = 'stylesheet'
+            styleSheet.type = 'text/css'
+            styleSheet.href = getURL('css/style.bundle.css')
+            document.head.appendChild(styleSheet)
         }
+
         if (isGitHub || isGitHubEnterprise) {
             setSourcegraphUrl(sourcegraphServerUrl)
             setServerUrls(items.serverUrls)

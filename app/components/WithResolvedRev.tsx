@@ -8,6 +8,8 @@ import 'rxjs/add/operator/switchMap'
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
+import { setServerUrls } from '../../app/util/context'
+import * as storage from '../../extension/storage'
 import { ECLONEINPROGESS, EREPONOTFOUND, resolveRev } from '../repo/backend'
 
 interface WithResolvedRevProps {
@@ -74,6 +76,12 @@ export class WithResolvedRev extends React.Component<WithResolvedRevProps, WithR
 
     public componentDidMount(): void {
         this.componentUpdates.next(this.props)
+        storage.onChanged(items => {
+            if (items.serverUrls && items.serverUrls.newValue) {
+                setServerUrls(items.serverUrls.newValue)
+                this.componentUpdates.next(this.props)
+            }
+        })
     }
 
     public componentWillReceiveProps(nextProps: WithResolvedRevProps): void {

@@ -42,5 +42,5 @@
         "https://sourcegraph.com/*"
     ],
     "optional_permissions": ["tabs", "http://*/", "https://*/"],
-    "web_accessible_resources": ["img/*", "js/link.bundle.js", "link.html"]
+    "web_accessible_resources": ["img/*", "js/link.bundle.js", "link.html", "css/style.bundle.css"]
 }

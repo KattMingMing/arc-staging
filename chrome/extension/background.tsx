@@ -27,16 +27,14 @@ if (contentScripts) {
     }
 }
 
-storage.onChanged(changes =>
-    storage.getSync(items => {
-        if (items.sourcegraphURL) {
-            setSourcegraphUrl(items.sourcegraphURL)
-        }
-        if (items.serverUrls) {
-            setServerUrls([...new Set(items.serverUrls)])
-        }
-    })
-)
+storage.onChanged(changes => {
+    if (changes.sourcegraphURL && changes.sourcegraphURL.newValue) {
+        setSourcegraphUrl(changes.sourcegraphURL.newValue)
+    }
+    if (changes.serverUrls && changes.serverUrls.newValue) {
+        setServerUrls(changes.serverUrls.newValue)
+    }
+})
 
 permissions.getAll().then(permissions => {
     if (!permissions.origins) {
@@ -112,21 +110,6 @@ runtime.onMessage((message, _, cb) => {
         case 'setSourcegraphUrl':
             requestPermissionsForSourcegraphUrl(message.payload)
             return
-
-        case 'injectCss':
-            const { origin } = message.payload
-            tabs.getActive(tab => {
-                if (!tab.url || !tab.id) {
-                    return
-                }
-                if (!tab.url.startsWith(origin)) {
-                    return
-                }
-                tabs.insertCSS(tab.id, { file: 'css/style.bundle.css', runAt: 'document_end' }, res =>
-                    console.log('injected CSS bundle on tab ' + tab.id)
-                )
-            })
-            return true
     }
 })
 
