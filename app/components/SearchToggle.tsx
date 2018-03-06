@@ -1,3 +1,4 @@
+import 'rxjs/add/operator/toPromise'
 import { getURL } from '../../extension/extension'
 import * as storage from '../../extension/storage'
 import * as github from '../github/util'

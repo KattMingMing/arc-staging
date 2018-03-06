@@ -217,6 +217,31 @@ export async function getRepoPHIDForDifferentialID(differentialID: number): Prom
     return res.result['0'].repositoryPHID
 }
 
+interface CreatePhabricatorRepoOptions {
+    callsign: string
+    repoPath: string
+    phabricatorURL: string
+}
+
+export const createPhabricatorRepo = memoizeObservable(
+    (options: CreatePhabricatorRepoOptions): Observable<void> =>
+        mutateGraphQL(
+            `mutation addPhabricatorRepo(
+            $callsign: String!,
+            $repoPath: String!
+            $phabricatorURL: String!
+        ) {
+            addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabricatorURL) { alwaysNil }
+        }`,
+            options
+        ).map(({ data, errors }) => {
+            if (!data || (errors && errors.length > 0)) {
+                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
+            }
+        }),
+    ({ callsign }) => callsign
+)
+
 export interface PhabricatorRepoDetails {
     callsign: string
     repoPath: string
@@ -313,28 +338,3 @@ function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDeta
     const repoPath = normalizeRepoPath(rawURI)
     return { callsign: repo.fields.callsign, repoPath }
 }
-
-interface CreatePhabricatorRepoOptions {
-    callsign: string
-    repoPath: string
-    phabricatorURL: string
-}
-
-export const createPhabricatorRepo = memoizeObservable(
-    (options: CreatePhabricatorRepoOptions): Observable<void> =>
-        mutateGraphQL(
-            `mutation addPhabricatorRepo(
-            $callsign: String!,
-            $repoPath: String!
-            $phabricatorURL: String!
-        ) {
-            addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabricatorURL) { alwaysNil }
-        }`,
-            options
-        ).map(({ data, errors }) => {
-            if (!data || (errors && errors.length > 0)) {
-                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
-            }
-        }),
-    ({ callsign }) => callsign
-)

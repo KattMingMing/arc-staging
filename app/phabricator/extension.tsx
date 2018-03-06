@@ -35,9 +35,8 @@ export function init(): void {
     } else {
         // tslint:disable-next-line
         console.log(
-            `Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${
-                window.localStorage.SOURCEGRAPH_DISABLED
-            }.`
+            `Sourcegraph on Phabricator is disabled because window.localStorage.SOURCEGRAPH_DISABLED is set to ${window
+                .localStorage.SOURCEGRAPH_DISABLED}.`
         )
     }
 }

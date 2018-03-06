@@ -3,7 +3,8 @@
 import '../../app/util/polyfill'
 
 import { without } from 'lodash'
-import { setSourcegraphUrl, setServerUrls } from '../../app/util/context'
+
+import { setServerUrls, setSourcegraphUrl } from '../../app/util/context'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'
 import * as storage from '../../extension/storage'

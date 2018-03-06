@@ -1,11 +1,16 @@
+import 'rxjs/add/observable/defer'
 import 'rxjs/add/observable/dom/ajax'
 import 'rxjs/add/observable/range'
+import 'rxjs/add/observable/throw'
 import 'rxjs/add/observable/timer'
+import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/mergeMap'
-import 'rxjs/add/operator/repeatWhen'
+import 'rxjs/add/operator/retryWhen'
+import 'rxjs/add/operator/zip'
 import { Observable } from 'rxjs/Observable'
-import { sourcegraphUrl, serverUrls } from '../util/context'
+
 import * as storage from '../../extension/storage'
+import { serverUrls, sourcegraphUrl } from '../util/context'
 import { getHeaders } from './headers'
 
 /**
@@ -64,7 +69,7 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
             }
             return Observable.range(0, serverUrls.length + 1)
                 .zip(attempts, i => i)
-                .flatMap(i => {
+                .mergeMap(i => {
                     if (i === serverUrls.length) {
                         return Observable.throw({ error: 'No retry' })
                     }

@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { render } from 'react-dom'
-import 'rxjs/add/operator/toPromise'
 import { Subject } from 'rxjs/Subject'
 import * as runtime from '../../extension/runtime'
 import * as storage from '../../extension/storage'

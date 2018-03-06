@@ -12,9 +12,9 @@ import {
     setOpenEditorEnabled,
     setRepositoryFileTreeEnabled,
     setRepositorySearchEnabled,
+    setServerUrls,
     setSourcegraphRepoSearchToggled,
     setSourcegraphUrl,
-    setServerUrls,
 } from '../../app/util/context'
 import * as runtime from '../../extension/runtime'
 import * as storage from '../../extension/storage'
