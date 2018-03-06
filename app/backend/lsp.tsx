@@ -1,7 +1,11 @@
+import 'rxjs/add/observable/of'
+import 'rxjs/add/operator/map'
+import { Observable } from 'rxjs/Observable'
+import { map } from 'rxjs/operators/map'
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
 import { getModeFromExtension, getPathExtension, sourcegraphUrl, supportedExtensions } from '../util/context'
-import { memoizeAsync } from '../util/memoize'
+import { memoizeObservable } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
 import { getHeaders } from './headers'
 
@@ -43,10 +47,10 @@ function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
     ]
 }
 
-export const fetchHover = memoizeAsync((pos: AbsoluteRepoFilePosition): Promise<Hover> => {
+export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Observable<Hover> => {
     const ext = getPathExtension(pos.filePath)
     if (!supportedExtensions.has(ext)) {
-        return Promise.resolve({ contents: [] })
+        return Observable.of({ contents: [] })
     }
 
     const body = wrapLSP(
@@ -66,27 +70,22 @@ export const fetchHover = memoizeAsync((pos: AbsoluteRepoFilePosition): Promise<
         pos.filePath
     )
 
-    return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/hover`, {
+    return Observable.ajax({
         method: 'POST',
-        body: JSON.stringify(body),
+        url: `${sourcegraphUrl}/.api/xlang/textDocument/hover`,
         headers: getHeaders(),
-        credentials: 'include',
+        crossDomain: true,
+        withCredentials: true,
+        body: JSON.stringify(body),
+    }).map(({ response }) => {
+        if (!response || !response[1] || !response[1].result) {
+            return []
+        }
+        return response[1].result
     })
-        .then(resp => resp.json())
-        .then(json => {
-            if (!json || !json[1] || !json[1].result) {
-                return []
-            }
-            return json[1].result
-        })
 }, makeRepoURI)
 
-export const fetchDefinition = memoizeAsync((pos: AbsoluteRepoFilePosition): Promise<Definition> => {
-    const ext = getPathExtension(pos.filePath)
-    if (!supportedExtensions.has(ext)) {
-        return Promise.resolve([])
-    }
-
+export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition): Observable<Definition> => {
     const body = wrapLSP(
         {
             method: 'textDocument/definition',
@@ -104,31 +103,33 @@ export const fetchDefinition = memoizeAsync((pos: AbsoluteRepoFilePosition): Pro
         pos.filePath
     )
 
-    return fetch(`${sourcegraphUrl}/.api/xlang/textDocument/definition`, {
+    return Observable.ajax({
         method: 'POST',
-        body: JSON.stringify(body),
+        url: `${sourcegraphUrl}/.api/xlang/textDocument/definition`,
         headers: getHeaders(),
-        credentials: 'include',
+        crossDomain: true,
+        withCredentials: true,
+        body: JSON.stringify(body),
+    }).map(({ response }) => {
+        if (!response || !response[1] || !response[1].result) {
+            return []
+        }
+        return response[1].result
     })
-        .then(resp => resp.json())
-        .then(json => {
-            if (!json || !json[1] || !json[1].result) {
-                return []
-            }
-            return json[1].result
-        })
 }, makeRepoURI)
 
-export function fetchJumpURL(pos: AbsoluteRepoFilePosition): Promise<string | null> {
-    return fetchDefinition(pos).then(def => {
-        const defArray = Array.isArray(def) ? def : [def]
-        def = defArray[0]
-        if (!def) {
-            return null
-        }
+export function fetchJumpURL(pos: AbsoluteRepoFilePosition): Observable<string | null> {
+    return fetchDefinition(pos).pipe(
+        map(def => {
+            const defArray = Array.isArray(def) ? def : [def]
+            def = defArray[0]
+            if (!def) {
+                return null
+            }
 
-        const uri = parseRepoURI(def.uri) as AbsoluteRepoFilePosition
-        uri.position = { line: def.range.start.line + 1, character: def.range.start.character + 1 }
-        return toAbsoluteBlobURL(uri)
-    })
+            const uri = parseRepoURI(def.uri) as AbsoluteRepoFilePosition
+            uri.position = { line: def.range.start.line + 1, character: def.range.start.character + 1 }
+            return toAbsoluteBlobURL(uri)
+        })
+    )
 }

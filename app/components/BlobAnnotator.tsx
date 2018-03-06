@@ -1,7 +1,6 @@
 import { isEmpty } from 'lodash'
 import * as React from 'react'
 import 'rxjs/add/observable/fromEvent'
-import 'rxjs/add/observable/fromPromise'
 import 'rxjs/add/observable/interval'
 import 'rxjs/add/observable/merge'
 import 'rxjs/add/operator/catch'
@@ -433,7 +432,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
      * tooltip is defined, it will update the target styling.
      */
     private getTooltip(target: HTMLElement, ctx: AbsoluteRepoFilePosition): Observable<TooltipData> {
-        return Observable.fromPromise(fetchHover(ctx))
+        return fetchHover(ctx)
             .do(data => {
                 if (isEmptyHover(data)) {
                     // short-cirtuit, no tooltip data
@@ -449,7 +448,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
      * This Observable will emit exactly one value before it completes.
      */
     private getDefinition(ctx: AbsoluteRepoFilePosition): Observable<string | null> {
-        return Observable.fromPromise(fetchJumpURL(ctx))
+        return fetchJumpURL(ctx)
     }
 
     /**
