@@ -9,7 +9,7 @@ import 'rxjs/add/operator/retryWhen'
 import 'rxjs/add/operator/zip'
 import { Observable } from 'rxjs/Observable'
 
-// import * as storage from '../../extension/storage'
+import * as storage from '../../extension/storage'
 import { serverUrls, sourcegraphUrl } from '../util/context'
 import { getHeaders } from './headers'
 
@@ -60,10 +60,10 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
             ) {
                 throw response
             }
-            // if (sourcegraphUrl !== url) {
-            // setSourcegraphUrl(url)
-            // storage.setSync({ sourcegraphURL: url })
-            // }
+            if (sourcegraphUrl !== url) {
+                setSourcegraphUrl(url)
+                storage.setSync({ sourcegraphURL: url })
+            }
             return response
         })
         .retryWhen(attempts =>
