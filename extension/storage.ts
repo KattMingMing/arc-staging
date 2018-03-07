@@ -11,6 +11,7 @@ export interface StorageItems {
     openEditorEnabled: boolean
     identity: string
     serverUrls: string[]
+    serverUserId: string
 }
 
 const get = (area: browser.storage.StorageArea) => (callback: (items: StorageItems) => void) => area.get(callback)

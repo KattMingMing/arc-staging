@@ -7,6 +7,9 @@ if (searchParams && searchParams.sourceurl) {
     chrome.storage.sync.get(items => {
         const serverUrls = items.serverUrls || []
         serverUrls.push(searchParams.sourceurl)
-        chrome.storage.sync.set({ serverUrls: [...new Set([...serverUrls, 'https://sourcegraph.com'])] })
+        chrome.storage.sync.set({
+            serverUrls: [...new Set([...serverUrls, 'https://sourcegraph.com'])],
+            serverUserId: searchParams.userId || items.serverUserId,
+        })
     })
 }

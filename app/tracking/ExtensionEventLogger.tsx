@@ -28,6 +28,9 @@ export class ExtensionEventLogger extends EventLogger {
             if (items.sourcegraphURL) {
                 this.telligentWrapper.setUrl(items.sourcegraphURL)
             }
+            if (items.serverUserId) {
+                this.telligentWrapper.setUserId(items.serverUserId)
+            }
         })
 
         storage.onChanged(changes => {
@@ -40,6 +43,9 @@ export class ExtensionEventLogger extends EventLogger {
                 }
                 if (key === 'eventTrackingEnabled') {
                     this.trackingEnabled = changes[key].newValue
+                }
+                if (key === 'serverUserId') {
+                    this.telligentWrapper.setUserId(changes[key].newValue)
                 }
             }
         })
