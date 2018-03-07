@@ -10,7 +10,7 @@ import 'rxjs/add/operator/zip'
 import { Observable } from 'rxjs/Observable'
 
 import * as storage from '../../extension/storage'
-import { serverUrls, sourcegraphUrl } from '../util/context'
+import { serverUrls, setSourcegraphUrl, sourcegraphUrl } from '../util/context'
 import { getHeaders } from './headers'
 
 /**
