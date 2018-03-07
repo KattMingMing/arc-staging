@@ -1,6 +1,6 @@
 import 'rxjs/add/operator/toPromise'
 import { getURL } from '../../extension/extension'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 import * as github from '../github/util'
 import { listAllSearchResults, resolveRev } from '../repo/backend'
 import { eventLogger, getPlatformName, repositorySearchEnabled, sourcegraphUrl } from '../util/context'

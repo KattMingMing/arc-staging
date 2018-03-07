@@ -7,7 +7,7 @@ import { without } from 'lodash'
 import { setServerUrls, setSourcegraphUrl } from '../../app/util/context'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 import * as tabs from '../../extension/tabs'
 
 let customServerOrigins: string[] = []

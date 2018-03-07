@@ -2,14 +2,20 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const path = require('path')
 const webpack = require('webpack')
 
+const buildEntry = pre => entry => [path.join(__dirname, pre), path.join(__dirname, entry)]
+
+const pageEntry = buildEntry('../scripts/page.entry.js')
+const extEntry = buildEntry('../scripts/extension.entry.js')
+
 module.exports = {
     entry: {
-        background: path.join(__dirname, '../chrome/extension/background.tsx'),
-        link: path.join(__dirname, '../chrome/extension/link.tsx'),
-        options: path.join(__dirname, '../chrome/extension/options.tsx'),
-        inject: path.join(__dirname, '../chrome/extension/inject.tsx'),
+        background: extEntry('../chrome/extension/background.tsx'),
+        link: extEntry('../chrome/extension/link.tsx'),
+        options: extEntry('../chrome/extension/options.tsx'),
+        inject: extEntry('../chrome/extension/inject.tsx'),
+        phabricator: pageEntry('../app/phabricator/extension.tsx'),
+
         style: path.join(__dirname, '../app/app.scss'),
-        phabricator: path.join(__dirname, '../app/phabricator/extension.tsx'),
     },
     output: {
         path: path.join(__dirname, '../dist/js'),

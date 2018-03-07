@@ -1,5 +1,5 @@
 import * as querystring from 'query-string'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 
 const search = window.location.search
 const searchParams = querystring.parse(search)

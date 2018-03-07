@@ -9,7 +9,7 @@ import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
 import { setServerUrls } from '../../app/util/context'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 import { ECLONEINPROGESS, EREPONOTFOUND, resolveRev } from '../repo/backend'
 
 interface WithResolvedRevProps {

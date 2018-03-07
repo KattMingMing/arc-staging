@@ -1,6 +1,6 @@
 import * as React from 'react'
 import 'rxjs/add/operator/toPromise'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 import { resolveRev } from '../repo/backend'
 import { sourcegraphUrl } from '../util/context'
 import { NeedsRepositoryConfigurationAlert } from './NeedsRepositoryConfigurationAlert'

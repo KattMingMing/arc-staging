@@ -1,5 +1,5 @@
 import * as runtime from '../../extension/runtime'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
 import { TelligentWrapper } from '../tracking/TelligentWrapper'
 import { isConnectedToSourcegraphDotCom, isE2ETest } from '../util/context'

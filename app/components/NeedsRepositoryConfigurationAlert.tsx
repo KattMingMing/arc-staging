@@ -1,7 +1,7 @@
 import Icon from '@sourcegraph/icons/lib/CircleChevronRight'
 import CloseIcon from '@sourcegraph/icons/lib/Close'
 import * as React from 'react'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 import { sourcegraphUrl } from '../util/context'
 import { eventLogger } from '../util/context'
 

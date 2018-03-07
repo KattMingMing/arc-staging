@@ -17,7 +17,7 @@ import {
     setSourcegraphUrl,
 } from '../../app/util/context'
 import { getURL } from '../../extension/extension'
-import * as storage from '../../extension/storage'
+import storage from '../../extension/storage'
 
 // set the event logger before anything else proceeds, to avoid logging events before we have it set
 setEventLogger(new ExtensionEventLogger())
