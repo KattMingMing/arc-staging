@@ -1,13 +1,14 @@
 import * as querystring from 'query-string'
+import * as storage from '../../extension/storage'
 
 const search = window.location.search
 const searchParams = querystring.parse(search)
 
 if (searchParams && searchParams.sourceurl) {
-    chrome.storage.sync.get(items => {
+    storage.getSync(items => {
         const serverUrls = items.serverUrls || []
         serverUrls.push(searchParams.sourceurl)
-        chrome.storage.sync.set({
+        storage.setSync({
             serverUrls: [...new Set([...serverUrls, 'https://sourcegraph.com'])],
             serverUserId: searchParams.userId || items.serverUserId,
         })
