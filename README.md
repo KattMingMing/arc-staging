@@ -1,5 +1,13 @@
 # Sourcegraph browser extensions for Google Chrome and Firefox
 
+[![build](https://badge.buildkite.com/8aec2156579076111918e632ba9e188cafc8c9598968457f4f.svg)](https://buildkite.com/sourcegraph/browser-extension)  
+[![chrome version](https://img.shields.io/chrome-web-store/v/dgjhfomjieaadpoljlnidmbgkdffpack.svg)](https://chrome.google.com/webstore/detail/sourcegraph-for-github/dgjhfomjieaadpoljlnidmbgkdffpack)
+[![chrome users](https://img.shields.io/chrome-web-store/users/dgjhfomjieaadpoljlnidmbgkdffpack.svg)](https://chrome.google.com/webstore/detail/sourcegraph-for-github/dgjhfomjieaadpoljlnidmbgkdffpack)
+[![chrome rating](https://img.shields.io/chrome-web-store/rating/dgjhfomjieaadpoljlnidmbgkdffpack.svg)](https://chrome.google.com/webstore/detail/sourcegraph-for-github/dgjhfomjieaadpoljlnidmbgkdffpack)  
+[![firefox version](https://img.shields.io/amo/v/sourcegraph-addon-for-github.svg)](https://addons.mozilla.org/en-US/firefox/addon/sourcegraph-addon-for-github/)
+[![firefox users](https://img.shields.io/amo/users/sourcegraph-addon-for-github.svg)](https://addons.mozilla.org/en-US/firefox/addon/sourcegraph-addon-for-github/)
+[![firefox rating](https://img.shields.io/amo/rating/sourcegraph-addon-for-github.svg)](https://addons.mozilla.org/en-US/firefox/addon/sourcegraph-addon-for-github/)
+
 ## Overview
 
 The Sourcegraph browser extension adds tooltips to code on GitHub, Phabricator, and Bitbucket.
