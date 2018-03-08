@@ -14,3 +14,8 @@ dist/
 update.xml
 npm-debug.log.*
 /.gtm/
+
+# Keep safari extension config stuff, remove the rest
+*.safariextension/**/*
+!*.safariextension/background.safari.html
+!*.safariextension/*.plist
