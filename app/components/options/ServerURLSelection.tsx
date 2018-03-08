@@ -20,10 +20,6 @@ export class ServerURLSelection extends React.Component<{}, State> {
         this.syncServerUrls()
     }
 
-    public componentDidUpdate(): void {
-        this.syncServerUrls()
-    }
-
     private syncServerUrls(): void {
         storage.getSync(items => {
             this.setState(() => ({ serverUrls: items.serverUrls || [], sourcegraphUrl: items.sourcegraphURL }))
@@ -32,7 +28,12 @@ export class ServerURLSelection extends React.Component<{}, State> {
 
     private handleClick = (url: string) => {
         storage.setSync({ sourcegraphURL: url }, () => {
-            this.setState(() => ({ sourcegraphUrl: url }))
+            this.setState(
+                () => ({ sourcegraphUrl: url }),
+                () => {
+                    this.syncServerUrls()
+                }
+            )
         })
     }
 
@@ -42,7 +43,12 @@ export class ServerURLSelection extends React.Component<{}, State> {
         storage.getSync(items => {
             const urls = items.serverUrls || []
             storage.setSync({ serverUrls: without(urls, url) }, () => {
-                this.setState(() => ({ serverUrls: without(urls, url) }))
+                this.setState(
+                    () => ({ serverUrls: without(urls, url) }),
+                    () => {
+                        this.syncServerUrls()
+                    }
+                )
             })
         })
     }

@@ -20,10 +20,6 @@ export class EnterpriseURLList extends React.Component<{}, State> {
         this.syncEnterpriseUrls()
     }
 
-    public componentDidUpdate(): void {
-        this.syncEnterpriseUrls()
-    }
-
     private syncEnterpriseUrls(): void {
         storage.getSync(items => {
             this.setState(() => ({ enterpriseUrls: items.enterpriseUrls || [] }))
@@ -36,7 +32,12 @@ export class EnterpriseURLList extends React.Component<{}, State> {
         storage.getSync(items => {
             const urls = items.enterpriseUrls || []
             storage.setSync({ enterpriseUrls: without(urls, url) }, () => {
-                this.setState(() => ({ enterpriseUrls: without(urls, url) }))
+                this.setState(
+                    () => ({ enterpriseUrls: without(urls, url) }),
+                    () => {
+                        this.syncEnterpriseUrls()
+                    }
+                )
             })
         })
     }
