@@ -15,6 +15,7 @@ module.exports = {
         inject: extEntry('../chrome/extension/inject.tsx'),
         phabricator: pageEntry('../app/phabricator/extension.tsx'),
 
+        bootstrap: path.join(__dirname, '../node_modules/bootstrap/dist/css/bootstrap.css'),
         style: path.join(__dirname, '../app/app.scss'),
     },
     output: {

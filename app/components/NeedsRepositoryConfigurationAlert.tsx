@@ -39,7 +39,7 @@ export class NeedsRepositoryConfigurationAlert extends React.Component<Props, {}
 
     public render(): JSX.Element | null {
         return (
-            <div className="alert alert-success site-alert">
+            <div className="sg-alert sg-alert-success site-alert">
                 <a
                     onClick={this.onClick}
                     className="site-alert__link"

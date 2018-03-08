@@ -38,11 +38,12 @@ function injectApplication(): void {
         const srcgEl = document.getElementById('sourcegraph-chrome-webstore-item')
         const sourcegraphServerUrl = items.sourcegraphURL || 'https://sourcegraph.com'
         const isSourcegraphServer = window.location.origin === sourcegraphServerUrl || !!srcgEl
-        const githubEnterpriseURL = items.gitHubEnterpriseURL
-        const isPhabricator = window.location.origin === items.phabricatorURL
+        const isPhabricator =
+            Boolean(document.querySelector('.phabricator-home')) || window.location.origin === items.phabricatorURL
 
         const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
-        const isGitHubEnterprise = Boolean(githubEnterpriseURL) && href.startsWith(githubEnterpriseURL)
+        const ogSiteName = document.head.querySelector(`meta[property='og:site_name']`) as HTMLMetaElement
+        const isGitHubEnterprise = ogSiteName ? ogSiteName.content === 'GitHub Enterprise' : false
 
         if (!isSourcegraphServer && !document.getElementById('ext-style-sheet')) {
             const styleSheet = document.createElement('link') as HTMLLinkElement

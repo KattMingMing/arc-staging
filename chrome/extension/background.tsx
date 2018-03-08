@@ -99,12 +99,8 @@ runtime.onMessage((message, _, cb) => {
             })
             return true
 
-        case 'setGitHubEnterpriseUrl':
-            requestPermissionsForGitHubEnterpriseUrl(message.payload)
-            return
-
-        case 'setPhabricatorUrl':
-            requestPermissionsForPhabricatorUrl(message.payload)
+        case 'setEnterpriseUrl':
+            requestPermissionsForEnterpriseUrl(message.payload)
             return
 
         case 'setSourcegraphUrl':
@@ -113,18 +109,17 @@ runtime.onMessage((message, _, cb) => {
     }
 })
 
-async function requestPermissionsForGitHubEnterpriseUrl(url: string): Promise<void> {
+async function requestPermissionsForEnterpriseUrl(url: string): Promise<void> {
     const granted = await permissions.request(url)
-    if (granted) {
-        storage.setSync({ gitHubEnterpriseURL: url })
+    if (!granted) {
+        return
     }
-}
-
-async function requestPermissionsForPhabricatorUrl(url: string): Promise<void> {
-    const granted = await permissions.request(url)
-    if (granted) {
-        storage.setSync({ phabricatorURL: url })
-    }
+    storage.getSync(items => {
+        const enterpriseUrls = items.enterpriseUrls || []
+        storage.setSync({
+            enterpriseUrls: [...new Set([...enterpriseUrls, url])],
+        })
+    })
 }
 
 async function requestPermissionsForSourcegraphUrl(url: string): Promise<void> {

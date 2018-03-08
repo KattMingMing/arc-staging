@@ -14,8 +14,6 @@ export let sourcegraphUrl = window.localStorage.SOURCEGRAPH_URL || window.SOURCE
 
 export let serverUrls = [sourcegraphUrl]
 
-export let phabricatorUrl = ''
-
 export let eventTrackingEnabled = false
 
 export let sourcegraphRepoSearchToggled = false
@@ -32,10 +30,6 @@ export function setSourcegraphUrl(url: string): void {
 
 export function setServerUrls(urls: string[]): void {
     serverUrls = urls
-}
-
-export function setPhabricatorUrl(url: string): void {
-    phabricatorUrl = url
 }
 
 export function isBrowserExtension(): boolean {

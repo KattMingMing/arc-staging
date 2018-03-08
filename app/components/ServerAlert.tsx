@@ -36,7 +36,7 @@ export class NeedsServerConfigurationAlert extends React.Component<Props, {}> {
 
     public render(): JSX.Element | null {
         return (
-            <div className="alert alert-warning site-alert" style={{ justifyContent: 'space-between' }}>
+            <div className="sg-alert sg-alert-warning site-alert" style={{ justifyContent: 'space-between' }}>
                 <a
                     onClick={this.onClicked}
                     className="site-alert__link"

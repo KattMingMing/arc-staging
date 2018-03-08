@@ -11,6 +11,7 @@ export interface StorageItems {
     openEditorEnabled: boolean
     identity: string
     serverUrls: string[]
+    enterpriseUrls: string[]
     serverUserId: string
 }
 
