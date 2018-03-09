@@ -16,6 +16,7 @@ import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
 import { fetchHover, fetchJumpURL, isEmptyHover } from '../backend/lsp'
+import { logUserEvent } from '../backend/userEvents'
 import { OpenOnSourcegraph } from '../components/OpenOnSourcegraph'
 import * as github from '../github/util'
 import {
@@ -383,6 +384,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
         // target element, and we have tooltip contents
         if (!this.state.fixedTooltip && data.target && !isEmpty(data.contents)) {
             eventLogger.logHover(this.getEventLoggerProps())
+            logUserEvent('PAGEVIEW').subscribe()
         }
     }
 
