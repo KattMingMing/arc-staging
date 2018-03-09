@@ -1,8 +1,10 @@
+import { logUserEvent } from '../backend/userEvents'
 import { getPlatformName, isE2ETest } from '../util/context'
 
 export abstract class EventLogger {
     public logHover(eventProperties: any = {}): void {
         this.logEventForCategory('BrowserExtension', 'Hover', 'SymbolHovered', eventProperties)
+        logUserEvent('PAGEVIEW').subscribe()
     }
 
     public logClick(eventProperties: any = {}): void {
