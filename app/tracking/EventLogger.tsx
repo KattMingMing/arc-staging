@@ -4,6 +4,8 @@ import { getPlatformName, isE2ETest } from '../util/context'
 export abstract class EventLogger {
     public logHover(eventProperties: any = {}): void {
         this.logEventForCategory('BrowserExtension', 'Hover', 'SymbolHovered', eventProperties)
+        // TODO: log a code intelligence event instead of page view.
+        // Requries adding a row in the users table in the main repo.
         logUserEvent('PAGEVIEW').subscribe()
     }
 
