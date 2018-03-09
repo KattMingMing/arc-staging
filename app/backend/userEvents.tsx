@@ -1,4 +1,3 @@
-import 'rxjs/add/operator/do'
 import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { mutateGraphQL } from '../backend/graphql'
