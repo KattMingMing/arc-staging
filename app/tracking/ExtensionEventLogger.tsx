@@ -67,6 +67,10 @@ export class ExtensionEventLogger extends EventLogger {
         }
     }
 
+    public setCodeHost(codeHost: string): void {
+        this.telligentWrapper.setCodeHost(codeHost)
+    }
+
     protected sendEvent(eventAction: string, eventProps: any): void {
         if (this.trackingEnabled && this.telligentWrapper) {
             this.telligentWrapper.track(eventAction, eventProps)

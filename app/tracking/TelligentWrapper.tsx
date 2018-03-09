@@ -82,6 +82,10 @@ export class TelligentWrapper {
         this.t('addStaticMetadata', 'installed_chrome_extension', 'true', 'userInfo')
     }
 
+    public setCodeHost(codeHost: string): void {
+        this.t('addStaticMetadata', 'extension_code_host', codeHost, 'header')
+    }
+
     public setUrl(url: string): void {
         this.t('setCollectorUrl', prepareEndpointUrl(`${url}/.api/telemetry`))
         this.t('setTrackUrls', isConnectedToSourcegraphDotCom(url))

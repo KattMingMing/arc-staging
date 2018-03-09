@@ -20,7 +20,8 @@ import { getURL } from '../../extension/extension'
 import storage from '../../extension/storage'
 
 // set the event logger before anything else proceeds, to avoid logging events before we have it set
-setEventLogger(new ExtensionEventLogger())
+const eventLogger = new ExtensionEventLogger()
+setEventLogger(eventLogger)
 
 /**
  * Main entry point into browser extension.
@@ -44,6 +45,18 @@ function injectApplication(): void {
         const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
         const ogSiteName = document.head.querySelector(`meta[property='og:site_name']`) as HTMLMetaElement
         const isGitHubEnterprise = ogSiteName ? ogSiteName.content === 'GitHub Enterprise' : false
+
+        let codeHost = ''
+
+        if (isGitHub) {
+            codeHost = 'github'
+        } else if (isGitHubEnterprise) {
+            codeHost = 'github-enterprise'
+        } else if (isPhabricator) {
+            codeHost = 'phabricator'
+        }
+
+        eventLogger.setCodeHost(codeHost)
 
         if (!isSourcegraphServer && !document.getElementById('ext-style-sheet')) {
             const styleSheet = document.createElement('link') as HTMLLinkElement
