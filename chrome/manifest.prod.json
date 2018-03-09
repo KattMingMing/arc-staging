@@ -33,8 +33,7 @@
         "scripts": ["js/background.bundle.js", "js/link.bundle.js"]
     },
     "options_ui": {
-        "page": "options.html",
-        "chrome_style": true
+        "page": "options.html"
     },
     "permissions": ["cookies", "activeTab", "storage", "https://github.com/*", "https://sourcegraph.com/*"],
     "optional_permissions": ["tabs", "http://*/", "https://*/"],
