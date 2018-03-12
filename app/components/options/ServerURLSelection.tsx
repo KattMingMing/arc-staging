@@ -3,7 +3,6 @@ import { without } from 'lodash'
 import * as React from 'react'
 import { Badge, ListGroup, ListGroupItem } from 'reactstrap'
 import storage from '../../../extension/storage'
-import { sourcegraphUrl } from '../../util/context'
 
 interface State {
     serverUrls: string[]
@@ -19,8 +18,14 @@ export class ServerURLSelection extends React.Component<Props, State> {
         super(props)
         this.state = {
             serverUrls: this.props.serverUrls,
-            sourcegraphUrl,
+            sourcegraphUrl: '',
         }
+    }
+
+    public componentDidMount(): void {
+        chrome.storage.sync.get(items => {
+            this.setState(() => ({ sourcegraphUrl: items.sourcegraphURL }))
+        })
     }
 
     public componentWillReceiveProps(nextProps: Props): void {
