@@ -7,12 +7,20 @@ import { ServerURLSelection } from './ServerURLSelection'
 interface State {
     customUrl: string
     invalid: boolean
+    serverUrls: string[]
 }
 
 export class ServerConnection extends React.Component<{}, State> {
     public state = {
         customUrl: '',
         invalid: false,
+        serverUrls: [],
+    }
+
+    public componentDidMount(): void {
+        storage.getSync(items => {
+            this.setState(() => ({ serverUrls: items.serverUrls || [] }))
+        })
     }
 
     private addSourcegraphServerURL = (): void => {
@@ -24,14 +32,14 @@ export class ServerConnection extends React.Component<{}, State> {
             }
 
             storage.getSync(items => {
-                const serverUrls = items.serverUrls || []
+                const serverUrls = items.serverUrls ? [...new Set([...items.serverUrls, url.origin])] : []
                 storage.setSync(
                     {
                         sourcegraphURL: url.origin,
                         serverUrls: [...new Set([...serverUrls, url.origin])],
                     },
                     () => {
-                        this.setState(() => ({ customUrl: '' }))
+                        this.setState(() => ({ customUrl: '', serverUrls }))
                     }
                 )
             })
@@ -88,7 +96,7 @@ export class ServerConnection extends React.Component<{}, State> {
                         {this.state.invalid && <FormText color="muted">Please enter a URL.</FormText>}
                     </div>
                 </div>
-                <ServerURLSelection />
+                <ServerURLSelection serverUrls={this.state.serverUrls} />
             </div>
         )
     }

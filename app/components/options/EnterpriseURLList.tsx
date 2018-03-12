@@ -8,22 +8,26 @@ interface State {
     enterpriseUrls: string[]
 }
 
-export class EnterpriseURLList extends React.Component<{}, State> {
-    constructor() {
-        super()
+interface Props {
+    enterpriseUrls: string[]
+}
+
+export class EnterpriseURLList extends React.Component<Props, State> {
+    constructor(props: Props) {
+        super(props)
         this.state = {
             enterpriseUrls: [],
         }
     }
 
     public componentDidMount(): void {
-        this.syncEnterpriseUrls()
+        this.setState(() => ({ enterpriseUrls: this.props.enterpriseUrls }))
     }
 
-    private syncEnterpriseUrls(): void {
-        storage.getSync(items => {
-            this.setState(() => ({ enterpriseUrls: items.enterpriseUrls || [] }))
-        })
+    public componentWillReceiveProps(nextProps: Props): void {
+        if (this.props.enterpriseUrls !== nextProps.enterpriseUrls) {
+            this.setState(() => ({ enterpriseUrls: nextProps.enterpriseUrls }))
+        }
     }
 
     private handleRemove = (e: React.MouseEvent<HTMLElement>, url: string): void => {
@@ -32,12 +36,7 @@ export class EnterpriseURLList extends React.Component<{}, State> {
         storage.getSync(items => {
             const urls = items.enterpriseUrls || []
             storage.setSync({ enterpriseUrls: without(urls, url) }, () => {
-                this.setState(
-                    () => ({ enterpriseUrls: without(urls, url) }),
-                    () => {
-                        this.syncEnterpriseUrls()
-                    }
-                )
+                this.setState(() => ({ enterpriseUrls: without(urls, url) }))
             })
         })
     }

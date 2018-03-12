@@ -100,8 +100,7 @@ runtime.onMessage((message, _, cb) => {
             return true
 
         case 'setEnterpriseUrl':
-            requestPermissionsForEnterpriseUrl(message.payload)
-            return
+            return requestPermissionsForEnterpriseUrl(message.payload)
 
         case 'setSourcegraphUrl':
             requestPermissionsForSourcegraphUrl(message.payload)
@@ -114,9 +113,9 @@ async function requestPermissionsForEnterpriseUrl(url: string): Promise<void> {
     if (!granted) {
         return
     }
-    storage.getSync(items => {
+    return storage.getSync(items => {
         const enterpriseUrls = items.enterpriseUrls || []
-        storage.setSync({
+        return storage.setSync({
             enterpriseUrls: [...new Set([...enterpriseUrls, url])],
         })
     })

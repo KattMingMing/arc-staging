@@ -10,30 +10,28 @@ interface State {
     sourcegraphUrl: string
 }
 
-export class ServerURLSelection extends React.Component<{}, State> {
-    public state = {
-        serverUrls: [],
-        sourcegraphUrl,
+interface Props {
+    serverUrls: string[]
+}
+
+export class ServerURLSelection extends React.Component<Props, State> {
+    constructor(props: Props) {
+        super(props)
+        this.state = {
+            serverUrls: this.props.serverUrls,
+            sourcegraphUrl,
+        }
     }
 
-    public componentDidMount(): void {
-        this.syncServerUrls()
-    }
-
-    private syncServerUrls(): void {
-        storage.getSync(items => {
-            this.setState(() => ({ serverUrls: items.serverUrls || [], sourcegraphUrl: items.sourcegraphURL }))
-        })
+    public componentWillReceiveProps(nextProps: Props): void {
+        if (this.props.serverUrls !== nextProps.serverUrls) {
+            this.setState(() => ({ serverUrls: nextProps.serverUrls }))
+        }
     }
 
     private handleClick = (url: string) => {
         storage.setSync({ sourcegraphURL: url }, () => {
-            this.setState(
-                () => ({ sourcegraphUrl: url }),
-                () => {
-                    this.syncServerUrls()
-                }
-            )
+            this.setState(() => ({ sourcegraphUrl: url }))
         })
     }
 
@@ -43,12 +41,7 @@ export class ServerURLSelection extends React.Component<{}, State> {
         storage.getSync(items => {
             const urls = items.serverUrls || []
             storage.setSync({ serverUrls: without(urls, url) }, () => {
-                this.setState(
-                    () => ({ serverUrls: without(urls, url) }),
-                    () => {
-                        this.syncServerUrls()
-                    }
-                )
+                this.setState(() => ({ serverUrls: without(urls, url) }))
             })
         })
     }

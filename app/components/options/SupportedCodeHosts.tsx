@@ -2,17 +2,33 @@ import AddIcon from '@sourcegraph/icons/lib/Add'
 import * as React from 'react'
 import { Button, ButtonGroup, FormText, Input, InputGroup, InputGroupAddon } from 'reactstrap'
 import * as runtime from '../../../extension/runtime'
+import storage from '../../../extension/storage'
 import { EnterpriseURLList } from './EnterpriseURLList'
 
 interface State {
     customCodeHost: string
     invalid: boolean
+    enterpriseUrls: string[]
 }
 
 export class SupportedCodeHosts extends React.Component<{}, State> {
     public state = {
         customCodeHost: '',
         invalid: false,
+        enterpriseUrls: [],
+    }
+
+    public componentDidMount(): void {
+        storage.getSync(items => {
+            this.setState(() => ({ enterpriseUrls: items.enterpriseUrls || [] }))
+        })
+
+        storage.onChanged(items => {
+            const { enterpriseUrls } = items
+            if (enterpriseUrls && enterpriseUrls.newValue && enterpriseUrls.newValue !== this.state.enterpriseUrls) {
+                this.setState(() => ({ enterpriseUrls: items.enterpriseUrls.newValue || [] }))
+            }
+        })
     }
 
     private inputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,9 +43,9 @@ export class SupportedCodeHosts extends React.Component<{}, State> {
                 this.handleInvalidUrl()
                 return
             }
-            runtime.sendMessage({ type: 'setEnterpriseUrl', payload: this.state.customCodeHost }, () =>
+            runtime.sendMessage({ type: 'setEnterpriseUrl', payload: this.state.customCodeHost }, () => {
                 this.setState(() => ({ customCodeHost: '' }))
-            )
+            })
         } catch {
             this.handleInvalidUrl()
         }
@@ -78,7 +94,7 @@ export class SupportedCodeHosts extends React.Component<{}, State> {
                         </InputGroup>
                         {this.state.invalid && <FormText color="muted">Please enter a URL.</FormText>}
                     </div>
-                    <EnterpriseURLList />
+                    <EnterpriseURLList enterpriseUrls={this.state.enterpriseUrls} />
                 </div>
             </div>
         )
