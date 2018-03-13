@@ -240,6 +240,24 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     }
                     const { target, ctx } = data
                     return this.getTooltip(target, ctx)
+                        .do(tooltip => {
+                            if (!tooltip) {
+                                this.setFixedTooltip()
+                                return
+                            }
+
+                            const contents = tooltip.contents
+                            if (!contents || isEmptyHover({ contents })) {
+                                this.setFixedTooltip()
+                                return
+                            }
+
+                            this.setFixedTooltip(tooltip)
+                            // Show the tooltip with j2d and findRef buttons. We don't want to wait for
+                            // a response from getDefinition before showing this, as the response can take some time
+                            // for JS and TS when private packages are used.
+                            updateTooltip(tooltip, true, this.tooltipActions(ctx), this.props.isBase)
+                        })
                         .zip(this.getDefinition(ctx))
                         .map(([tooltip, defUrl]) => ({ ...tooltip, defUrl: defUrl || undefined } as TooltipData))
                         .catch(e => {
@@ -259,6 +277,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
                         return
                     }
 
+                    // Hide the previous placeholder tooltip.
+                    hideTooltip()
                     this.setFixedTooltip(data)
                     updateTooltip(data, true, this.tooltipActions(data.ctx), this.props.isBase)
                 })
