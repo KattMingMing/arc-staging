@@ -4,16 +4,30 @@ import { Button, FormText, Input, InputGroup, InputGroupAddon } from 'reactstrap
 import storage from '../../../extension/storage'
 import { ServerURLSelection } from './ServerURLSelection'
 
+enum errors {
+    Empty,
+    Invalid,
+    HTTPNotSupported,
+}
+
 interface State {
     customUrl: string
-    invalid: boolean
+    error: errors | null
     serverUrls: string[]
+}
+
+// Make safari not be abnoxious <angry face>
+const safariInputAttributes = {
+    autoComplete: 'off',
+    autoCorrect: 'off',
+    autoCapitalize: 'off',
+    spellCheck: false,
 }
 
 export class ServerConnection extends React.Component<{}, State> {
     public state = {
         customUrl: '',
-        invalid: false,
+        error: null,
         serverUrls: [],
     }
 
@@ -21,36 +35,49 @@ export class ServerConnection extends React.Component<{}, State> {
         storage.getSync(items => {
             this.setState(() => ({ serverUrls: items.serverUrls || [] }))
         })
+
+        storage.onChanged(({ serverUrls }) => {
+            if (serverUrls && serverUrls.newValue) {
+                this.setState({ serverUrls: serverUrls.newValue })
+            }
+        })
     }
 
     private addSourcegraphServerURL = (): void => {
         try {
             const url = new URL(this.state.customUrl)
             if (!url || !url.origin || url.origin === 'null') {
-                this.handleInvalidUrl()
+                this.handleInvalidUrl(errors.Empty)
+                return
+            }
+
+            if (window.safari && url.protocol === 'http:') {
+                this.handleInvalidUrl(errors.HTTPNotSupported)
                 return
             }
 
             storage.getSync(items => {
-                const serverUrls = items.serverUrls ? [...new Set([...items.serverUrls, url.origin])] : []
+                let serverUrls = items.serverUrls || []
+                serverUrls = [...serverUrls, url.origin]
+
                 storage.setSync(
                     {
                         sourcegraphURL: url.origin,
-                        serverUrls: [...new Set([...serverUrls, url.origin])],
+                        serverUrls: [...new Set(serverUrls)],
                     },
                     () => {
-                        this.setState(() => ({ customUrl: '', serverUrls }))
+                        this.setState(() => ({ customUrl: '', serverUrls, error: null }))
                     }
                 )
             })
         } catch {
-            this.handleInvalidUrl()
+            this.handleInvalidUrl(errors.Invalid)
         }
     }
 
-    private handleInvalidUrl = (): void => {
+    private handleInvalidUrl = (error: errors): void => {
         this.setState(
-            () => ({ invalid: true }),
+            () => ({ error }),
             () => {
                 setTimeout(() => this.setState(() => ({ invalid: false })), 2000)
             }
@@ -76,11 +103,12 @@ export class ServerConnection extends React.Component<{}, State> {
                     <div className="options__input-container">
                         <InputGroup>
                             <Input
-                                invalid={this.state.invalid}
+                                invalid={!!this.state.error}
                                 onKeyPress={this.handleKeyPress}
                                 value={this.state.customUrl}
                                 onChange={this.inputChanged}
                                 className="options__input-field"
+                                {...safariInputAttributes as any}
                             />
                             <InputGroupAddon className="input-group-append" addonType="append">
                                 <Button
@@ -93,7 +121,17 @@ export class ServerConnection extends React.Component<{}, State> {
                                 </Button>
                             </InputGroupAddon>
                         </InputGroup>
-                        {this.state.invalid && <FormText color="muted">Please enter a URL.</FormText>}
+                        {this.state.error === errors.Invalid && (
+                            <FormText color="muted">Please enter a valid URL.</FormText>
+                        )}
+                        {this.state.error === errors.Empty && <FormText color="muted">Please enter a URL.</FormText>}
+                        {this.state.error === errors.HTTPNotSupported && (
+                            <FormText color="muted">
+                                Extensions cannot communicate over HTTPS in your browser. We suggest using a tool like{' '}
+                                <a href="https://ngrok.com/">ngrok</a> for trying the extension out with your local
+                                instance.
+                            </FormText>
+                        )}
                     </div>
                 </div>
                 <ServerURLSelection serverUrls={this.state.serverUrls} />

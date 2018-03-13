@@ -35,17 +35,17 @@ export class ExtensionEventLogger extends EventLogger {
 
         storage.onChanged(changes => {
             for (const key of Object.keys(changes)) {
-                if (key === 'sourcegraphURL') {
-                    this.telligentWrapper.setUrl(changes[key].newValue)
+                if (key === 'sourcegraphURL' && changes[key]) {
+                    this.telligentWrapper.setUrl(changes[key]!.newValue)
                     this.logExtensionConnected({
-                        isConnectedToSourcegraphDotCom: isConnectedToSourcegraphDotCom(changes[key].newValue),
+                        isConnectedToSourcegraphDotCom: isConnectedToSourcegraphDotCom(changes[key]!.newValue),
                     })
                 }
-                if (key === 'eventTrackingEnabled') {
-                    this.trackingEnabled = changes[key].newValue
+                if (key === 'eventTrackingEnabled' && changes[key]) {
+                    this.trackingEnabled = changes[key]!.newValue
                 }
-                if (key === 'serverUserId') {
-                    this.telligentWrapper.setUserId(changes[key].newValue)
+                if (key === 'serverUserId' && changes[key]) {
+                    this.telligentWrapper.setUserId(changes[key]!.newValue)
                 }
             }
         })

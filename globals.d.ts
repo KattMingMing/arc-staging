@@ -5,4 +5,7 @@ interface Window {
     SG_ENV: 'EXTENSION' | 'PAGE'
 
     browser: typeof browser
+    safariMessager?: {
+        send: (message: { type: string; payload: any }, cb?: (res?: any) => void) => void
+    }
 }

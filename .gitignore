@@ -17,5 +17,5 @@ npm-debug.log.*
 
 # Keep safari extension config stuff, remove the rest
 *.safariextension/**/*
-!*.safariextension/background.safari.html
 !*.safariextension/*.plist
+!*.safariextension/background.safari.html

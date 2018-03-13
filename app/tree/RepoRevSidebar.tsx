@@ -150,9 +150,8 @@ export class RepoRevSidebar extends React.PureComponent<Props, State> {
                             <span style={{ width: '100%', textAlign: 'right' }}>
                                 <button
                                     onClick={this.onSidebarToggle}
-                                    className={`tab-btn sg-icon`}
+                                    className={`tab-btn sg-icon sg-icon-close`}
                                     data-tooltip="Close"
-                                    style={{ width: 17, height: 17 }}
                                 >
                                     <CloseIcon style={{ width: 17, height: 17, color: 'white' }} />
                                 </button>

@@ -25,8 +25,8 @@ export class SupportedCodeHosts extends React.Component<{}, State> {
 
         storage.onChanged(items => {
             const { enterpriseUrls } = items
-            if (enterpriseUrls && enterpriseUrls.newValue && enterpriseUrls.newValue !== this.state.enterpriseUrls) {
-                this.setState(() => ({ enterpriseUrls: items.enterpriseUrls.newValue || [] }))
+            if (enterpriseUrls && enterpriseUrls.newValue) {
+                this.setState(() => ({ enterpriseUrls: enterpriseUrls.newValue || [] }))
             }
         })
     }

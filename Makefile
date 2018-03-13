@@ -9,13 +9,28 @@ build: install
 	npm run tslint
 	npm run build
 
-bundle: build
+bundle: build all
+
+all: chrome firefox safari
+
+chrome:
 	zip -r chrome-bundle.zip dist/*
+
+firefox:
 	cd dist && zip -r ../firefox-bundle.xpi *
+
+safari:
+	cp -r dist/* Sourcegraph.safariextension
 
 phabricator: clean build
 	cp dist/js/phabricator.bundle.js ../../ui/assets/scripts/phabricator.bundle.js
 	cp dist/js/phabricator.bundle.js.map ../../ui/assets/scripts/phabricator.bundle.js.map
+
+watch:
+	fswatch -o ./dist | xargs -n1 $(MAKE) ${TARGET}
+
+watch-all:
+	fswatch -o ./dist | xargs -n1 $(MAKE) all
 
 test-unit:
 	npm run test

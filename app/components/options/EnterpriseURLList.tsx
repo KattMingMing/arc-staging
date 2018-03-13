@@ -21,7 +21,11 @@ export class EnterpriseURLList extends React.Component<Props, State> {
     }
 
     public componentDidMount(): void {
-        this.setState(() => ({ enterpriseUrls: this.props.enterpriseUrls }))
+        storage.onChanged(({ enterpriseUrls }) => {
+            if (enterpriseUrls && enterpriseUrls.newValue) {
+                this.setState({ enterpriseUrls: enterpriseUrls.newValue })
+            }
+        })
     }
 
     public componentWillReceiveProps(nextProps: Props): void {
@@ -50,7 +54,7 @@ export class EnterpriseURLList extends React.Component<Props, State> {
                         <button className="options__row-close btn btn-icon">
                             <CloseIcon
                                 // tslint:disable-next-line
-                                onClick={(e) => this.handleRemove(e, url)}
+                                onClick={e => this.handleRemove(e, url)}
                                 style={{ verticalAlign: 'middle' }}
                                 className="icon-inline"
                             />

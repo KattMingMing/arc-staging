@@ -9,9 +9,9 @@
 ////////////////////
 // Global object
 ////////////////////
-// interface Window {
-//     browser: typeof browser;
-// }
+interface Window {
+    browser: typeof browser;
+}
 
 ////////////////////
 // Accessibility Features

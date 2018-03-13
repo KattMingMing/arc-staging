@@ -23,8 +23,21 @@ export class ServerURLSelection extends React.Component<Props, State> {
     }
 
     public componentDidMount(): void {
-        chrome.storage.sync.get(items => {
-            this.setState(() => ({ sourcegraphUrl: items.sourcegraphURL }))
+        storage.onChanged(({ sourcegraphURL, serverUrls }) => {
+            const newState = {
+                serverUrls: this.state.serverUrls,
+                sourcegraphUrl: this.state.sourcegraphUrl,
+            }
+
+            if (sourcegraphURL) {
+                newState.sourcegraphUrl = sourcegraphURL.newValue!
+            }
+
+            if (serverUrls) {
+                newState.serverUrls = serverUrls.newValue!
+            }
+
+            this.setState(newState)
         })
     }
 
@@ -34,13 +47,13 @@ export class ServerURLSelection extends React.Component<Props, State> {
         }
     }
 
-    private handleClick = (url: string) => {
+    private handleClick = (url: string) => () => {
         storage.setSync({ sourcegraphURL: url }, () => {
             this.setState(() => ({ sourcegraphUrl: url }))
         })
     }
 
-    private handleRemove = (e: React.MouseEvent<HTMLElement>, url: string): void => {
+    private handleRemove = (url: string) => (e: React.MouseEvent<HTMLElement>): void => {
         e.preventDefault()
         e.stopPropagation()
         storage.getSync(items => {
@@ -62,8 +75,7 @@ export class ServerURLSelection extends React.Component<Props, State> {
                         key={i}
                         disabled={url === this.state.sourcegraphUrl}
                         action={true}
-                        // tslint:disable-next-line
-                        onClick={() => this.handleClick(url)}
+                        onClick={this.handleClick(url)}
                     >
                         <span className="options__group-item-text">{url}</span>
                         {url === this.state.sourcegraphUrl && (
@@ -73,8 +85,7 @@ export class ServerURLSelection extends React.Component<Props, State> {
                         )}
                         <button className="options__row-close btn btn-icon">
                             <CloseIcon
-                                // tslint:disable-next-line
-                                onClick={(e) => this.handleRemove(e, url)}
+                                onClick={this.handleRemove(url)}
                                 style={{ verticalAlign: 'middle' }}
                                 className="icon-inline"
                             />

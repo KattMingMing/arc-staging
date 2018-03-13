@@ -14,6 +14,14 @@ interface State {
     openEditorEnabled: boolean
 }
 
+// Make safari not be abnoxious <angry face>
+const safariInputAttributes = {
+    autoComplete: 'off',
+    autoCorrect: 'off',
+    autoCapitalize: 'off',
+    spellCheck: false,
+}
+
 export class OptionsPage extends React.Component<{}, State> {
     public state = {
         repositoryFileTreeEnabled: false,
@@ -77,6 +85,7 @@ export class OptionsPage extends React.Component<{}, State> {
                                         checked={Boolean(this.state.repositorySearchEnabled)}
                                         className="options__input-checkbox"
                                         type="checkbox"
+                                        {...safariInputAttributes as any}
                                     />{' '}
                                     <div className="options__input-label">
                                         Display Sourcegraph search toggle in code host search input.
@@ -96,6 +105,7 @@ export class OptionsPage extends React.Component<{}, State> {
                                         checked={Boolean(this.state.repositoryFileTreeEnabled)}
                                         className="options__input-checkbox"
                                         type="checkbox"
+                                        {...safariInputAttributes as any}
                                     />{' '}
                                     <div className="options__input-label">Display repository file tree navigation.</div>
                                 </Label>
@@ -113,6 +123,7 @@ export class OptionsPage extends React.Component<{}, State> {
                                         checked={Boolean(this.state.openEditorEnabled)}
                                         className="options__input-checkbox"
                                         type="checkbox"
+                                        {...safariInputAttributes as any}
                                     />{' '}
                                     <div className="options__input-label">
                                         Enable Links that open{' '}

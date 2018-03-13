@@ -12,7 +12,7 @@ import * as tabs from '../../extension/tabs'
 
 let customServerOrigins: string[] = []
 
-const contentScripts = runtime.getManifest().content_scripts
+const contentScripts = runtime.getContentScripts()
 
 // jsContentScriptOrigins are the required URLs inside of the manifest. When checking for permissions to inject
 // the content script on optional pages (inside browser.tabs.onUpdated) we need to skip manual injection of the
@@ -63,7 +63,7 @@ tabs.onUpdated((tabId, changeInfo, tab) => {
             if (!tab.url || !tab.url.startsWith(origin.replace('/*', ''))) {
                 continue
             }
-            tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end' })
+            tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end', origin })
         }
     }
 })
@@ -77,7 +77,7 @@ export const isSourcegraphServerCheck = () => {
         if (!request.data || request.data !== 'isSGServerInstance') {
             return
         }
-        const isSourcegraphDomain = document.getElementById('sourcegraph-chrome-webstore-item')
+        const isSourcegraphDomain = document.getElementById('sourcegraph-browser-webstore-item')
         if (isSourcegraphDomain) {
             document.dispatchEvent(new CustomEvent('sourcegraph:server-instance-configuration-clicked', {}))
         }
@@ -86,38 +86,55 @@ export const isSourcegraphServerCheck = () => {
     })
 }
 
-runtime.onMessage((message, _, cb) => {
+runtime.onMessage(async (message, _, cb) => {
     switch (message.type) {
         case 'setIdentity':
-            storage.setLocal({ identity: message.identity })
+            storage.setLocal({ identity: message.payload.identity })
             return
 
         case 'getIdentity':
             storage.getLocalItem('identity', obj => {
                 const { identity } = obj
+
                 cb(identity)
             })
             return true
 
         case 'setEnterpriseUrl':
-            return requestPermissionsForEnterpriseUrl(message.payload)
+            await requestPermissionsForEnterpriseUrl(message.payload, cb)
+            return
 
         case 'setSourcegraphUrl':
-            requestPermissionsForSourcegraphUrl(message.payload)
+            await requestPermissionsForSourcegraphUrl(message.payload)
+            return
+
+        // We should only need to do this on safari
+        case 'insertCSS':
+            const details = message.payload as { file: string; origin: string }
+            storage.getSyncItem('serverUrls', ({ serverUrls }) =>
+                tabs.insertCSS(0, {
+                    ...details,
+                    whitelist: details.origin ? [details.origin] : [],
+                    blacklist: serverUrls || [],
+                })
+            )
             return
     }
 })
 
-async function requestPermissionsForEnterpriseUrl(url: string): Promise<void> {
+async function requestPermissionsForEnterpriseUrl(url: string, cb: (res?: any) => void): Promise<void> {
     const granted = await permissions.request(url)
     if (!granted) {
         return
     }
     return storage.getSync(items => {
         const enterpriseUrls = items.enterpriseUrls || []
-        return storage.setSync({
-            enterpriseUrls: [...new Set([...enterpriseUrls, url])],
-        })
+        storage.setSync(
+            {
+                enterpriseUrls: [...new Set([...enterpriseUrls, url])],
+            },
+            cb
+        )
     })
 }
 

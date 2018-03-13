@@ -1,19 +1,6 @@
 import browser from './browser'
-
-export interface StorageItems {
-    sourcegraphURL: string
-    gitHubEnterpriseURL: string
-    phabricatorURL: string
-    repositoryFileTreeEnabled: boolean
-    repositorySearchEnabled: boolean
-    sourcegraphRepoSearchToggled: boolean
-    eventTrackingEnabled: boolean
-    openEditorEnabled: boolean
-    identity: string
-    serverUrls: string[]
-    enterpriseUrls: string[]
-    serverUserId: string
-}
+import SafariStorageArea, { SafariSettingsChangeMessage, stringifyStorageArea } from './safari/StorageArea'
+import { StorageChange, StorageItems } from './types'
 
 export interface Storage {
     getSync: (callback: (items: StorageItems) => void) => void
@@ -22,15 +9,12 @@ export interface Storage {
     getLocal: (callback: (items: StorageItems) => void) => void
     getLocalItem: (key: keyof StorageItems, callback: (items: StorageItems) => void) => void
     setLocal: (items: Partial<StorageItems>, callback?: (() => void) | undefined) => void
-    onChanged: (
-        listener: (changes: { [key in keyof StorageItems]: browser.storage.StorageChange }, areaName: string) => void
-    ) => void
+    onChanged: (listener: (changes: Partial<StorageChange>, areaName: string) => void) => void
 }
 
 const get = (area: browser.storage.StorageArea) => (callback: (items: StorageItems) => void) => area.get(callback)
 const set = (area: browser.storage.StorageArea) => (items: Partial<StorageItems>, callback?: () => void) =>
     area.set(items, callback)
-
 const getItem = (area: browser.storage.StorageArea) => (
     key: keyof StorageItems,
     callback: (items: StorageItems) => void
@@ -42,23 +26,54 @@ const noop = () => {
 
 export default ((): Storage => {
     if (window.SG_ENV === 'EXTENSION') {
+        const syncStorageArea: browser.storage.StorageArea =
+            browser && browser.storage
+                ? browser.storage.sync
+                : new SafariStorageArea((safari.extension as SafariExtension).settings, 'sync')
+
+        const localStorageArea: browser.storage.StorageArea =
+            browser && browser.storage
+                ? browser.storage.local
+                : new SafariStorageArea(stringifyStorageArea(window.localStorage), 'local')
+
         return {
-            getSync: get(browser.storage.sync),
-            getSyncItem: getItem(browser.storage.sync),
-            setSync: set(browser.storage.sync),
+            getSync: get(syncStorageArea),
+            getSyncItem: getItem(syncStorageArea),
+            setSync: set(syncStorageArea),
 
-            onChanged: (
-                listener: (
-                    changes: { [key in keyof StorageItems]: browser.storage.StorageChange },
-                    areaName: string
-                ) => void
-            ) => {
-                browser.storage.onChanged.addListener(listener)
+            getLocal: get(localStorageArea),
+            getLocalItem: getItem(localStorageArea),
+            setLocal: set(localStorageArea),
+
+            onChanged: (listener: (changes: Partial<StorageChange>, areaName: string) => void) => {
+                if (browser && browser.storage) {
+                    browser.storage.onChanged.addListener(listener)
+                } else if (safari && safari.application) {
+                    const extension = safari.extension as SafariExtension
+
+                    extension.settings.addEventListener(
+                        'change',
+                        ({ key, newValue, oldValue }: SafariExtensionSettingsChangeEvent) => {
+                            const k = key as keyof StorageItems
+
+                            listener({ [k]: { newValue, oldValue } }, 'sync')
+                        }
+                    )
+                } else if (safari && !safari.application) {
+                    const page = safari.self as SafariContentWebPage
+
+                    const handleChanges = (event: SafariExtensionMessageEvent) => {
+                        if (event.name === 'settings-change') {
+                            const { changes, areaName } = event.message as SafariSettingsChangeMessage
+                            const c = changes as { [key in keyof StorageItems]: browser.storage.StorageChange }
+
+                            listener(c, areaName)
+                        }
+                    }
+
+                    page.addEventListener('message', handleChanges, false)
+                }
             },
-
-            getLocal: get(browser.storage.local),
-            getLocalItem: getItem(browser.storage.local),
-            setLocal: set(browser.storage.local),
         }
     }
 

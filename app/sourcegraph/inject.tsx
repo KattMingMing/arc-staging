@@ -15,7 +15,7 @@ export function injectSourcegraphApp(marker: HTMLElement): void {
         if (ev && ev.detail) {
             const e = eventLogger as ExtensionEventLogger
             e.updatePropsForUser(ev.detail)
-            runtime.sendMessage({ type: 'setIdentity', identity: ev.detail })
+            runtime.sendMessage({ type: 'setIdentity', payload: { identity: ev.detail } })
         } else {
             console.error('sourcegraph:identify missing details')
         }

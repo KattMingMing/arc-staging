@@ -17,6 +17,7 @@ import {
     setSourcegraphUrl,
 } from '../../app/util/context'
 import { getURL } from '../../extension/extension'
+import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
 
 // set the event logger before anything else proceeds, to avoid logging events before we have it set
@@ -35,12 +36,22 @@ function injectApplication(): void {
     }
 
     const href = window.location.href
-    storage.getSync(items => {
+
+    const handleGetStorage = items => {
+        // This has a default value so it should always be defined.
+        // In safari, if the storage hasn't been initialized yet, this
+        // will be undefined so we want to return early.
+        // When safari's storage is initialized, we fire a custom event that will
+        // re-run this function.
+        if (!items.sourcegraphURL) {
+            return
+        }
+
         const srcgEl = document.getElementById('sourcegraph-chrome-webstore-item')
         const sourcegraphServerUrl = items.sourcegraphURL || 'https://sourcegraph.com'
         const isSourcegraphServer = window.location.origin === sourcegraphServerUrl || !!srcgEl
         const isPhabricator =
-            Boolean(document.querySelector('.phabricator-home')) || window.location.origin === items.phabricatorURL
+            Boolean(document.querySelector('.phabricator-wordmark')) || window.location.origin === items.phabricatorURL
 
         const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
         const ogSiteName = document.head.querySelector(`meta[property='og:site_name']`) as HTMLMetaElement
@@ -59,12 +70,19 @@ function injectApplication(): void {
         eventLogger.setCodeHost(codeHost)
 
         if (!isSourcegraphServer && !document.getElementById('ext-style-sheet')) {
-            const styleSheet = document.createElement('link') as HTMLLinkElement
-            styleSheet.id = 'ext-style-sheet'
-            styleSheet.rel = 'stylesheet'
-            styleSheet.type = 'text/css'
-            styleSheet.href = getURL('css/style.bundle.css')
-            document.head.appendChild(styleSheet)
+            if (window.safari) {
+                runtime.sendMessage({
+                    type: 'insertCSS',
+                    payload: { file: 'css/style.bundle.css', origin: window.location.origin },
+                })
+            } else {
+                const styleSheet = document.createElement('link') as HTMLLinkElement
+                styleSheet.id = 'ext-style-sheet'
+                styleSheet.rel = 'stylesheet'
+                styleSheet.type = 'text/css'
+                styleSheet.href = getURL('css/style.bundle.css')
+                document.head.appendChild(styleSheet)
+            }
         }
 
         if (isGitHub || isGitHubEnterprise) {
@@ -88,6 +106,12 @@ function injectApplication(): void {
             setSourcegraphUrl(sourcegraphServerUrl)
             injectPhabricatorApplication()
         }
+    }
+
+    storage.getSync(handleGetStorage)
+
+    document.addEventListener('sourcegraph:storage-init', () => {
+        storage.getSync(handleGetStorage)
     })
 }
 
