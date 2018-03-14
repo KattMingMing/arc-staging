@@ -11,7 +11,7 @@ build: install
 
 bundle: build all
 
-all: chrome firefox safari phabricator
+all: chrome firefox safari
 
 chrome:
 	zip -r chrome-bundle.zip dist/*
