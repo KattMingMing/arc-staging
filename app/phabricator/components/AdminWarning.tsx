@@ -5,7 +5,7 @@ const info =
 
 export const AdminWarning = () => (
     <div className="phui-two-column-content">
-        <div className="sg-alert sg-alert-danger site-alert phabricator-alert" title={info}>
+        <div className="sg-alert sg-alert-warning site-alert phabricator-alert" title={info}>
             <a
                 className="site-alert__link"
                 href="https://about.sourcegraph.com/docs/features/phabricator-extension#admin-mode-single-user"

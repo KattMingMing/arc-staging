@@ -23,8 +23,14 @@ safari:
 	cp -r dist/* Sourcegraph.safariextension
 
 phabricator:
-	cp dist/js/phabricator.bundle.js ../../ui/assets/scripts/phabricator.bundle.js
-	cp dist/js/phabricator.bundle.js.map ../../ui/assets/scripts/phabricator.bundle.js.map
+	cp ./dist/js/phabricator.bundle.js \
+		 ../sourcegraph/ui/assets/extension/scripts/phabricator.bundle.js
+	cp ./dist/js/phabricator.bundle.js.map \
+		 ../sourcegraph/ui/assets/extension/scripts/phabricator.bundle.js.map
+	cp ./dist/css/style.bundle.css \
+		 ../sourcegraph/ui/assets/extension/css/style.bundle.css
+	cp ./dist/css/style.bundle.css.map \
+		 ../sourcegraph/ui/assets/extension/css/style.bundle.css.map
 
 watch:
 	fswatch -o ./dist | xargs -n1 $(MAKE) ${TARGET}
