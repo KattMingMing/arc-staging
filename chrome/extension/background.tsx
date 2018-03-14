@@ -57,6 +57,24 @@ permissions.onRemoved(permissions => {
     }
 })
 
+storage.addSyncMigration((items, set, remove) => {
+    if (items.phabricatorURL) {
+        remove('phabricatorURL')
+
+        const newItems: {
+            enterpriseUrls?: string[]
+        } = {}
+
+        if (items.enterpriseUrls && !items.enterpriseUrls.find(u => u === items.phabricatorURL)) {
+            newItems.enterpriseUrls = items.enterpriseUrls.concat(items.phabricatorURL)
+        } else if (!items.enterpriseUrls) {
+            newItems.enterpriseUrls = [items.phabricatorURL]
+        }
+
+        set(newItems)
+    }
+})
+
 tabs.onUpdated((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete') {
         for (const origin of customServerOrigins) {

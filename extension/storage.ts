@@ -2,6 +2,12 @@ import browser from './browser'
 import SafariStorageArea, { SafariSettingsChangeMessage, stringifyStorageArea } from './safari/StorageArea'
 import { StorageChange, StorageItems } from './types'
 
+type MigrateFunc = (
+    items: StorageItems,
+    set: (items: Partial<StorageItems>) => void,
+    remove: (key: keyof StorageItems) => void
+) => void
+
 export interface Storage {
     getSync: (callback: (items: StorageItems) => void) => void
     getSyncItem: (key: keyof StorageItems, callback: (items: StorageItems) => void) => void
@@ -9,6 +15,8 @@ export interface Storage {
     getLocal: (callback: (items: StorageItems) => void) => void
     getLocalItem: (key: keyof StorageItems, callback: (items: StorageItems) => void) => void
     setLocal: (items: Partial<StorageItems>, callback?: (() => void) | undefined) => void
+    addSyncMigration: (migrate: MigrateFunc) => void
+    addLocalMigration: (migrate: MigrateFunc) => void
     onChanged: (listener: (changes: Partial<StorageChange>, areaName: string) => void) => void
 }
 
@@ -22,6 +30,12 @@ const getItem = (area: browser.storage.StorageArea) => (
 
 const noop = () => {
     /* noop */
+}
+
+const addMigration = (area: browser.storage.StorageArea) => (migrate: MigrateFunc) => {
+    area.get(items => {
+        migrate(items as StorageItems, area.set, area.remove)
+    })
 }
 
 export default ((): Storage => {
@@ -44,6 +58,9 @@ export default ((): Storage => {
             getLocal: get(localStorageArea),
             getLocalItem: getItem(localStorageArea),
             setLocal: set(localStorageArea),
+
+            addSyncMigration: addMigration(syncStorageArea),
+            addLocalMigration: addMigration(localStorageArea),
 
             onChanged: (listener: (changes: Partial<StorageChange>, areaName: string) => void) => {
                 if (browser && browser.storage) {
@@ -86,5 +103,7 @@ export default ((): Storage => {
         getLocal: noop,
         getLocalItem: noop,
         setLocal: noop,
+        addSyncMigration: noop,
+        addLocalMigration: noop,
     }
 })()

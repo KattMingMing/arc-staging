@@ -11,7 +11,7 @@ build: install
 
 bundle: build all
 
-all: chrome firefox safari
+all: chrome firefox safari phabricator
 
 chrome:
 	zip -r chrome-bundle.zip dist/*
@@ -22,7 +22,7 @@ firefox:
 safari:
 	cp -r dist/* Sourcegraph.safariextension
 
-phabricator: clean build
+phabricator:
 	cp dist/js/phabricator.bundle.js ../../ui/assets/scripts/phabricator.bundle.js
 	cp dist/js/phabricator.bundle.js.map ../../ui/assets/scripts/phabricator.bundle.js.map
 
