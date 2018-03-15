@@ -1,7 +1,7 @@
 import CloseIcon from '@sourcegraph/icons/lib/Close'
-import { without } from 'lodash'
 import * as React from 'react'
 import { ListGroup, ListGroupItem } from 'reactstrap'
+import * as runtime from '../../../extension/runtime'
 import storage from '../../../extension/storage'
 
 interface State {
@@ -34,15 +34,10 @@ export class EnterpriseURLList extends React.Component<Props, State> {
         }
     }
 
-    private handleRemove = (e: React.MouseEvent<HTMLElement>, url: string): void => {
+    private handleRemove = (url: string) => (e: React.MouseEvent<HTMLElement>): void => {
         e.preventDefault()
         e.stopPropagation()
-        storage.getSync(items => {
-            const urls = items.enterpriseUrls || []
-            storage.setSync({ enterpriseUrls: without(urls, url) }, () => {
-                this.setState(() => ({ enterpriseUrls: without(urls, url) }))
-            })
-        })
+        runtime.sendMessage({ type: 'removeEnterpriseUrl', payload: url })
     }
 
     public render(): JSX.Element | null {
@@ -54,7 +49,7 @@ export class EnterpriseURLList extends React.Component<Props, State> {
                         <button className="options__row-close btn btn-icon">
                             <CloseIcon
                                 // tslint:disable-next-line
-                                onClick={e => this.handleRemove(e, url)}
+                                onClick={this.handleRemove(url)}
                                 style={{ verticalAlign: 'middle' }}
                                 className="icon-inline"
                             />

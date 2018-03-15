@@ -126,6 +126,10 @@ runtime.onMessage(async (message, _, cb) => {
             await requestPermissionsForSourcegraphUrl(message.payload)
             return
 
+        case 'removeEnterpriseUrl':
+            await removeEnterpriseUrl(message.payload, cb)
+            return
+
         // We should only need to do this on safari
         case 'insertCSS':
             const details = message.payload as { file: string; origin: string }
@@ -161,6 +165,14 @@ async function requestPermissionsForSourcegraphUrl(url: string): Promise<void> {
     if (granted) {
         storage.setSync({ sourcegraphURL: url })
     }
+}
+
+async function removeEnterpriseUrl(url: string, cb: (res?: any) => void): Promise<void> {
+    permissions.remove(url)
+
+    storage.getSyncItem('enterpriseUrls', ({ enterpriseUrls }) => {
+        storage.setSync({ enterpriseUrls: without(enterpriseUrls, url) }, cb)
+    })
 }
 
 runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')

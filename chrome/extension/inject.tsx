@@ -50,7 +50,9 @@ function injectApplication(): void {
         const srcgEl = document.getElementById('sourcegraph-chrome-webstore-item')
         const sourcegraphServerUrl = items.sourcegraphURL || 'https://sourcegraph.com'
         const isSourcegraphServer = window.location.origin === sourcegraphServerUrl || !!srcgEl
-        const isPhabricator = Boolean(document.querySelector('.phabricator-wordmark'))
+        const isPhabricator =
+            Boolean(document.querySelector('.phabricator-wordmark')) &&
+            items.enterpriseUrls.find(url => url === window.location.origin)
 
         const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
         const ogSiteName = document.head.querySelector(`meta[property='og:site_name']`) as HTMLMetaElement

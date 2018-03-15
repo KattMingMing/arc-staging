@@ -24,6 +24,21 @@ export function request(url: string): Promise<boolean> {
     })
 }
 
+export function remove(url: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+        if (browser && browser.permissions) {
+            browser.permissions.remove(
+                {
+                    origins: [url + '/*'],
+                },
+                resolve
+            )
+        } else if (safari) {
+            resolve(true)
+        }
+    })
+}
+
 export function getAll(): Promise<browser.permissions.Permissions> {
     return new Promise(resolve => {
         if (browser && browser.permissions) {
