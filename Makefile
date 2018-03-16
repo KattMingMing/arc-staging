@@ -11,9 +11,9 @@ build: install
 
 bundle: build all
 
-all: chrome firefox safari
+all: chrome-ext firefox safari
 
-chrome:
+chrome-ext:
 	zip -r chrome-bundle.zip dist/*
 
 firefox:
