@@ -22,8 +22,6 @@ export let repositorySearchEnabled = false
 
 export let repositoryFileTreeEnabled = false
 
-export let openEditorEnabled = false
-
 export function setSourcegraphUrl(url: string): void {
     sourcegraphUrl = url
 }
@@ -36,8 +34,8 @@ export function isBrowserExtension(): boolean {
     return window.SOURCEGRAPH_PHABRICATOR_EXTENSION || false
 }
 
-export function isConnectedToSourcegraphDotCom(url?: string): boolean {
-    return /^https?:\/\/(www.)?sourcegraph.com/.test(url || sourcegraphUrl)
+export function isOnlySourcegraphDotCom(urls: string[]): boolean {
+    return !urls.some(url => url !== 'https://sourcegraph.com')
 }
 
 export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
@@ -54,10 +52,6 @@ export function setRepositorySearchEnabled(enabled: boolean): void {
 
 export function setRepositoryFileTreeEnabled(enabled: boolean): void {
     repositoryFileTreeEnabled = enabled
-}
-
-export function setOpenEditorEnabled(enabled: boolean): void {
-    openEditorEnabled = enabled
 }
 
 /**

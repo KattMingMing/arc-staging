@@ -1,4 +1,5 @@
-import { isConnectedToSourcegraphDotCom, sourcegraphUrl } from '../util/context'
+import storage from '../../extension/storage'
+import { isOnlySourcegraphDotCom, sourcegraphUrl } from '../util/context'
 
 const telligent = require('@sourcegraph/telligent-tracker')
 const telligentFunctionName = 'telligent'
@@ -7,6 +8,24 @@ export class TelligentWrapper {
     private t: any
 
     constructor(siteId: string, platform: string, forceSecure: boolean, installedChromeExtension: boolean) {
+        storage.getSync(items =>
+            this.initTelligent(
+                isOnlySourcegraphDotCom(items.serverUrls),
+                siteId,
+                platform,
+                forceSecure,
+                installedChromeExtension
+            )
+        )
+    }
+
+    private initTelligent = (
+        trackUrls: boolean,
+        siteId: string,
+        platform: string,
+        forceSecure,
+        installedChromeExtension: boolean
+    ) => {
         // Create the initializing function
         // tslint:disable-next-line
         window[telligentFunctionName] = function(): void {
@@ -25,7 +44,6 @@ export class TelligentWrapper {
         // Send events to the Server telemetry endpoint. If a custom bi-logger is being used, the redirect
         // is handled on the backend.
         const telemetryUrl = `${sourcegraphUrl}/.api/telemetry`
-
         // Must be called once upon initialization
         this.t('newTracker', 'SourcegraphExtensionTracker', prepareEndpointUrl(telemetryUrl), {
             encodeBase64: false,
@@ -33,7 +51,7 @@ export class TelligentWrapper {
             platform,
             env: process.env.NODE_ENV,
             forceSecureTracker: forceSecure,
-            trackUrls: isConnectedToSourcegraphDotCom(),
+            trackUrls,
         })
 
         if (installedChromeExtension) {
@@ -41,13 +59,13 @@ export class TelligentWrapper {
         }
     }
 
-    public track(eventAction: string, requestPayload: any): void {
+    private trackEvent(eventAction: string, requestPayload: any, isSourcegraph: boolean): void {
         // for self-hosted Server or Data Center usage, we only want to collect high level event
         // context.
         //
         // Note: user identification information is still captured through persistent
         // `user_info` metadata stored in a cookie.
-        if (!isConnectedToSourcegraphDotCom()) {
+        if (!isSourcegraph) {
             // 🚨 PRIVACY: anything added to this filter will be capturable on self-hosted instances.
             const limitedPayload = {
                 event_action: requestPayload.eventAction,
@@ -66,8 +84,13 @@ export class TelligentWrapper {
             this.t('track', eventAction, limitedPayload)
             return
         }
-
         this.t('track', eventAction, requestPayload)
+    }
+
+    public track(eventAction: string, requestPayload: any): void {
+        storage.getSync(items =>
+            this.trackEvent(eventAction, requestPayload, isOnlySourcegraphDotCom(items.serverUrls))
+        )
     }
 
     public setUserId(requestPayload: any): void {
@@ -88,7 +111,7 @@ export class TelligentWrapper {
 
     public setUrl(url: string): void {
         this.t('setCollectorUrl', prepareEndpointUrl(`${url}/.api/telemetry`))
-        this.t('setTrackUrls', isConnectedToSourcegraphDotCom(url))
+        storage.getSync(items => this.t('setTrackUrls', isOnlySourcegraphDotCom(items.serverUrls)))
     }
 }
 

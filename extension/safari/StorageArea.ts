@@ -1,4 +1,4 @@
-import { StorageItems, defaultStorageItems } from '../types'
+import { defaultStorageItems, StorageItems } from '../types'
 
 interface ISafariStorageArea {
     getItem: (key: string) => any | null
@@ -101,7 +101,6 @@ class ContentStorageArea implements ISafariStorageArea {
 export default class SafariStorageArea implements browser.storage.StorageArea {
     private area: ISafariStorageArea | null = null
     private keys: string[] = []
-    private name?: string
     private isBackground = !!safari.application
 
     constructor(area: ISafariStorageArea, areaName: string) {
@@ -114,7 +113,6 @@ export default class SafariStorageArea implements browser.storage.StorageArea {
         }
 
         this.keys = Object.keys(defaultStorageItems)
-        this.name = areaName
 
         this.initBackground()
     }

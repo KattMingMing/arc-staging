@@ -325,7 +325,6 @@ function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDeta
     for (const u of repo.attachments.uris.uris) {
         const normalPath = u.fields.uri.normalized.replace('\\', '')
         if (normalPath.startsWith(window.location.host + '/')) {
-            console.log('ignoring uri', u)
             continue
         }
         uri = u

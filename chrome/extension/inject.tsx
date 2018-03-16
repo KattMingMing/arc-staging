@@ -9,7 +9,6 @@ import { ExtensionEventLogger } from '../../app/tracking/ExtensionEventLogger'
 import {
     setEventLogger,
     setEventTrackingEnabled,
-    setOpenEditorEnabled,
     setRepositoryFileTreeEnabled,
     setRepositorySearchEnabled,
     setServerUrls,
@@ -96,8 +95,10 @@ function injectApplication(): void {
                 items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled
             )
             setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled)
-            setEventTrackingEnabled(items.eventTrackingEnabled)
-            setOpenEditorEnabled(items.openEditorEnabled)
+
+            // This value should default to true unless opted out in the options menu.
+            const trackEvents = items.eventTrackingEnabled === undefined || items.eventTrackingEnabled
+            setEventTrackingEnabled(trackEvents)
             injectGitHubApplication(extensionMarker)
         } else if (isSourcegraphServer || /^https?:\/\/(www.)?sourcegraph.com/.test(href)) {
             setSourcegraphUrl(sourcegraphServerUrl)

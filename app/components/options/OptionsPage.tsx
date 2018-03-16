@@ -11,7 +11,7 @@ import { SupportedCodeHosts } from './SupportedCodeHosts'
 interface State {
     repositoryFileTreeEnabled: boolean
     repositorySearchEnabled: boolean
-    openEditorEnabled: boolean
+    eventTrackingEnabled: boolean
 }
 
 // Make safari not be abnoxious <angry face>
@@ -26,7 +26,7 @@ export class OptionsPage extends React.Component<{}, State> {
     public state = {
         repositoryFileTreeEnabled: false,
         repositorySearchEnabled: false,
-        openEditorEnabled: false,
+        eventTrackingEnabled: false,
     }
 
     public componentDidMount(): void {
@@ -35,7 +35,7 @@ export class OptionsPage extends React.Component<{}, State> {
                 repositoryFileTreeEnabled:
                     items.repositoryFileTreeEnabled === undefined || items.repositoryFileTreeEnabled,
                 repositorySearchEnabled: items.repositorySearchEnabled === undefined || items.repositorySearchEnabled,
-                openEditorEnabled: items.openEditorEnabled,
+                eventTrackingEnabled: items.eventTrackingEnabled,
             }))
         })
     }
@@ -52,9 +52,9 @@ export class OptionsPage extends React.Component<{}, State> {
         })
     }
 
-    private onEditorToggled = () => {
-        storage.setSync({ openEditorEnabled: !this.state.openEditorEnabled }, () => {
-            this.setState(() => ({ openEditorEnabled: !this.state.openEditorEnabled }))
+    private onTelemetryToggled = () => {
+        storage.setSync({ eventTrackingEnabled: !this.state.eventTrackingEnabled }, () => {
+            this.setState(() => ({ eventTrackingEnabled: !this.state.eventTrackingEnabled }))
         })
     }
 
@@ -114,27 +114,27 @@ export class OptionsPage extends React.Component<{}, State> {
                     </div>
                     <div className="options__divider" />
                     <div className="options__section">
-                        <div className="options__section-header">Editor (beta)</div>
+                        <div className="options__section-header">Telemetry</div>
                         <div className="options__section-contents">
                             <FormGroup check={true}>
                                 <Label className="options__input">
                                     <Input
-                                        onClick={this.onEditorToggled}
-                                        checked={Boolean(this.state.openEditorEnabled)}
+                                        onClick={this.onTelemetryToggled}
+                                        checked={Boolean(this.state.eventTrackingEnabled)}
                                         className="options__input-checkbox"
                                         type="checkbox"
                                         {...safariInputAttributes as any}
                                     />{' '}
                                     <div className="options__input-label">
-                                        Enable Links that open{' '}
+                                        Enable Telemetry{' '}
                                         <a
-                                            href="https://about.sourcegraph.com/products/editor"
+                                            href="https://about.sourcegraph.com/privacy/"
                                             target="_blank"
                                             // tslint:disable-next-line
                                             onClick={e => e.stopPropagation()}
                                             className="options__alert-link"
                                         >
-                                            Sourcegraph Editor.
+                                            (Privacy Policy)
                                         </a>
                                     </div>
                                 </Label>

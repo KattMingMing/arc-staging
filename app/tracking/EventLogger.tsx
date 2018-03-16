@@ -1,11 +1,13 @@
 import { logUserEvent } from '../backend/userEvents'
-import { getPlatformName, isE2ETest } from '../util/context'
+import { eventTrackingEnabled, getPlatformName, isE2ETest } from '../util/context'
 
 export abstract class EventLogger {
     public logHover(eventProperties: any = {}): void {
         this.logEventForCategory('BrowserExtension', 'Hover', 'SymbolHovered', eventProperties)
         // TODO(farhan): log a code intelligence event instead of page view.
-        logUserEvent('PAGEVIEW').subscribe()
+        if (eventTrackingEnabled) {
+            logUserEvent('PAGEVIEW').subscribe()
+        }
     }
 
     public logClick(eventProperties: any = {}): void {

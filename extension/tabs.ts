@@ -10,8 +10,6 @@ export const onUpdated = (
     }
 
     if (safari && safari.application) {
-        console.log('SAFARI tabs.onUpdated', safari)
-
         safari.application.addEventListener('change', (...args: any[]) => {
             console.log('application on change', ...args)
         })

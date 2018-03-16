@@ -2,7 +2,7 @@ import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
 import { TelligentWrapper } from '../tracking/TelligentWrapper'
-import { isConnectedToSourcegraphDotCom, isE2ETest } from '../util/context'
+import { isE2ETest, isOnlySourcegraphDotCom } from '../util/context'
 
 /**
  * Event logger for user-installed browser extensions.
@@ -37,8 +37,10 @@ export class ExtensionEventLogger extends EventLogger {
             for (const key of Object.keys(changes)) {
                 if (key === 'sourcegraphURL' && changes[key]) {
                     this.telligentWrapper.setUrl(changes[key]!.newValue)
+                }
+                if (key === 'serverUrls' && changes[key]) {
                     this.logExtensionConnected({
-                        isConnectedToSourcegraphDotCom: isConnectedToSourcegraphDotCom(changes[key]!.newValue),
+                        isConnectedToSourcegraphDotCom: isOnlySourcegraphDotCom(changes[key]!.newValue),
                     })
                 }
                 if (key === 'eventTrackingEnabled' && changes[key]) {

@@ -180,7 +180,11 @@ runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
 chrome.runtime.onInstalled.addListener(() => {
     storage.getSync(items => {
         if (!items.serverUrls || items.serverUrls.length === 0) {
-            storage.setSync({ serverUrls: ['https://sourcegraph.com'], sourcegraphURL: 'https://sourcegraph.com' })
+            storage.setSync({
+                serverUrls: ['https://sourcegraph.com'],
+                sourcegraphURL: 'https://sourcegraph.com',
+                eventTrackingEnabled: true,
+            })
         }
     })
 })
