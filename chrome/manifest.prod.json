@@ -1,5 +1,5 @@
 {
-    "version": "1.6.97",
+    "version": "1.6.98",
     "name": "Sourcegraph for GitHub",
     "manifest_version": 2,
     "description": "Gives GitHub IDE powers: jump to definition and hover tooltips in code, PRs, and diffs",
@@ -23,7 +23,7 @@
         "128": "img/icon-128.png"
     },
     "omnibox": {
-        "keyword": "src"
+        "keyword": "s"
     },
     "content_scripts": [
         {
