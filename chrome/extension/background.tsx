@@ -2,9 +2,11 @@
 // prettier-ignore
 import '../../app/util/polyfill'
 
-import { without } from 'lodash'
+import { first, without } from 'lodash'
 
+import { createSuggestionFetcher, Suggestion } from '../../app/backend/search'
 import { setServerUrls, setSourcegraphUrl } from '../../app/util/context'
+import * as omnibox from '../../extension/omnibox'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
@@ -27,9 +29,60 @@ if (contentScripts) {
     }
 }
 
+const configureOmnibox = (serverUrl: string) => {
+    omnibox.setDefaultSuggestion({
+        description: `Search code on ${serverUrl}...`,
+    })
+}
+
+const suggestionFetcher = createSuggestionFetcher()
+
+omnibox.onInputChanged((query, suggest) => {
+    storage.getSync(({ serverUrls, sourcegraphURL }) => {
+        const sgUrl = sourcegraphURL || first(serverUrls)
+
+        suggestionFetcher({
+            query,
+            handler: (suggestions: Suggestion[]) =>
+                suggest(
+                    suggestions.map(({ title, url, urlLabel }) => ({
+                        content: `${sgUrl}${url}`,
+                        description: `${title} - ${urlLabel}`,
+                    }))
+                ),
+        })
+    })
+})
+
+const isURL = /^https?:\/\//
+
+omnibox.onInputEntered((query, disposition) => {
+    storage.getSync(({ serverUrls, sourcegraphURL }) => {
+        const url = sourcegraphURL || first(serverUrls)
+        const props = {
+            url: isURL.test(query) ? query : `${url}/search?q=${query}`,
+        }
+
+        switch (disposition) {
+            case 'currentTab':
+                tabs.update(props)
+                break
+            case 'newForegroundTab':
+                tabs.create(props)
+                break
+            case 'newBackgroundTab':
+                tabs.create({ ...props, active: false })
+                break
+        }
+    })
+})
+
+storage.getSync(({ sourcegraphURL }) => configureOmnibox(sourcegraphURL))
+
 storage.onChanged(changes => {
     if (changes.sourcegraphURL && changes.sourcegraphURL.newValue) {
         setSourcegraphUrl(changes.sourcegraphURL.newValue)
+        configureOmnibox(changes.sourcegraphURL.newValue)
     }
     if (changes.serverUrls && changes.serverUrls.newValue) {
         setServerUrls(changes.serverUrls.newValue)

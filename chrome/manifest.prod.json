@@ -22,6 +22,9 @@
         "48": "img/icon-48.png",
         "128": "img/icon-128.png"
     },
+    "omnibox": {
+        "keyword": "src"
+    },
     "content_scripts": [
         {
             "matches": ["https://github.com/*", "https://sourcegraph.com/*"],

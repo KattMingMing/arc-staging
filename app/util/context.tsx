@@ -1,4 +1,5 @@
 import browser from '../../extension/browser'
+import storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
 
 export let eventLogger: EventLogger
@@ -21,6 +22,21 @@ export let sourcegraphRepoSearchToggled = false
 export let repositorySearchEnabled = false
 
 export let repositoryFileTreeEnabled = false
+
+if (window.SG_ENV === 'EXTENSION') {
+    storage.getSync(items => {
+        serverUrls = items.serverUrls
+        sourcegraphUrl = items.sourcegraphURL
+
+        eventTrackingEnabled = items.eventTrackingEnabled
+
+        sourcegraphRepoSearchToggled = items.sourcegraphRepoSearchToggled
+
+        repositorySearchEnabled = items.repositorySearchEnabled
+
+        repositoryFileTreeEnabled = items.repositoryFileTreeEnabled
+    })
+}
 
 export function setSourcegraphUrl(url: string): void {
     sourcegraphUrl = url

@@ -4397,7 +4397,7 @@ declare namespace browser.omnibox {
         description: string;
     }
 
-    export interface OmniboxInputEnteredEvent extends browser.events.IEvent<(text: string) => void> {}
+    export interface OmniboxInputEnteredEvent extends browser.events.IEvent<(text: string, disposition?: string) => void> {}
 
     export interface OmniboxInputChangedEvent extends browser.events.IEvent<(text: string, suggest: (suggestResults: SuggestResult[]) => void) => void> {}
 
