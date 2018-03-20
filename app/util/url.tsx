@@ -104,3 +104,15 @@ export function openFromJS(path: string, event?: MouseEvent): void {
         window.location.href = path
     }
 }
+
+/**
+ * Builds a URL query for given SearchOptions (without leading `?`)
+ */
+export function buildSearchURLQuery(query: string): string {
+    const searchParams = new URLSearchParams()
+    searchParams.set('q', query)
+    return searchParams
+        .toString()
+        .replace(/%2F/g, '/')
+        .replace(/%3A/g, ':')
+}

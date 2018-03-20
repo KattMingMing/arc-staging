@@ -6,6 +6,7 @@ import { first, without } from 'lodash'
 
 import { createSuggestionFetcher, Suggestion } from '../../app/backend/search'
 import { setServerUrls, setSourcegraphUrl } from '../../app/util/context'
+import { buildSearchURLQuery } from '../../app/util/url'
 import * as omnibox from '../../extension/omnibox'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'
@@ -60,7 +61,7 @@ omnibox.onInputEntered((query, disposition) => {
     storage.getSync(({ serverUrls, sourcegraphURL }) => {
         const url = sourcegraphURL || first(serverUrls)
         const props = {
-            url: isURL.test(query) ? query : `${url}/search?q=${query}`,
+            url: isURL.test(query) ? query : `${url}/search?${buildSearchURLQuery(query)}`,
         }
 
         switch (disposition) {
