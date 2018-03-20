@@ -1,5 +1,4 @@
-import storage from '../../extension/storage'
-import { isOnlySourcegraphDotCom, sourcegraphUrl } from '../util/context'
+import { checkIsOnlySourcegraphDotCom, sourcegraphUrl } from '../util/context'
 
 const telligent = require('@sourcegraph/telligent-tracker')
 const telligentFunctionName = 'telligent'
@@ -8,14 +7,8 @@ export class TelligentWrapper {
     private t: any
 
     constructor(siteId: string, platform: string, forceSecure: boolean, installedChromeExtension: boolean) {
-        storage.getSync(items =>
-            this.initTelligent(
-                isOnlySourcegraphDotCom(items.serverUrls),
-                siteId,
-                platform,
-                forceSecure,
-                installedChromeExtension
-            )
+        checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom =>
+            this.initTelligent(isOnlySourcegraphDotCom, siteId, platform, forceSecure, installedChromeExtension)
         )
     }
 
@@ -88,8 +81,8 @@ export class TelligentWrapper {
     }
 
     public track(eventAction: string, requestPayload: any): void {
-        storage.getSync(items =>
-            this.trackEvent(eventAction, requestPayload, isOnlySourcegraphDotCom(items.serverUrls))
+        checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom =>
+            this.trackEvent(eventAction, requestPayload, isOnlySourcegraphDotCom)
         )
     }
 
@@ -111,7 +104,7 @@ export class TelligentWrapper {
 
     public setUrl(url: string): void {
         this.t('setCollectorUrl', prepareEndpointUrl(`${url}/.api/telemetry`))
-        storage.getSync(items => this.t('setTrackUrls', isOnlySourcegraphDotCom(items.serverUrls)))
+        checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom => this.t('setTrackUrls', isOnlySourcegraphDotCom))
     }
 }
 

@@ -54,6 +54,14 @@ export function isOnlySourcegraphDotCom(urls: string[]): boolean {
     return !urls.some(url => url !== 'https://sourcegraph.com')
 }
 
+export function checkIsOnlySourcegraphDotCom(handler: (res: boolean) => void): void {
+    if (window.SG_ENV === 'EXTENSION') {
+        storage.getSync(items => handler(isOnlySourcegraphDotCom(items.serverUrls)))
+    } else {
+        handler(false)
+    }
+}
+
 export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
     sourcegraphRepoSearchToggled = enabled
 }
