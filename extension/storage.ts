@@ -28,8 +28,8 @@ const getItem = (area: browser.storage.StorageArea) => (
     callback: (items: StorageItems) => void
 ) => area.get(key, callback)
 
-const noop = () => {
-    /* noop */
+const throwNoopErr = () => {
+    throw new Error('do not call browser extension apis from an in page script')
 }
 
 const addMigration = (area: browser.storage.StorageArea) => (migrate: MigrateFunc) => {
@@ -96,14 +96,14 @@ export default ((): Storage => {
 
     // Running natively in the webpage(in Phabricator patch) so we don't need any storage.
     return {
-        getSync: noop,
-        getSyncItem: noop,
-        setSync: noop,
-        onChanged: noop,
-        getLocal: noop,
-        getLocalItem: noop,
-        setLocal: noop,
-        addSyncMigration: noop,
-        addLocalMigration: noop,
+        getSync: throwNoopErr,
+        getSyncItem: throwNoopErr,
+        setSync: throwNoopErr,
+        onChanged: throwNoopErr,
+        getLocal: throwNoopErr,
+        getLocalItem: throwNoopErr,
+        setLocal: throwNoopErr,
+        addSyncMigration: throwNoopErr,
+        addLocalMigration: throwNoopErr,
     }
 })()
