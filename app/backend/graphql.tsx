@@ -1,6 +1,12 @@
+import 'rxjs/add/observable/defer'
 import 'rxjs/add/observable/dom/ajax'
-import 'rxjs/add/operator/catch'
+import 'rxjs/add/observable/range'
+import 'rxjs/add/observable/throw'
+import 'rxjs/add/observable/timer'
 import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/mergeMap'
+import 'rxjs/add/operator/retryWhen'
+import 'rxjs/add/operator/zip'
 import { Observable } from 'rxjs/Observable'
 
 import storage from '../../extension/storage'
@@ -30,24 +36,19 @@ export interface MutationResult {
  * @param variables A key/value object with variable values
  * @return Observable That emits the result or errors if the HTTP request failed
  */
-function requestGraphQL(
-    request: string,
-    variables: any = {},
-    urlsToTry = serverUrls
-): Observable<GQL.IGraphQLResponseRoot> {
+function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IGraphQLResponseRoot> {
+    let url = sourcegraphUrl
     const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
-    if (urlsToTry.length === 0) {
-        throw new Error('no sourcegraph urls are configured')
-    }
-    const url = urlsToTry[0]
-    return Observable.ajax({
-        method: 'POST',
-        url: `${url}/.api/graphql` + (nameMatch ? '?' + nameMatch[1] : ''),
-        headers: getHeaders(),
-        crossDomain: true,
-        withCredentials: true,
-        body: JSON.stringify({ query: request, variables }),
-    })
+    return Observable.defer(() =>
+        Observable.ajax({
+            method: 'POST',
+            url: `${url}/.api/graphql` + (nameMatch ? '?' + nameMatch[1] : ''),
+            headers: getHeaders(),
+            crossDomain: true,
+            withCredentials: true,
+            body: JSON.stringify({ query: request, variables }),
+        })
+    )
         .map(({ response }) => {
             // If the query should return a repository and the response is null, throw an error
             // to trigger a refetch for the next possible Server URL.
@@ -65,13 +66,17 @@ function requestGraphQL(
             }
             return response
         })
-        .catch(err => {
-            if (urlsToTry.length === 1) {
-                // We just tried the last url
-                throw err
-            }
-            return requestGraphQL(request, variables, urlsToTry.slice(1))
-        })
+        .retryWhen(attempts =>
+            Observable.range(0, serverUrls.length + 1)
+                .zip(attempts, i => i)
+                .mergeMap(i => {
+                    if (i === serverUrls.length) {
+                        return Observable.throw({ error: 'No retry' })
+                    }
+                    url = serverUrls[i]
+                    return Observable.timer()
+                })
+        )
 }
 
 /**
