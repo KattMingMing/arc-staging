@@ -2,10 +2,13 @@ import * as querystring from 'query-string'
 import * as React from 'react'
 import { FormGroup, Input, Label } from 'reactstrap'
 import { getExtensionVersion } from '../../../app/util/context'
+import * as browserAction from '../../../extension/browserAction'
 import { getURL } from '../../../extension/extension'
 import storage from '../../../extension/storage'
 import { ConfigWarning } from './ConfigWarning'
 import { ServerConnection } from './ServerConnection'
+import { ServerInstallation } from './ServerInstallation'
+import { ServerModal } from './ServerModal'
 import { SupportedCodeHosts } from './SupportedCodeHosts'
 
 interface State {
@@ -30,6 +33,7 @@ export class OptionsPage extends React.Component<{}, State> {
     }
 
     public componentDidMount(): void {
+        browserAction.setBadgeText({ text: '' })
         storage.getSync(items => {
             this.setState(() => ({
                 repositoryFileTreeEnabled:
@@ -63,6 +67,7 @@ export class OptionsPage extends React.Component<{}, State> {
         const searchParams = querystring.parse(search)
         return (
             <div className="options__container">
+                <ServerModal />
                 <div>
                     {searchParams.popup && (
                         <div className="options__overlay-header">
@@ -151,6 +156,7 @@ export class OptionsPage extends React.Component<{}, State> {
                 <div className="options__section">
                     <SupportedCodeHosts />
                 </div>
+                <ServerInstallation />
             </div>
         )
     }

@@ -7,6 +7,7 @@ import { first, without } from 'lodash'
 import { createSuggestionFetcher, Suggestion } from '../../app/backend/search'
 import { setServerUrls, setSourcegraphUrl } from '../../app/util/context'
 import { buildSearchURLQuery } from '../../app/util/url'
+import * as browserAction from '../../extension/browserAction'
 import * as omnibox from '../../extension/omnibox'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'
@@ -145,8 +146,8 @@ tabs.onUpdated((tabId, changeInfo, tab) => {
  * Content script injected into webpages through "activeTab" permission to determine if webpage is a Sourcegraph Server instance.
  */
 export const isSourcegraphServerCheck = () => {
-    window.chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        if (!request.data || request.data !== 'isSGServerInstance') {
+    runtime.onMessage(async (message, _, sendResponse) => {
+        if (!message.type || message.type !== 'isSGServerInstance') {
             return
         }
         const isSourcegraphDomain = document.getElementById('sourcegraph-browser-webstore-item')
@@ -195,6 +196,9 @@ runtime.onMessage(async (message, _, cb) => {
                 })
             )
             return
+        case 'setBadgeText':
+            browserAction.setBadgeText({ text: message.payload })
+            return
     }
 })
 
@@ -231,7 +235,7 @@ async function removeEnterpriseUrl(url: string, cb: (res?: any) => void): Promis
 
 runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
 
-chrome.runtime.onInstalled.addListener(() => {
+runtime.onInstalled(() => {
     storage.getSync(items => {
         if (!items.serverUrls || items.serverUrls.length === 0) {
             storage.setSync({

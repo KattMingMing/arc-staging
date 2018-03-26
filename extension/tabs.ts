@@ -76,13 +76,13 @@ export const sendMessage = (tabId: number, message: any, responseCallback?: (res
     // TODO: Do we actually need this? It's currently only being used to check if the active tab is a sourcegraph server.
 }
 
-export const create = (props: browser.tabs.CreateProperties, callback?: (tab: chrome.tabs.Tab) => void) => {
+export const create = (props: browser.tabs.CreateProperties, callback?: (tab: browser.tabs.Tab) => void) => {
     if (browser && browser.tabs) {
         browser.tabs.create(props, callback)
     }
 }
 
-export const update = (props: browser.tabs.UpdateProperties, callback?: (tab?: chrome.tabs.Tab) => void) => {
+export const update = (props: browser.tabs.UpdateProperties, callback?: (tab?: browser.tabs.Tab) => void) => {
     if (browser && browser.tabs) {
         browser.tabs.update(props, callback)
     }

@@ -11,6 +11,7 @@ export interface StorageItems {
     serverUrls: string[]
     enterpriseUrls: string[]
     serverUserId: string
+    hasSeenServerModal: boolean
 }
 
 export const defaultStorageItems: StorageItems = {
@@ -26,6 +27,7 @@ export const defaultStorageItems: StorageItems = {
     serverUrls: [],
     enterpriseUrls: [],
     serverUserId: '',
+    hasSeenServerModal: false,
 }
 
 export type StorageChange = { [key in keyof StorageItems]: browser.storage.StorageChange }

@@ -7,6 +7,7 @@ import { injectPhabricatorApplication } from '../../app/phabricator/app'
 import { injectSourcegraphApp } from '../../app/sourcegraph/inject'
 import { ExtensionEventLogger } from '../../app/tracking/ExtensionEventLogger'
 import {
+    isOnlySourcegraphDotCom,
     setEventLogger,
     setEventTrackingEnabled,
     setRepositoryFileTreeEnabled,
@@ -65,6 +66,10 @@ function injectApplication(): void {
             codeHost = 'github-enterprise'
         } else if (isPhabricator) {
             codeHost = 'phabricator'
+        }
+
+        if (isOnlySourcegraphDotCom(items.serverUrls) && !items.hasSeenServerModal) {
+            runtime.sendMessage({ type: 'setBadgeText', payload: '1' })
         }
 
         eventLogger.setCodeHost(codeHost)

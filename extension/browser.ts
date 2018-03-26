@@ -1,1 +1,1 @@
-export default (window.browser || window.chrome) as typeof window.browser
+export default (window.browser || (window as any).chrome) as typeof window.browser

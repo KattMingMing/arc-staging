@@ -176,6 +176,24 @@
         font-weight: normal;
         background-color: #566E9F;
     }
+
+    &__footer {
+        margin-right: auto !important;
+        border: 0;
+        padding-top: 0;
+    }
+
+    &__installation-cta {
+        padding-top: 1rem;
+    }
+
+    &__cta {
+        background-color: #1c7cd6;
+    }
+
+    &__link {
+        color: #1c7cd6;
+    }
 }
 
 .sg-options-label {

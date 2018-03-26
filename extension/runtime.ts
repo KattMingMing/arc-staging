@@ -55,3 +55,10 @@ export const getContentScripts = () => {
     console.log('SAFARI getContentScripts', safari)
     return []
 }
+
+export const onInstalled = (callback: (details: browser.runtime.InstalledDetails) => void) => {
+    if (browser && browser.runtime && browser.runtime.onInstalled) {
+        browser.runtime.onInstalled.addListener(callback)
+        return
+    }
+}
