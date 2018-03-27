@@ -1,18 +1,17 @@
-import browser from './browser'
-
 // Safari doesn't support optional permissions so we have access to every site
 const safari = window.safari
+const chrome = global.chrome
 
 export function contains(url: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        browser.permissions.contains({ origins: [url + '/*'] }, resolve)
+        chrome.permissions.contains({ origins: [url + '/*'] }, resolve)
     })
 }
 
 export function request(url: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        if (browser && browser.permissions) {
-            browser.permissions.request(
+        if (chrome && chrome.permissions) {
+            chrome.permissions.request(
                 {
                     origins: [url + '/*'],
                 },
@@ -26,8 +25,8 @@ export function request(url: string): Promise<boolean> {
 
 export function remove(url: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        if (browser && browser.permissions) {
-            browser.permissions.remove(
+        if (chrome && chrome.permissions) {
+            chrome.permissions.remove(
                 {
                     origins: [url + '/*'],
                 },
@@ -39,26 +38,25 @@ export function remove(url: string): Promise<boolean> {
     })
 }
 
-export function getAll(): Promise<browser.permissions.Permissions> {
+export function getAll(): Promise<chrome.permissions.Permissions> {
     return new Promise(resolve => {
-        if (browser && browser.permissions) {
-            browser.permissions.getAll(resolve)
+        if (chrome && chrome.permissions) {
+            chrome.permissions.getAll(resolve)
             return
         }
 
-        // make sure we properly handle this on safari
-        throw Error('SAFARI permissions.getAll not supported')
+        // noop on safari
     })
 }
 
-export function onAdded(listener: (p: browser.permissions.Permissions) => void): void {
-    if (browser && browser.permissions && browser.permissions.onAdded) {
-        browser.permissions.onAdded.addListener(listener)
+export function onAdded(listener: (p: chrome.permissions.Permissions) => void): void {
+    if (chrome && chrome.permissions && chrome.permissions.onAdded) {
+        chrome.permissions.onAdded.addListener(listener)
     }
 }
 
-export function onRemoved(listener: (p: browser.permissions.Permissions) => void): void {
-    if (browser && browser.permissions && browser.permissions.onRemoved) {
-        browser.permissions.onRemoved.addListener(listener)
+export function onRemoved(listener: (p: chrome.permissions.Permissions) => void): void {
+    if (chrome && chrome.permissions && chrome.permissions.onRemoved) {
+        chrome.permissions.onRemoved.addListener(listener)
     }
 }

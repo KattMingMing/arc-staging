@@ -1,17 +1,11 @@
 {
-    "plugins": [
-        "add-module-exports",
-        "transform-new-target"
-    ],
+    "plugins": ["add-module-exports", "transform-new-target"],
     "presets": [
         [
             "env",
             {
                 "targets": {
-                    "browsers": [
-                        "last 2 versions",
-                        "safari >= 7"
-                    ],
+                    "browsers": ["last 2 versions", "safari >= 7"],
                     "useBuiltIns": true
                 }
             }
@@ -24,10 +18,7 @@
                     "env",
                     {
                         "targets": {
-                            "browsers": [
-                                "last 2 versions",
-                                "safari >= 7"
-                            ],
+                            "browsers": ["last 2 versions", "safari >= 7"],
                             "uglify": true,
                             "useBuiltIns": true
                         }

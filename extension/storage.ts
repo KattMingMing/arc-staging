@@ -1,6 +1,7 @@
-import browser from './browser'
 import SafariStorageArea, { SafariSettingsChangeMessage, stringifyStorageArea } from './safari/StorageArea'
 import { StorageChange, StorageItems } from './types'
+
+export { StorageItems, defaultStorageItems } from './types'
 
 type MigrateFunc = (
     items: StorageItems,
@@ -20,10 +21,10 @@ export interface Storage {
     onChanged: (listener: (changes: Partial<StorageChange>, areaName: string) => void) => void
 }
 
-const get = (area: browser.storage.StorageArea) => (callback: (items: StorageItems) => void) => area.get(callback)
-const set = (area: browser.storage.StorageArea) => (items: Partial<StorageItems>, callback?: () => void) =>
+const get = (area: chrome.storage.StorageArea) => (callback: (items: StorageItems) => void) => area.get(callback)
+const set = (area: chrome.storage.StorageArea) => (items: Partial<StorageItems>, callback?: () => void) =>
     area.set(items, callback)
-const getItem = (area: browser.storage.StorageArea) => (
+const getItem = (area: chrome.storage.StorageArea) => (
     key: keyof StorageItems,
     callback: (items: StorageItems) => void
 ) => area.get(key, callback)
@@ -32,7 +33,7 @@ const throwNoopErr = () => {
     throw new Error('do not call browser extension apis from an in page script')
 }
 
-const addMigration = (area: browser.storage.StorageArea) => (migrate: MigrateFunc) => {
+const addMigration = (area: chrome.storage.StorageArea) => (migrate: MigrateFunc) => {
     area.get(items => {
         migrate(items as StorageItems, area.set, area.remove)
     })
@@ -40,14 +41,17 @@ const addMigration = (area: browser.storage.StorageArea) => (migrate: MigrateFun
 
 export default ((): Storage => {
     if (window.SG_ENV === 'EXTENSION') {
-        const syncStorageArea: browser.storage.StorageArea =
-            browser && browser.storage
-                ? browser.storage.sync
+        const chrome = global.chrome
+        const safari = window.safari
+
+        const syncStorageArea: chrome.storage.StorageArea =
+            typeof chrome !== 'undefined'
+                ? chrome.storage.sync
                 : new SafariStorageArea((safari.extension as SafariExtension).settings, 'sync')
 
-        const localStorageArea: browser.storage.StorageArea =
-            browser && browser.storage
-                ? browser.storage.local
+        const localStorageArea: chrome.storage.StorageArea =
+            typeof chrome !== 'undefined'
+                ? chrome.storage.local
                 : new SafariStorageArea(stringifyStorageArea(window.localStorage), 'local')
 
         return {
@@ -63,8 +67,8 @@ export default ((): Storage => {
             addLocalMigration: addMigration(localStorageArea),
 
             onChanged: (listener: (changes: Partial<StorageChange>, areaName: string) => void) => {
-                if (browser && browser.storage) {
-                    browser.storage.onChanged.addListener(listener)
+                if (chrome && chrome.storage) {
+                    chrome.storage.onChanged.addListener(listener)
                 } else if (safari && safari.application) {
                     const extension = safari.extension as SafariExtension
 
@@ -82,7 +86,7 @@ export default ((): Storage => {
                     const handleChanges = (event: SafariExtensionMessageEvent) => {
                         if (event.name === 'settings-change') {
                             const { changes, areaName } = event.message as SafariSettingsChangeMessage
-                            const c = changes as { [key in keyof StorageItems]: browser.storage.StorageChange }
+                            const c = changes as { [key in keyof StorageItems]: chrome.storage.StorageChange }
 
                             listener(c, areaName)
                         }

@@ -1,12 +1,11 @@
-import browser from './browser'
-
 const safari = window.safari
+const chrome = global.chrome
 
 export const onUpdated = (
-    callback: (tabId: number, changeInfo: browser.tabs.TabChangeInfo, tab: browser.tabs.Tab) => void
+    callback: (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => void
 ) => {
-    if (browser && browser.tabs && browser.tabs.onUpdated) {
-        browser.tabs.onUpdated.addListener(callback)
+    if (chrome && chrome.tabs && chrome.tabs.onUpdated) {
+        chrome.tabs.onUpdated.addListener(callback)
     }
 
     if (safari && safari.application) {
@@ -16,9 +15,9 @@ export const onUpdated = (
     }
 }
 
-export const getActive = (callback: (tab: browser.tabs.Tab) => void) => {
-    if (browser && browser.tabs) {
-        browser.tabs.query({ active: true }, (tabs: browser.tabs.Tab[]) => {
+export const getActive = (callback: (tab: chrome.tabs.Tab) => void) => {
+    if (chrome && chrome.tabs) {
+        chrome.tabs.query({ active: true }, (tabs: chrome.tabs.Tab[]) => {
             for (const tab of tabs) {
                 callback(tab)
             }
@@ -28,17 +27,19 @@ export const getActive = (callback: (tab: browser.tabs.Tab) => void) => {
     }
 }
 
-interface InjectDetails extends browser.tabs.InjectDetails {
+interface InjectDetails extends chrome.tabs.InjectDetails {
     origin?: string
     whitelist?: string[]
     blacklist?: string[]
+    file?: string
+    runAt?: string
 }
 
 const patternify = (str: string) => `${str}/*`
 
 export const insertCSS = (tabId: number, details: InjectDetails, callback?: () => void) => {
-    if (browser && browser.tabs && browser.tabs.insertCSS) {
-        browser.tabs.insertCSS(tabId, details, callback)
+    if (chrome && chrome.tabs && chrome.tabs.insertCSS) {
+        chrome.tabs.insertCSS(tabId, details, callback)
     }
 
     // Safari doesn't have a target tab filter for injecting CSS.
@@ -54,9 +55,9 @@ export const insertCSS = (tabId: number, details: InjectDetails, callback?: () =
 }
 
 export const executeScript = (tabId: number, details: InjectDetails, callback?: (result: any[]) => void) => {
-    if (browser && browser.tabs) {
+    if (chrome && chrome.tabs) {
         const { origin, whitelist, blacklist, ...rest } = details
-        browser.tabs.executeScript(tabId, rest, callback)
+        chrome.tabs.executeScript(tabId, rest, callback)
     }
 
     // Safari doesn't have a target tab filter for executing js.
@@ -68,22 +69,22 @@ export const executeScript = (tabId: number, details: InjectDetails, callback?: 
 }
 
 export const sendMessage = (tabId: number, message: any, responseCallback?: (response: any) => void) => {
-    if (browser && browser.tabs) {
-        browser.tabs.sendMessage(tabId, message, responseCallback)
+    if (chrome && chrome.tabs) {
+        chrome.tabs.sendMessage(tabId, message, responseCallback)
     }
 
     // Noop on safari
     // TODO: Do we actually need this? It's currently only being used to check if the active tab is a sourcegraph server.
 }
 
-export const create = (props: browser.tabs.CreateProperties, callback?: (tab: browser.tabs.Tab) => void) => {
-    if (browser && browser.tabs) {
-        browser.tabs.create(props, callback)
+export const create = (props: chrome.tabs.CreateProperties, callback?: (tab: chrome.tabs.Tab) => void) => {
+    if (chrome && chrome.tabs) {
+        chrome.tabs.create(props, callback)
     }
 }
 
-export const update = (props: browser.tabs.UpdateProperties, callback?: (tab?: browser.tabs.Tab) => void) => {
-    if (browser && browser.tabs) {
-        browser.tabs.update(props, callback)
+export const update = (props: chrome.tabs.UpdateProperties, callback?: (tab?: chrome.tabs.Tab) => void) => {
+    if (chrome && chrome.tabs) {
+        chrome.tabs.update(props, callback)
     }
 }

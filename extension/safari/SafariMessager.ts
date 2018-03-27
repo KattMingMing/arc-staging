@@ -6,7 +6,7 @@ interface Message {
 type ResponseHandler = (res?: any) => void
 type MessageHandler = (
     message: Message,
-    sender: browser.runtime.MessageSender,
+    sender: chrome.runtime.MessageSender,
     sendResponse?: (response?: any) => void
 ) => void
 

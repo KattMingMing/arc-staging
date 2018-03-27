@@ -1,7 +1,7 @@
-import browser from './browser'
+const chrome = global.chrome
 
-export const setBadgeText = (details: browser.browserAction.BadgeTextDetails) => {
-    if (browser && browser.browserAction) {
-        browser.browserAction.setBadgeText(details)
+export const setBadgeText = (details: chrome.browserAction.BadgeTextDetails) => {
+    if (chrome && chrome.browserAction) {
+        chrome.browserAction.setBadgeText(details)
     }
 }

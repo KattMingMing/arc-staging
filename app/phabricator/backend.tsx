@@ -1,5 +1,4 @@
 import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/toPromise'
 import { Observable } from 'rxjs/Observable'
 import { mutateGraphQL } from '../backend/graphql'
 import { memoizeObservable } from '../util/memoize'
@@ -50,46 +49,6 @@ interface ConduitReposResponse {
     }
 }
 
-export async function getRepoListFromConduit(): Promise<ConduitRepo[]> {
-    const searchForm = document.querySelector('.phabricator-search-menu form') as any
-    if (!searchForm) {
-        return []
-    }
-    const form = new FormData()
-    form.set('__csrf__', searchForm.querySelector('input[name=__csrf__]')!.value)
-    form.set('__form__', searchForm.querySelector('input[name=__form__]')!.value)
-    form.set('params[attachments]', '{ "uris": true }')
-
-    const results: ConduitRepo[] = []
-    while (true) {
-        try {
-            const res: ConduitReposResponse = await fetch(window.location.origin + '/api/diffusion.repository.search', {
-                method: 'POST',
-                body: form,
-                credentials: 'include',
-                headers: new Headers({ Accept: 'application/json' }),
-            }).then(resp => resp.json())
-
-            if (res.error_code) {
-                throw new Error(`error ${res.error_code}: ${res.error_info}`)
-            }
-            if (res.result) {
-                results.push(...res.result.data)
-            }
-            if (!res.result.cursor.after) {
-                break
-            } else {
-                form.set('params[after]', '' + res.result.cursor.after)
-            }
-        } catch (e) {
-            console.error(e)
-            throw e
-        }
-    }
-
-    return results
-}
-
 export interface ConduitRef {
     ref: string
     type: 'base' | 'diff'
@@ -136,22 +95,27 @@ function createConduitRequestForm(): FormData {
     return form
 }
 
-export async function getDiffDetailsFromConduit(diffID: number, differentialID: number): Promise<ConduitDiffDetails> {
-    const form = createConduitRequestForm()
-    form.set('params[ids]', `[${diffID}]`)
-    form.set('params[revisionIDs]', `[${differentialID}]`)
+export function getDiffDetailsFromConduit(diffID: number, differentialID: number): Promise<ConduitDiffDetails> {
+    return new Promise((resolve, reject) => {
+        const form = createConduitRequestForm()
+        form.set('params[ids]', `[${diffID}]`)
+        form.set('params[revisionIDs]', `[${differentialID}]`)
 
-    const res: ConduitDiffDetailsResponse = await fetch(window.location.origin + '/api/differential.querydiffs', {
-        method: 'POST',
-        body: form,
-        credentials: 'include',
-        headers: new Headers({ Accept: 'application/json' }),
-    }).then(resp => resp.json())
-
-    if (res.error_code) {
-        throw new Error(`error ${res.error_code}: ${res.error_info}`)
-    }
-    return res.result['' + diffID]
+        fetch(window.location.origin + '/api/differential.querydiffs', {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+            headers: new Headers({ Accept: 'application/json' }),
+        })
+            .then(resp => resp.json())
+            .then((res: ConduitDiffDetailsResponse) => {
+                if (res.error_code) {
+                    reject(new Error(`error ${res.error_code}: ${res.error_info}`))
+                }
+                resolve(res.result['' + diffID])
+            })
+            .catch(reject)
+    })
 }
 
 interface ConduitCommit {
@@ -168,25 +132,27 @@ interface ConduitDiffusionCommitQueryResponse {
     }
 }
 
-export async function searchForCommitID(props: any): Promise<string> {
-    const form = createConduitRequestForm()
-    form.set('params[constraints]', `{"ids":[${props.diffID}]}`)
+export function searchForCommitID(props: any): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const form = createConduitRequestForm()
+        form.set('params[constraints]', `{"ids":[${props.diffID}]}`)
 
-    const resp: ConduitDiffusionCommitQueryResponse = await fetch(
-        window.location.origin + '/api/diffusion.commit.search',
-        {
+        fetch(window.location.origin + '/api/diffusion.commit.search', {
             method: 'POST',
             body: form,
             credentials: 'include',
             headers: new Headers({ Accept: 'application/json' }),
-        }
-    ).then(resp => resp.json())
+        })
+            .then(resp => resp.json())
+            .then((resp: ConduitDiffusionCommitQueryResponse) => {
+                if (resp.error_code) {
+                    reject(new Error(`error ${resp.error_code}: ${resp.error_info}`))
+                }
 
-    if (resp.error_code) {
-        throw new Error(`error ${resp.error_code}: ${resp.error_info}`)
-    }
-
-    return resp.result.data[0].fields.identifier
+                resolve(resp.result.data[0].fields.identifier)
+            })
+            .catch(reject)
+    })
 }
 
 interface ConduitDifferentialQueryResponse {
@@ -200,21 +166,26 @@ interface ConduitDifferentialQueryResponse {
     }
 }
 
-export async function getRepoPHIDForDifferentialID(differentialID: number): Promise<string> {
-    const form = createConduitRequestForm()
-    form.set('params[ids]', `[${differentialID}]`)
+export function getRepoPHIDForDifferentialID(differentialID: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const form = createConduitRequestForm()
+        form.set('params[ids]', `[${differentialID}]`)
 
-    const res: ConduitDifferentialQueryResponse = await fetch(window.location.origin + '/api/differential.query', {
-        method: 'POST',
-        body: form,
-        credentials: 'include',
-        headers: new Headers({ Accept: 'application/json' }),
-    }).then(resp => resp.json())
-
-    if (res.error_code) {
-        throw new Error(`error ${res.error_code}: ${res.error_info}`)
-    }
-    return res.result['0'].repositoryPHID
+        fetch(window.location.origin + '/api/differential.query', {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+            headers: new Headers({ Accept: 'application/json' }),
+        })
+            .then(resp => resp.json())
+            .then((res: ConduitDifferentialQueryResponse) => {
+                if (res.error_code) {
+                    reject(new Error(`error ${res.error_code}: ${res.error_info}`))
+                }
+                resolve(res.result['0'].repositoryPHID)
+            })
+            .catch(reject)
+    })
 }
 
 interface CreatePhabricatorRepoOptions {
@@ -247,77 +218,92 @@ export interface PhabricatorRepoDetails {
     repoPath: string
 }
 
-export async function getRepoDetailsFromCallsign(callsign: string): Promise<PhabricatorRepoDetails> {
-    const form = createConduitRequestForm()
-    form.set('params[constraints]', JSON.stringify({ callsigns: [callsign] }))
-    form.set('params[attachments]', '{ "uris": true }')
+export function getRepoDetailsFromCallsign(callsign: string): Promise<PhabricatorRepoDetails> {
+    return new Promise((resolve, reject) => {
+        const form = createConduitRequestForm()
+        form.set('params[constraints]', JSON.stringify({ callsigns: [callsign] }))
+        form.set('params[attachments]', '{ "uris": true }')
 
-    const res: ConduitReposResponse = await fetch(window.location.origin + '/api/diffusion.repository.search', {
-        method: 'POST',
-        body: form,
-        credentials: 'include',
-        headers: new Headers({ Accept: 'application/json' }),
-    }).then(resp => resp.json())
+        fetch(window.location.origin + '/api/diffusion.repository.search', {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+            headers: new Headers({ Accept: 'application/json' }),
+        })
+            .then(resp => resp.json())
+            .then((res: ConduitReposResponse) => {
+                if (res.error_code) {
+                    reject(new Error(`error ${res.error_code}: ${res.error_info}`))
+                }
+                const repo = res.result.data[0]
+                if (!repo) {
+                    reject(new Error(`could not locate repo with callsign ${callsign}`))
+                }
+                if (!repo.attachments || !repo.attachments.uris) {
+                    reject(new Error(`could not locate git uri for repo with callsign ${callsign}`))
+                }
 
-    if (res.error_code) {
-        throw new Error(`error ${res.error_code}: ${res.error_info}`)
-    }
-    const repo = res.result.data[0]
-    if (!repo) {
-        throw new Error(`could not locate repo with callsign ${callsign}`)
-    }
-    if (!repo.attachments || !repo.attachments.uris) {
-        throw new Error(`could not locate git uri for repo with callsign ${callsign}`)
-    }
-
-    const details = convertConduitRepoToRepoDetails(repo)
-    if (!details) {
-        throw new Error('could not parse repo details')
-    }
-    return createPhabricatorRepo({ callsign, repoPath: details.repoPath, phabricatorURL: window.location.origin })
-        .map(() => details)
-        .toPromise()
-}
-
-export async function getRepoDetailsFromRepoPHID(phid: string): Promise<PhabricatorRepoDetails> {
-    const form = createConduitRequestForm()
-    form.set('params[constraints]', JSON.stringify({ phids: [phid] }))
-    form.set('params[attachments]', '{ "uris": true }')
-
-    const res: ConduitReposResponse = await fetch(window.location.origin + '/api/diffusion.repository.search', {
-        method: 'POST',
-        body: form,
-        credentials: 'include',
-        headers: new Headers({ Accept: 'application/json' }),
-    }).then(resp => resp.json())
-
-    if (res.error_code) {
-        throw new Error(`error ${res.error_code}: ${res.error_info}`)
-    }
-    const repo = res.result.data[0]
-    if (!repo) {
-        throw new Error(`could not locate repo with phid ${phid}`)
-    }
-    if (!repo.attachments || !repo.attachments.uris) {
-        throw new Error(`could not locate git uri for repo with phid ${phid}`)
-    }
-
-    const details = convertConduitRepoToRepoDetails(repo)
-    if (!details) {
-        throw new Error('could not parse repo details')
-    }
-    return createPhabricatorRepo({
-        callsign: repo.fields.callsign,
-        repoPath: details.repoPath,
-        phabricatorURL: window.location.origin,
+                const details = convertConduitRepoToRepoDetails(repo)
+                if (details) {
+                    createPhabricatorRepo({
+                        callsign,
+                        repoPath: details.repoPath,
+                        phabricatorURL: window.location.origin,
+                    }).subscribe(() => resolve(details))
+                } else {
+                    reject(new Error('could not parse repo details'))
+                }
+            })
+            .catch(reject)
     })
-        .map(() => details)
-        .toPromise()
 }
 
-export async function getRepoDetailsFromDifferentialID(differentialID: number): Promise<PhabricatorRepoDetails> {
-    const phid = await getRepoPHIDForDifferentialID(differentialID)
-    return getRepoDetailsFromRepoPHID(phid)
+export function getRepoDetailsFromRepoPHID(phid: string): Promise<PhabricatorRepoDetails> {
+    return new Promise((resolve, reject) => {
+        const form = createConduitRequestForm()
+        form.set('params[constraints]', JSON.stringify({ phids: [phid] }))
+        form.set('params[attachments]', '{ "uris": true }')
+
+        fetch(window.location.origin + '/api/diffusion.repository.search', {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+            headers: new Headers({ Accept: 'application/json' }),
+        })
+            .then(resp => resp.json())
+            .then((res: ConduitReposResponse) => {
+                if (res.error_code) {
+                    throw new Error(`error ${res.error_code}: ${res.error_info}`)
+                }
+                const repo = res.result.data[0]
+                if (!repo) {
+                    throw new Error(`could not locate repo with phid ${phid}`)
+                }
+                if (!repo.attachments || !repo.attachments.uris) {
+                    throw new Error(`could not locate git uri for repo with phid ${phid}`)
+                }
+
+                const details = convertConduitRepoToRepoDetails(repo)
+                if (details) {
+                    createPhabricatorRepo({
+                        callsign: repo.fields.callsign,
+                        repoPath: details.repoPath,
+                        phabricatorURL: window.location.origin,
+                    })
+                        .map(() => details)
+                        .subscribe(() => {
+                            resolve(details)
+                        })
+                } else {
+                    reject(new Error('could not parse repo details'))
+                }
+            })
+            .catch(reject)
+    })
+}
+
+export function getRepoDetailsFromDifferentialID(differentialID: number): Promise<PhabricatorRepoDetails> {
+    return getRepoPHIDForDifferentialID(differentialID).then(getRepoDetailsFromRepoPHID)
 }
 
 function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDetails | null {

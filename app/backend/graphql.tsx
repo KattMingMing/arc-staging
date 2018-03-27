@@ -62,7 +62,9 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
             }
             if (sourcegraphUrl !== url) {
                 setSourcegraphUrl(url)
-                storage.setSync({ sourcegraphURL: url })
+                if (window.SG_ENV === 'EXTENSION') {
+                    storage.setSync({ sourcegraphURL: url })
+                }
             }
             return response
         })

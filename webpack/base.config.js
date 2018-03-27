@@ -2,24 +2,26 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const path = require('path')
 const webpack = require('webpack')
 
-const buildEntry = pre => entry => [path.join(__dirname, pre), path.join(__dirname, entry)]
+const buildEntry = (...files) => files.map(file => path.join(__dirname, file))
 
-const pageEntry = buildEntry('../scripts/page.entry.js')
-const extEntry = buildEntry('../scripts/extension.entry.js')
+const contentEntry = '../pre/content.entry.js'
+const backgroundEntry = '../pre/background.entry.js'
+const pageEntry = '../pre/page.entry.js'
+const extEntry = '../pre/extension.entry.js'
 
 module.exports = {
     entry: {
-        background: extEntry('../chrome/extension/background.tsx'),
-        link: extEntry('../chrome/extension/link.tsx'),
-        options: extEntry('../chrome/extension/options.tsx'),
-        inject: extEntry('../chrome/extension/inject.tsx'),
-        phabricator: pageEntry('../app/phabricator/extension.tsx'),
+        background: buildEntry(extEntry, backgroundEntry, '../chrome/extension/background.tsx'),
+        link: buildEntry(extEntry, contentEntry, '../chrome/extension/link.tsx'),
+        options: buildEntry(extEntry, backgroundEntry, '../chrome/extension/options.tsx'),
+        inject: buildEntry(extEntry, contentEntry, '../chrome/extension/inject.tsx'),
+        phabricator: buildEntry(pageEntry, '../app/phabricator/extension.tsx'),
 
         bootstrap: path.join(__dirname, '../node_modules/bootstrap/dist/css/bootstrap.css'),
         style: path.join(__dirname, '../app/app.scss'),
     },
     output: {
-        path: path.join(__dirname, '../dist/js'),
+        path: path.join(__dirname, '../build/dist/js'),
         filename: '[name].bundle.js',
         chunkFilename: '[id].chunk.js',
     },
@@ -33,19 +35,21 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js'],
     },
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.tsx?$/,
-                loaders: [
+                use: [
                     'babel-loader',
-                    'ts-loader?' +
-                        JSON.stringify({
+                    {
+                        loader: 'ts-loader',
+                        options: {
                             compilerOptions: {
                                 module: 'esnext',
                                 noEmit: false, // tsconfig.json sets this to true to avoid output when running tsc manually
                             },
                             transpileOnly: process.env.DISABLE_TYPECHECKING === 'true',
-                        }),
+                        },
+                    },
                 ],
             },
             {

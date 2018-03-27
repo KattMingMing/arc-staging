@@ -16,7 +16,6 @@
     "devDependencies": {
         "@sourcegraph/tslint-config": "^7.0.0",
         "@types/bluebird": "^3.0.35",
-        "@types/chrome": "^0.0.48",
         "@types/lodash": "^4.14.72",
         "@types/marked": "^0.0.28",
         "@types/node": "^8.0.20",
@@ -30,7 +29,7 @@
         "babel-plugin-transform-new-target": "^7.0.0-alpha.14",
         "babel-preset-env": "^1.6.1",
         "css-loader": "^0.28.7",
-        "extract-text-webpack-plugin": "^3.0.1",
+        "extract-text-webpack-plugin": "^3.0.2",
         "get-graphql-schema": "^2.1.1",
         "gql2ts": "^1.2.1",
         "jade": "^1.11.0",
@@ -48,13 +47,14 @@
         "tslint-language-service": "^0.9.6",
         "tslint-webpack-plugin": "^1.0.0",
         "typescript": "^2.5.2",
-        "webpack": "^3.10.0"
+        "web-ext": "^2.5.0",
+        "webpack": "^3.11.0"
     },
     "dependencies": {
         "@sourcegraph/icons": "^1.7.0",
         "@sourcegraph/telligent-tracker": "^0.1.6",
+        "@types/filesystem": "0.0.28",
         "autobind-decorator": "^1.3.4",
-        "babel-polyfill": "^6.26.0",
         "bluebird": "^3.3.4",
         "bootstrap": "^4.0.0",
         "formdata-polyfill": "^3.0.9",

@@ -1,7 +1,7 @@
-import browser from './browser'
 import safariMessager from './safari/SafariMessager'
 
 const safari = window.safari
+const chrome = global.chrome
 
 export interface Message {
     type: string
@@ -9,8 +9,8 @@ export interface Message {
 }
 
 export const sendMessage = (message: Message, responseCallback?: (response: any) => void) => {
-    if (browser && browser.runtime) {
-        browser.runtime.sendMessage(message, responseCallback)
+    if (chrome && chrome.runtime) {
+        chrome.runtime.sendMessage(message, responseCallback)
     }
 
     if (safari) {
@@ -19,10 +19,10 @@ export const sendMessage = (message: Message, responseCallback?: (response: any)
 }
 
 export const onMessage = (
-    callback: (message: Message, sender: browser.runtime.MessageSender, sendResponse: (response: any) => void) => void
+    callback: (message: Message, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => void
 ) => {
-    if (browser && browser.runtime && browser.runtime.onMessage) {
-        browser.runtime.onMessage.addListener(callback)
+    if (chrome && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.addListener(callback)
         return
     }
 
@@ -35,30 +35,28 @@ export const onMessage = (
 }
 
 export const setUninstallURL = (url: string) => {
-    if (browser && browser.runtime && browser.runtime.setUninstallURL) {
-        browser.runtime.setUninstallURL(url)
+    if (chrome && chrome.runtime && chrome.runtime.setUninstallURL) {
+        chrome.runtime.setUninstallURL(url)
     }
 }
 
 export const getManifest = () => {
-    if (browser && browser.runtime && browser.runtime.getManifest) {
-        return browser.runtime.getManifest()
+    if (chrome && chrome.runtime && chrome.runtime.getManifest) {
+        return chrome.runtime.getManifest()
     }
 
     return null
 }
 
 export const getContentScripts = () => {
-    if (browser && browser.runtime) {
-        return browser.runtime.getManifest().content_scripts
+    if (chrome && chrome.runtime) {
+        return chrome.runtime.getManifest().content_scripts
     }
-    console.log('SAFARI getContentScripts', safari)
     return []
 }
 
-export const onInstalled = (callback: (details: browser.runtime.InstalledDetails) => void) => {
-    if (browser && browser.runtime && browser.runtime.onInstalled) {
-        browser.runtime.onInstalled.addListener(callback)
-        return
+export const onInstalled = (handler: (info: chrome.runtime.InstalledDetails) => void) => {
+    if (chrome && chrome.runtime && chrome.runtime.onInstalled) {
+        chrome.runtime.onInstalled.addListener(handler)
     }
 }

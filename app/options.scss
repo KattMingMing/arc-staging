@@ -9,6 +9,12 @@
         color: #2b3750;
         width: 400px;
         height: 400px;
+
+        &-full {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
     }
 
     &__logo {
@@ -143,7 +149,7 @@
         padding: 0;
 
         &:hover {
-            color: rgba(43, 55, 80, 1.0);
+            color: rgba(43, 55, 80, 1);
         }
     }
 
@@ -174,7 +180,7 @@
 
     &__item-badge {
         font-weight: normal;
-        background-color: #566E9F;
+        background-color: #566e9f;
     }
 
     &__footer {

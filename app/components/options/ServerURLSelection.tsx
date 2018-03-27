@@ -23,6 +23,8 @@ export class ServerURLSelection extends React.Component<Props, State> {
     }
 
     public componentDidMount(): void {
+        storage.getSync(({ sourcegraphURL }) => this.setState(() => ({ sourcegraphUrl: sourcegraphURL })))
+
         storage.onChanged(({ sourcegraphURL, serverUrls }) => {
             const newState = {
                 serverUrls: this.state.serverUrls,
@@ -47,7 +49,7 @@ export class ServerURLSelection extends React.Component<Props, State> {
         }
     }
 
-    private handleClick = (url: string) => () => {
+    private handleClick = (url: string) => (e: React.MouseEvent<HTMLElement>) => {
         storage.setSync({ sourcegraphURL: url }, () => {
             this.setState(() => ({ sourcegraphUrl: url }))
         })
@@ -58,9 +60,21 @@ export class ServerURLSelection extends React.Component<Props, State> {
         e.stopPropagation()
         storage.getSync(items => {
             const urls = items.serverUrls || []
-            storage.setSync({ serverUrls: without(urls, url) }, () => {
-                this.setState(() => ({ serverUrls: without(urls, url) }))
-            })
+            const serverUrls = without(urls, url)
+            // If the current primary server url is being removed,
+            // use the first url in the list or empty string if none are left
+            const sourcegraphURL =
+                url !== items.sourcegraphURL ? items.sourcegraphURL : serverUrls.find(u => u !== url) || ''
+
+            storage.setSync(
+                {
+                    serverUrls,
+                    sourcegraphURL,
+                },
+                () => {
+                    this.setState(() => ({ serverUrls: without(urls, url), sourcegraphUrl: sourcegraphURL }))
+                }
+            )
         })
     }
 
@@ -83,12 +97,8 @@ export class ServerURLSelection extends React.Component<Props, State> {
                                 Primary
                             </Badge>
                         )}
-                        <button className="options__row-close btn btn-icon">
-                            <CloseIcon
-                                onClick={this.handleRemove(url)}
-                                style={{ verticalAlign: 'middle' }}
-                                className="icon-inline"
-                            />
+                        <button onClick={this.handleRemove(url)} className="options__row-close btn btn-icon">
+                            <CloseIcon style={{ verticalAlign: 'middle' }} className="icon-inline" />
                         </button>
                     </ListGroupItem>
                 ))}

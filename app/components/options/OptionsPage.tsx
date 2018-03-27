@@ -15,6 +15,8 @@ interface State {
     repositoryFileTreeEnabled: boolean
     repositorySearchEnabled: boolean
     eventTrackingEnabled: boolean
+    displayHeader: boolean
+    isPopup: boolean
 }
 
 // Make safari not be abnoxious <angry face>
@@ -26,10 +28,21 @@ const safariInputAttributes = {
 }
 
 export class OptionsPage extends React.Component<{}, State> {
-    public state = {
-        repositoryFileTreeEnabled: false,
-        repositorySearchEnabled: false,
-        eventTrackingEnabled: false,
+    public state: State
+
+    constructor(props: any) {
+        super(props)
+
+        const search = window.location.search
+        const params = querystring.parse(search)
+
+        this.state = {
+            repositoryFileTreeEnabled: false,
+            repositorySearchEnabled: false,
+            eventTrackingEnabled: false,
+            displayHeader: params.popup || params.fullPage,
+            isPopup: params.popup,
+        }
     }
 
     public componentDidMount(): void {
@@ -63,13 +76,11 @@ export class OptionsPage extends React.Component<{}, State> {
     }
 
     public render(): JSX.Element | null {
-        const search = window.location.search
-        const searchParams = querystring.parse(search)
         return (
-            <div className="options__container">
+            <div className={`options__container ${!this.state.isPopup ? 'options__container-full' : ''}`}>
                 <ServerModal />
                 <div>
-                    {searchParams.popup && (
+                    {this.state.displayHeader && (
                         <div className="options__overlay-header">
                             <div className="options__overlay-container">
                                 <img

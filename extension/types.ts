@@ -16,6 +16,7 @@ export interface StorageItems {
 
 export const defaultStorageItems: StorageItems = {
     sourcegraphURL: 'https://sourcegraph.com',
+    serverUrls: ['https://sourcegraph.com'],
     gitHubEnterpriseURL: '',
     phabricatorURL: '',
     repositoryFileTreeEnabled: true,
@@ -24,10 +25,9 @@ export const defaultStorageItems: StorageItems = {
     eventTrackingEnabled: true,
     openEditorEnabled: false,
     identity: '',
-    serverUrls: [],
     enterpriseUrls: [],
     serverUserId: '',
     hasSeenServerModal: false,
 }
 
-export type StorageChange = { [key in keyof StorageItems]: browser.storage.StorageChange }
+export type StorageChange = { [key in keyof StorageItems]: chrome.storage.StorageChange }

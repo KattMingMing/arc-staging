@@ -8,7 +8,7 @@ interface ISafariStorageArea {
 }
 
 export interface SafariSettingsChangeMessage {
-    changes: { [key: string]: browser.storage.StorageChange }
+    changes: { [key: string]: chrome.storage.StorageChange }
     areaName: string
 }
 
@@ -21,6 +21,8 @@ interface SettingsHandlerMessage {
     type: keyof ISafariStorageArea | 'get' | 'init'
     payload?: string | SetItemPayload
 }
+
+const safari = window.safari
 
 class ContentStorageArea implements ISafariStorageArea {
     private page = safari.self as SafariContentWebPage
@@ -98,7 +100,7 @@ class ContentStorageArea implements ISafariStorageArea {
     }
 }
 
-export default class SafariStorageArea implements browser.storage.StorageArea {
+export default class SafariStorageArea implements chrome.storage.StorageArea {
     private area: ISafariStorageArea | null = null
     private keys: string[] = []
     private isBackground = !!safari.application
@@ -209,6 +211,7 @@ export default class SafariStorageArea implements browser.storage.StorageArea {
             callback({
                 [key]: this.area.getItem(key),
             })
+            return
         }
 
         const items = {}
@@ -218,7 +221,6 @@ export default class SafariStorageArea implements browser.storage.StorageArea {
         }
 
         const cb = keyOrCallback as (items: { [key: string]: any }) => void
-
         cb(items)
     }
 }

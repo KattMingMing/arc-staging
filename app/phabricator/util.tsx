@@ -156,247 +156,281 @@ function getBaseCommitIDFromRevisionPage(): string | null {
     return null
 }
 
-export async function getPhabricatorState(
+export function getPhabricatorState(
     loc: Location
 ): Promise<DiffusionState | DifferentialState | RevisionState | ChangeState | null> {
-    const diffusionMatch = PHAB_DIFFUSION_REGEX.exec(loc.href)
-    if (diffusionMatch) {
-        const match = {
-            protocol: diffusionMatch[1],
-            hostname: diffusionMatch[2],
-            tld: diffusionMatch[3],
-            port: diffusionMatch[4],
-            viewType: diffusionMatch[5],
-            callsign: diffusionMatch[6],
-            branch: diffusionMatch[7],
-            filePath: diffusionMatch[8],
-            revInUrl: diffusionMatch[9], // only on previous versions
-        }
-        if (match.branch && match.branch.endsWith('/')) {
-            // Remove trailing slash (included b/c branch group is optional)
-            match.branch = match.branch.substr(match.branch.length - 1)
-        }
-
-        const callsign = getCallsignFromPageTag()
-        if (!callsign) {
-            console.error('could not locate callsign for differential page')
-            return null
-        }
-        match.callsign = callsign
-        const repoPath = (await getRepoDetailsFromCallsign(callsign)).repoPath
-        const commitID = getCommitIDFromPageTag()
-        if (!commitID) {
-            console.error('cannot determine commitIDision from page')
-            return null
-        }
-        return {
-            repoPath,
-            rev: match.branch,
-            filePath: match.filePath,
-            mode: PhabricatorMode.Diffusion,
-            commitID,
-        }
-    }
-
-    const differentialMatch = PHAB_DIFFERENTIAL_REGEX.exec(loc.href)
-    if (differentialMatch) {
-        const match = {
-            protocol: differentialMatch[1],
-            hostname: differentialMatch[2],
-            tld: differentialMatch[3],
-            port: differentialMatch[4],
-            differentialID: differentialMatch[5],
-            diffID: differentialMatch[6],
-            comparison: differentialMatch[7],
-        }
-        const differentialID = parseInt(match.differentialID.split('D')[1], 10)
-        let diffID = match.diffID ? parseInt(match.diffID, 10) : undefined
-        const { callsign } = await getRepoDetailsFromDifferentialID(differentialID)
-        if (!callsign) {
-            console.error(`callsign not found`)
-            return null
-        }
-        if (!diffID) {
-            const fromPage = getDiffIdFromDifferentialPage()
-            if (fromPage) {
-                diffID = parseInt(fromPage, 10)
+    return new Promise((resolve, reject) => {
+        const diffusionMatch = PHAB_DIFFUSION_REGEX.exec(loc.href)
+        if (diffusionMatch) {
+            const match = {
+                protocol: diffusionMatch[1],
+                hostname: diffusionMatch[2],
+                tld: diffusionMatch[3],
+                port: diffusionMatch[4],
+                viewType: diffusionMatch[5],
+                callsign: diffusionMatch[6],
+                branch: diffusionMatch[7],
+                filePath: diffusionMatch[8],
+                revInUrl: diffusionMatch[9], // only on previous versions
             }
-        }
-        if (!diffID) {
-            console.error(`differential id not found on page.`)
-            return null
-        }
-        const repoPath = (await getRepoDetailsFromCallsign(callsign)).repoPath
-        let baseRev = `phabricator/base/${diffID}`
-        let headRev = `phabricator/diff/${diffID}`
-
-        let leftDiffID: number | undefined
-
-        const maxDiff = getMaxDiffFromTabView()
-        const diffLanded = isDifferentialLanded()
-        if (diffLanded && !maxDiff) {
-            console.error(
-                'looking for the final diff id in the revision contents table failed. expected final row to have the commit in the description field.'
-            )
-            return null
-        }
-        if (match.comparison) {
-            // urls that looks like this: http://phabricator.aws.sgdev.org/D3?vs=on&id=8&whitespace=ignore-most#toc
-            // if the first parameter (vs=) is not 'on', not sure how to handle
-            const comparisonMatch = COMPARISON_REGEX.exec(match.comparison)!
-            const leftID = comparisonMatch[1]
-            if (leftID !== 'on') {
-                leftDiffID = parseInt(leftID, 10)
-                baseRev = `phabricator/diff/${leftDiffID}`
-            } else {
-                baseRev = `phabricator/base/${comparisonMatch[2]}`
+            if (match.branch && match.branch.endsWith('/')) {
+                // Remove trailing slash (included b/c branch group is optional)
+                match.branch = match.branch.substr(match.branch.length - 1)
             }
-            headRev = `phabricator/diff/${comparisonMatch[2]}`
-            if (diffLanded && maxDiff && comparisonMatch[2] === `${maxDiff.diffID}`) {
-                headRev = maxDiff.revDescription
-                baseRev = headRev.concat('~1')
+
+            const callsign = getCallsignFromPageTag()
+            if (!callsign) {
+                console.error('could not locate callsign for differential page')
+                resolve(null)
+                return
             }
-        } else {
-            // check if the diff we are viewing is the max diff. if so,
-            // right is the merged rev into master, and left is master~1
-            if (diffLanded && maxDiff && diffID === maxDiff.diffID) {
-                headRev = maxDiff.revDescription
-                baseRev = maxDiff.revDescription.concat('~1')
+            match.callsign = callsign
+            getRepoDetailsFromCallsign(callsign)
+                .then(({ repoPath }) => {
+                    const commitID = getCommitIDFromPageTag()
+                    if (!commitID) {
+                        console.error('cannot determine commitIDision from page')
+                        resolve(null)
+                        return
+                    }
+                    resolve({
+                        repoPath,
+                        filePath: match.filePath,
+                        mode: PhabricatorMode.Diffusion,
+                        commitID,
+                    })
+                })
+                .catch(reject)
+            return
+        }
+
+        const differentialMatch = PHAB_DIFFERENTIAL_REGEX.exec(loc.href)
+        if (differentialMatch) {
+            const match = {
+                protocol: differentialMatch[1],
+                hostname: differentialMatch[2],
+                tld: differentialMatch[3],
+                port: differentialMatch[4],
+                differentialID: differentialMatch[5],
+                diffID: differentialMatch[6],
+                comparison: differentialMatch[7],
             }
-        }
-        return {
-            baseRepoPath: repoPath,
-            baseRev,
-            headRepoPath: repoPath,
-            headRev, // This will be blank on GitHub, but on a manually staged instance should exist
-            differentialID,
-            diffID,
-            leftDiffID,
-            mode: PhabricatorMode.Differential,
-        }
-    }
 
-    const revisionMatch = PHAB_REVISION_REGEX.exec(loc.href)
-    if (revisionMatch) {
-        const match = {
-            protocol: revisionMatch[1],
-            hostname: revisionMatch[2],
-            tld: revisionMatch[3],
-            port: revisionMatch[4],
-            callsign: revisionMatch[5],
-            rev: revisionMatch[6],
-        }
+            const differentialID = parseInt(match.differentialID.split('D')[1], 10)
+            let diffID = match.diffID ? parseInt(match.diffID, 10) : undefined
 
-        const repoPath = (await getRepoDetailsFromCallsign(match.callsign)).repoPath
+            getRepoDetailsFromDifferentialID(differentialID)
+                .then(({ callsign }) => {
+                    if (!callsign) {
+                        console.error(`callsign not found`)
+                        resolve(null)
+                        return
+                    }
+                    if (!diffID) {
+                        const fromPage = getDiffIdFromDifferentialPage()
+                        if (fromPage) {
+                            diffID = parseInt(fromPage, 10)
+                        }
+                    }
+                    if (!diffID) {
+                        console.error(`differential id not found on page.`)
+                        resolve(null)
+                        return
+                    }
+                    getRepoDetailsFromCallsign(callsign)
+                        .then(({ repoPath }) => {
+                            let baseRev = `phabricator/base/${diffID}`
+                            let headRev = `phabricator/diff/${diffID}`
 
-        const headCommitID = match.rev
-        const baseCommitID = getBaseCommitIDFromRevisionPage()
-        if (!baseCommitID) {
-            console.error(`did not successfully determine parent revision.`)
-            return null
-        }
-        return {
-            repoPath,
-            baseCommitID,
-            headCommitID,
-            mode: PhabricatorMode.Revision,
-        }
-    }
+                            let leftDiffID: number | undefined
 
-    const changeMatch = PHAB_CHANGE_REGEX.exec(loc.href)
-    if (changeMatch) {
-        const match = {
-            protocol: changeMatch[1],
-            hostname: changeMatch[2],
-            tld: changeMatch[3],
-            port: changeMatch[4],
-            viewType: changeMatch[5],
-            callsign: changeMatch[6],
-            branch: changeMatch[7],
-            filePath: changeMatch[8],
-            revInUrl: changeMatch[9], // only on previous versions
-        }
-
-        const callsign = getCallsignFromPageTag()
-        if (!callsign) {
-            console.error('could not locate callsign for differential page')
-            return null
-        }
-        match.callsign = callsign
-        const repoPath = (await getRepoDetailsFromCallsign(callsign)).repoPath
-
-        const commitID = getCommitIDFromPageTag()
-        if (!commitID) {
-            console.error('cannot determine revision from page.')
-            return null
-        }
-        return {
-            repoPath,
-            filePath: match.filePath,
-            mode: PhabricatorMode.Change,
-            commitID,
-        }
-    }
-
-    const changesetMatch = PHAB_CHANGESET_REGEX.exec(loc.href)
-    if (changesetMatch) {
-        const crumbs = document.querySelector('.phui-crumbs-view')
-        if (!crumbs) {
-            throw new Error('failed parsing changeset dom')
+                            const maxDiff = getMaxDiffFromTabView()
+                            const diffLanded = isDifferentialLanded()
+                            if (diffLanded && !maxDiff) {
+                                console.error(
+                                    'looking for the final diff id in the revision contents table failed. expected final row to have the commit in the description field.'
+                                )
+                                return null
+                            }
+                            if (match.comparison) {
+                                // urls that looks like this: http://phabricator.aws.sgdev.org/D3?vs=on&id=8&whitespace=ignore-most#toc
+                                // if the first parameter (vs=) is not 'on', not sure how to handle
+                                const comparisonMatch = COMPARISON_REGEX.exec(match.comparison)!
+                                const leftID = comparisonMatch[1]
+                                if (leftID !== 'on') {
+                                    leftDiffID = parseInt(leftID, 10)
+                                    baseRev = `phabricator/diff/${leftDiffID}`
+                                } else {
+                                    baseRev = `phabricator/base/${comparisonMatch[2]}`
+                                }
+                                headRev = `phabricator/diff/${comparisonMatch[2]}`
+                                if (diffLanded && maxDiff && comparisonMatch[2] === `${maxDiff.diffID}`) {
+                                    headRev = maxDiff.revDescription
+                                    baseRev = headRev.concat('~1')
+                                }
+                            } else {
+                                // check if the diff we are viewing is the max diff. if so,
+                                // right is the merged rev into master, and left is master~1
+                                if (diffLanded && maxDiff && diffID === maxDiff.diffID) {
+                                    headRev = maxDiff.revDescription
+                                    baseRev = maxDiff.revDescription.concat('~1')
+                                }
+                            }
+                            resolve({
+                                baseRepoPath: repoPath,
+                                baseRev,
+                                headRepoPath: repoPath,
+                                headRev, // This will be blank on GitHub, but on a manually staged instance should exist
+                                differentialID,
+                                diffID,
+                                leftDiffID,
+                                mode: PhabricatorMode.Differential,
+                            })
+                        })
+                        .catch(reject)
+                })
+                .catch(reject)
+            return
         }
 
-        const [, differentialHref, diffHref] = crumbs.querySelectorAll('a')
+        const revisionMatch = PHAB_REVISION_REGEX.exec(loc.href)
+        if (revisionMatch) {
+            const match = {
+                protocol: revisionMatch[1],
+                hostname: revisionMatch[2],
+                tld: revisionMatch[3],
+                port: revisionMatch[4],
+                callsign: revisionMatch[5],
+                rev: revisionMatch[6],
+            }
 
-        const differentialMatch = differentialHref.getAttribute('href')!.match(/D(\d+)/)
-        if (!differentialMatch) {
-            throw new Error('failed parsing differentialID')
-        }
-        const differentialID = parseInt(differentialMatch[1], 10)
-
-        const diffMatch = diffHref.getAttribute('href')!.match(/\/differential\/diff\/(\d+)/)
-        if (!diffMatch) {
-            throw new Error('failed parsing diffID')
-        }
-        const diffID = parseInt(diffMatch[1], 10)
-
-        const { callsign } = await getRepoDetailsFromDifferentialID(differentialID)
-        if (!callsign) {
-            console.error(`callsign not found`)
-            return null
-        }
-
-        const repoPath = (await getRepoDetailsFromCallsign(callsign)).repoPath
-        let baseRev = `phabricator/base/${diffID}`
-        let headRev = `phabricator/diff/${diffID}`
-
-        const maxDiff = getMaxDiffFromTabView()
-        const diffLanded = isDifferentialLanded()
-        if (diffLanded && !maxDiff) {
-            console.error(
-                'looking for the final diff id in the revision contents table failed. expected final row to have the commit in the description field.'
-            )
-            return null
+            getRepoDetailsFromCallsign(match.callsign)
+                .then(({ repoPath }) => {
+                    const headCommitID = match.rev
+                    const baseCommitID = getBaseCommitIDFromRevisionPage()
+                    if (!baseCommitID) {
+                        console.error(`did not successfully determine parent revision.`)
+                        return null
+                    }
+                    resolve({
+                        repoPath,
+                        baseCommitID,
+                        headCommitID,
+                        mode: PhabricatorMode.Revision,
+                    })
+                })
+                .catch(reject)
+            return
         }
 
-        // check if the diff we are viewing is the max diff. if so,
-        // right is the merged rev into master, and left is master~1
-        if (diffLanded && maxDiff && diffID === maxDiff.diffID) {
-            headRev = maxDiff.revDescription
-            baseRev = maxDiff.revDescription.concat('~1')
+        const changeMatch = PHAB_CHANGE_REGEX.exec(loc.href)
+        if (changeMatch) {
+            const match = {
+                protocol: changeMatch[1],
+                hostname: changeMatch[2],
+                tld: changeMatch[3],
+                port: changeMatch[4],
+                viewType: changeMatch[5],
+                callsign: changeMatch[6],
+                branch: changeMatch[7],
+                filePath: changeMatch[8],
+                revInUrl: changeMatch[9], // only on previous versions
+            }
+
+            const callsign = getCallsignFromPageTag()
+            if (!callsign) {
+                console.error('could not locate callsign for differential page')
+                return null
+            }
+            match.callsign = callsign
+            getRepoDetailsFromCallsign(callsign)
+                .then(({ repoPath }) => {
+                    const commitID = getCommitIDFromPageTag()
+                    if (!commitID) {
+                        console.error('cannot determine revision from page.')
+                        return null
+                    }
+                    resolve({
+                        repoPath,
+                        filePath: match.filePath,
+                        mode: PhabricatorMode.Change,
+                        commitID,
+                    })
+                })
+                .catch(reject)
+            return
         }
 
-        return {
-            baseRepoPath: repoPath,
-            baseRev,
-            headRepoPath: repoPath,
-            headRev, // This will be blank on GitHub, but on a manually staged instance should exist
-            differentialID,
-            diffID,
-            mode: PhabricatorMode.Differential,
-        }
-    }
+        const changesetMatch = PHAB_CHANGESET_REGEX.exec(loc.href)
+        if (changesetMatch) {
+            const crumbs = document.querySelector('.phui-crumbs-view')
+            if (!crumbs) {
+                reject(new Error('failed parsing changeset dom'))
+                return
+            }
 
-    return null
+            const [, differentialHref, diffHref] = crumbs.querySelectorAll('a')
+
+            const differentialMatch = differentialHref.getAttribute('href')!.match(/D(\d+)/)
+            if (!differentialMatch) {
+                reject(new Error('failed parsing differentialID'))
+                return
+            }
+            const differentialID = parseInt(differentialMatch[1], 10)
+
+            const diffMatch = diffHref.getAttribute('href')!.match(/\/differential\/diff\/(\d+)/)
+            if (!diffMatch) {
+                reject(new Error('failed parsing diffID'))
+                return
+            }
+            const diffID = parseInt(diffMatch[1], 10)
+
+            getRepoDetailsFromDifferentialID(differentialID)
+                .then(({ callsign }) => {
+                    if (!callsign) {
+                        console.error(`callsign not found`)
+                        return null
+                    }
+
+                    getRepoDetailsFromCallsign(callsign)
+                        .then(({ repoPath }) => {
+                            let baseRev = `phabricator/base/${diffID}`
+                            let headRev = `phabricator/diff/${diffID}`
+
+                            const maxDiff = getMaxDiffFromTabView()
+                            const diffLanded = isDifferentialLanded()
+                            if (diffLanded && !maxDiff) {
+                                console.error(
+                                    'looking for the final diff id in the revision contents table failed. expected final row to have the commit in the description field.'
+                                )
+                                return null
+                            }
+
+                            // check if the diff we are viewing is the max diff. if so,
+                            // right is the merged rev into master, and left is master~1
+                            if (diffLanded && maxDiff && diffID === maxDiff.diffID) {
+                                headRev = maxDiff.revDescription
+                                baseRev = maxDiff.revDescription.concat('~1')
+                            }
+
+                            resolve({
+                                baseRepoPath: repoPath,
+                                baseRev,
+                                headRepoPath: repoPath,
+                                headRev, // This will be blank on GitHub, but on a manually staged instance should exist
+                                differentialID,
+                                diffID,
+                                mode: PhabricatorMode.Differential,
+                            })
+                        })
+                        .catch(reject)
+                })
+                .catch(reject)
+            return
+        }
+
+        resolve(null)
+    })
 }
 
 export function getFilepathFromFile(fileContainer: HTMLElement): { filePath: string; baseFilePath?: string } {

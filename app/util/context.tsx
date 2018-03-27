@@ -1,4 +1,3 @@
-import browser from '../../extension/browser'
 import storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
 
@@ -149,7 +148,7 @@ export function getPlatformName(): string {
 }
 
 export function getExtensionVersion(): string {
-    const c = browser as any
+    const c = global.chrome as any
     if (c && c.app && c.app.getDetails) {
         const details = c.app.getDetails()
         if (details && details.version) {

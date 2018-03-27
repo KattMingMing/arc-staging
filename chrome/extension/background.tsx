@@ -11,7 +11,7 @@ import * as browserAction from '../../extension/browserAction'
 import * as omnibox from '../../extension/omnibox'
 import * as permissions from '../../extension/permissions'
 import * as runtime from '../../extension/runtime'
-import storage from '../../extension/storage'
+import storage, { defaultStorageItems } from '../../extension/storage'
 import * as tabs from '../../extension/tabs'
 
 let customServerOrigins: string[] = []
@@ -33,7 +33,7 @@ if (contentScripts) {
 
 const configureOmnibox = (serverUrl: string) => {
     omnibox.setDefaultSuggestion({
-        description: `Search code on ${serverUrl}...`,
+        description: `Search code on ${serverUrl}`,
     })
 }
 
@@ -141,25 +141,7 @@ tabs.onUpdated((tabId, changeInfo, tab) => {
     }
 })
 
-// TODO: Figure out a way for this to work cross browser. It will work on Chrome and Firefox but not Safari.
-/**
- * Content script injected into webpages through "activeTab" permission to determine if webpage is a Sourcegraph Server instance.
- */
-export const isSourcegraphServerCheck = () => {
-    runtime.onMessage(async (message, _, sendResponse) => {
-        if (!message.type || message.type !== 'isSGServerInstance') {
-            return
-        }
-        const isSourcegraphDomain = document.getElementById('sourcegraph-browser-webstore-item')
-        if (isSourcegraphDomain) {
-            document.dispatchEvent(new CustomEvent('sourcegraph:server-instance-configuration-clicked', {}))
-        }
-        sendResponse(Boolean(isSourcegraphDomain))
-        return true
-    })
-}
-
-runtime.onMessage(async (message, _, cb) => {
+runtime.onMessage((message, _, cb) => {
     switch (message.type) {
         case 'setIdentity':
             storage.setLocal({ identity: message.payload.identity })
@@ -174,16 +156,16 @@ runtime.onMessage(async (message, _, cb) => {
             return true
 
         case 'setEnterpriseUrl':
-            await requestPermissionsForEnterpriseUrl(message.payload, cb)
-            return
+            requestPermissionsForEnterpriseUrl(message.payload, cb)
+            return true
 
         case 'setSourcegraphUrl':
-            await requestPermissionsForSourcegraphUrl(message.payload)
-            return
+            requestPermissionsForSourcegraphUrl(message.payload)
+            return true
 
         case 'removeEnterpriseUrl':
-            await removeEnterpriseUrl(message.payload, cb)
-            return
+            removeEnterpriseUrl(message.payload, cb)
+            return true
 
         // We should only need to do this on safari
         case 'insertCSS':
@@ -196,18 +178,16 @@ runtime.onMessage(async (message, _, cb) => {
                 })
             )
             return
+
         case 'setBadgeText':
             browserAction.setBadgeText({ text: message.payload })
-            return
     }
+
+    return
 })
 
-async function requestPermissionsForEnterpriseUrl(url: string, cb: (res?: any) => void): Promise<void> {
-    const granted = await permissions.request(url)
-    if (!granted) {
-        return
-    }
-    return storage.getSync(items => {
+function requestPermissionsForEnterpriseUrl(url: string, cb: (res?: any) => void): void {
+    storage.getSync(items => {
         const enterpriseUrls = items.enterpriseUrls || []
         storage.setSync(
             {
@@ -218,14 +198,15 @@ async function requestPermissionsForEnterpriseUrl(url: string, cb: (res?: any) =
     })
 }
 
-async function requestPermissionsForSourcegraphUrl(url: string): Promise<void> {
-    const granted = await permissions.request(url)
-    if (granted) {
-        storage.setSync({ sourcegraphURL: url })
-    }
+function requestPermissionsForSourcegraphUrl(url: string): void {
+    permissions.request(url).then(granted => {
+        if (granted) {
+            storage.setSync({ sourcegraphURL: url })
+        }
+    })
 }
 
-async function removeEnterpriseUrl(url: string, cb: (res?: any) => void): Promise<void> {
+function removeEnterpriseUrl(url: string, cb: (res?: any) => void): void {
     permissions.remove(url)
 
     storage.getSyncItem('enterpriseUrls', ({ enterpriseUrls }) => {
@@ -235,14 +216,11 @@ async function removeEnterpriseUrl(url: string, cb: (res?: any) => void): Promis
 
 runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
 
-runtime.onInstalled(() => {
-    storage.getSync(items => {
-        if (!items.serverUrls || items.serverUrls.length === 0) {
-            storage.setSync({
-                serverUrls: ['https://sourcegraph.com'],
-                sourcegraphURL: 'https://sourcegraph.com',
-                eventTrackingEnabled: true,
-            })
-        }
-    })
-})
+runtime.onInstalled(() =>
+    storage.getSync(items =>
+        storage.setSync({
+            ...defaultStorageItems,
+            ...items,
+        })
+    )
+)
