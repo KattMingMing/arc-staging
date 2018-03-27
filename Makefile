@@ -14,13 +14,13 @@ bundle: build all
 all: chrome-ext firefox safari
 
 chrome-ext:
-	zip -r chrome-bundle.zip dist/*
+	cd build && zip -r ./bundles/chrome-bundle.zip chrome/*
 
 firefox:
-	cd dist && zip -r ../firefox-bundle.xpi *
+	cd build && zip -r ./bundles/firefox-bundle.xpi firefox/*
 
 safari:
-	cp -r dist/* Sourcegraph.safariextension
+	cp -r build/dist/* Sourcegraph.safariextension
 
 phabricator:
 	cp ./dist/js/phabricator.bundle.js \

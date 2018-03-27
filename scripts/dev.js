@@ -1,9 +1,4 @@
-var fs = require('fs')
-var path = require('path')
 var webpack = require('webpack')
-
-var shelljs = require('shelljs')
-
 var tasks = require('./tasks')
 var config = require('../webpack/dev.config')
 

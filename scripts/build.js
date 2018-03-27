@@ -1,11 +1,18 @@
-var fs = require('fs')
-var shelljs = require('shelljs')
 var tasks = require('./tasks')
+
+const buildChrome = tasks.buildChrome('prod')
+const buildFirefox = tasks.buildFirefox('prod')
 
 console.info('[Copy assets]')
 console.info('--------------------------------')
 tasks.copyAssets('prod')
 
-console.info('[Webpack Build]')
-console.info('--------------------------------')
-shelljs.exec('webpack --config webpack/prod.config.js --progress --profile --colors')
+function run() {
+	console.info('[Webpack Build]')
+	console.info('--------------------------------')
+	tasks.buildSafari('prod')
+	buildChrome()
+	buildFirefox()
+}
+
+run()

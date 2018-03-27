@@ -57,6 +57,11 @@ function buildForBrowser(browser) {
 
         let envInfo = omit(extensionInfo[env], browserBlacklist[browser])
 
+        if (browser === 'firefox') {
+            extensionInfo.dev.permissions.push('<all_urls>')
+            extensionInfo.prod.permissions.push('<all_urls>')
+        }
+
         let manifest = omit(extensionInfo, ['dev', 'prod', ...browserBlacklist[browser]])
         manifest = { ...manifest, ...envInfo }
 
