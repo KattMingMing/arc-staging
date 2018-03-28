@@ -45,7 +45,7 @@ export const resolveRev = memoizeObservable(
                     }
                 }
             }`,
-            { ...ctx, rev: ctx.rev || 'master' }
+            { ...ctx, rev: ctx.rev || '' }
         ).map(result => {
             if (!result.data) {
                 throw new Error('invalid response received from graphql endpoint')
