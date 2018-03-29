@@ -285,7 +285,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
         )
 
         this.subscriptions.add(
-            Observable.fromEvent<MouseEvent>(ref, 'mouseover')
+            Observable.fromEvent<MouseEvent>(ref, 'mouseover', { passive: true })
                 .debounceTime(50)
                 .map(e => e.target as HTMLElement)
                 .filter(this.props.filterTarget)
@@ -345,7 +345,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
             })
         )
         this.subscriptions.add(
-            Observable.fromEvent<MouseEvent>(ref, 'click')
+            Observable.fromEvent<MouseEvent>(ref, 'click', { passive: true })
                 .map(e => e.target as HTMLElement)
                 .filter(this.props.filterTarget)
                 .filter(target => {

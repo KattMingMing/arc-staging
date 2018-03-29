@@ -305,6 +305,17 @@ function injectBlobAnnotators(): void {
 
     function addBlobAnnotator(file: HTMLElement): void {
         const getTableElement = () => file.querySelector('table')
+        const diffLoader = file.querySelector('.js-diff-load-container')
+        if (diffLoader) {
+            const observer = new MutationObserver(() => {
+                const element = diffLoader.querySelector('.data.highlight.blob-wrapper')
+                if (element) {
+                    addBlobAnnotator(file)
+                    observer.disconnect()
+                }
+            })
+            observer.observe(diffLoader, { childList: true })
+        }
 
         if (!isDelta) {
             const mount = createBlobAnnotatorMount(file)

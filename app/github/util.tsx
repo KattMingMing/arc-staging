@@ -25,9 +25,9 @@ export function createBlobAnnotatorMount(fileContainer: HTMLElement, isBase?: bo
     }
 
     const className = 'sourcegraph-app-annotator' + (isBase ? '-base' : '')
-    const existingMount = fileContainer.querySelector('.' + className)
+    const existingMount = fileContainer.querySelector('.' + className) as HTMLElement
     if (existingMount) {
-        return null
+        return existingMount
     }
 
     const mountEl = document.createElement('div')
