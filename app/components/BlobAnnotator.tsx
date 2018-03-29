@@ -523,7 +523,24 @@ export class BlobAnnotator extends React.Component<Props, State> {
             this.setState({ fixedTooltip: undefined })
             // TODO(john): unsetting fixed tooltip won't work b/c it removes sticky highlight for identity j2d?
             // this.setFixedTooltip()
+
+            // Jump to definition inside of a pull request if the file exists in the PR.
             const sameRepo = this.props.repoPath === defCtx.repoPath
+            if (sameRepo && this.props.isPullRequest) {
+                const containers = github.getFileContainers()
+                for (const container of Array.from(containers)) {
+                    const header = container.querySelector('.file-header') as HTMLElement
+                    const anchorPath = header.dataset.path
+                    if (anchorPath === defCtx.filePath) {
+                        const anchorUrl = header.dataset.anchor
+                        const url = `${window.location.origin}${window.location.pathname}#${anchorUrl}R${defCtx.position
+                            .line}`
+                        window.location.href = url
+                        return
+                    }
+                }
+            }
+
             const rev = sameRepo
                 ? this.props.commitID === defCtx.commitID ? this.props.rev : defCtx.commitID || defCtx.rev
                 : defCtx.commitID || defCtx.rev
