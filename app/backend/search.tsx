@@ -159,6 +159,7 @@ const createAggregateError = (errors: ErrorLike[] = []): AggregateError =>
 
 export const fetchSuggestions = (options: SearchOptions) =>
     queryGraphQL(
+        { repoKey: '' },
         `
             query SearchSuggestions($query: String!, $first: Int!) {
                 search(query: $query) {

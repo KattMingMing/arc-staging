@@ -1,3 +1,5 @@
+export type RepoLocations = { [key: string]: string }
+
 export interface StorageItems {
     sourcegraphURL: string
     gitHubEnterpriseURL: string
@@ -12,6 +14,7 @@ export interface StorageItems {
     enterpriseUrls: string[]
     serverUserId: string
     hasSeenServerModal: boolean
+    repoLocations: RepoLocations
 }
 
 export const defaultStorageItems: StorageItems = {
@@ -28,6 +31,7 @@ export const defaultStorageItems: StorageItems = {
     enterpriseUrls: [],
     serverUserId: '',
     hasSeenServerModal: false,
+    repoLocations: {},
 }
 
 export type StorageChange = { [key in keyof StorageItems]: chrome.storage.StorageChange }

@@ -1,16 +1,11 @@
-import 'rxjs/add/observable/defer'
 import 'rxjs/add/observable/dom/ajax'
-import 'rxjs/add/observable/range'
-import 'rxjs/add/observable/throw'
-import 'rxjs/add/observable/timer'
+import 'rxjs/add/operator/catch'
 import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/mergeMap'
-import 'rxjs/add/operator/retryWhen'
-import 'rxjs/add/operator/zip'
+import 'rxjs/add/operator/switchMap'
 import { Observable } from 'rxjs/Observable'
 
-import storage from '../../extension/storage'
-import { serverUrls, setSourcegraphUrl, sourcegraphUrl } from '../util/context'
+import { repoCache } from './cache'
+import { RequestContext } from './context'
 import { getHeaders } from './headers'
 
 /**
@@ -36,19 +31,25 @@ export interface MutationResult {
  * @param variables A key/value object with variable values
  * @return Observable That emits the result or errors if the HTTP request failed
  */
-function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IGraphQLResponseRoot> {
-    let url = sourcegraphUrl
+function requestGraphQL(
+    ctx: RequestContext,
+    request: string,
+    variables: any = {},
+    urlsToTry: string[]
+): Observable<GQL.IGraphQLResponseRoot> {
     const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
-    return Observable.defer(() =>
-        Observable.ajax({
-            method: 'POST',
-            url: `${url}/.api/graphql` + (nameMatch ? '?' + nameMatch[1] : ''),
-            headers: getHeaders(),
-            crossDomain: true,
-            withCredentials: true,
-            body: JSON.stringify({ query: request, variables }),
-        })
-    )
+    if (urlsToTry.length === 0) {
+        throw new Error('no sourcegraph urls are configured')
+    }
+    const url = urlsToTry[0]
+    return Observable.ajax({
+        method: 'POST',
+        url: `${url}/.api/graphql` + (nameMatch ? '?' + nameMatch[1] : ''),
+        headers: getHeaders(),
+        crossDomain: true,
+        withCredentials: true,
+        body: JSON.stringify({ query: request, variables }),
+    })
         .map(({ response }) => {
             // If the query should return a repository and the response is null, throw an error
             // to trigger a refetch for the next possible Server URL.
@@ -60,25 +61,18 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
             ) {
                 throw response
             }
-            if (sourcegraphUrl !== url) {
-                setSourcegraphUrl(url)
-                if (window.SG_ENV === 'EXTENSION') {
-                    storage.setSync({ sourcegraphURL: url })
-                }
-            }
+
+            repoCache.setUrl(ctx.repoKey, url)
+
             return response
         })
-        .retryWhen(attempts =>
-            Observable.range(0, serverUrls.length + 1)
-                .zip(attempts, i => i)
-                .mergeMap(i => {
-                    if (i === serverUrls.length) {
-                        return Observable.throw({ error: 'No retry' })
-                    }
-                    url = serverUrls[i]
-                    return Observable.timer()
-                })
-        )
+        .catch(err => {
+            if (urlsToTry.length === 1) {
+                // We just tried the last url
+                throw err
+            }
+            return requestGraphQL(ctx, request, variables, urlsToTry.slice(1))
+        })
 }
 
 /**
@@ -88,8 +82,10 @@ function requestGraphQL(request: string, variables: any = {}): Observable<GQL.IG
  * @param variables A key/value object with variable values
  * @return Observable That emits the result or errors if the HTTP request failed
  */
-export function queryGraphQL(query: string, variables: any = {}): Observable<QueryResult> {
-    return requestGraphQL(query, variables) as Observable<QueryResult>
+export function queryGraphQL(ctx: RequestContext, query: string, variables: any = {}): Observable<QueryResult> {
+    return repoCache
+        .getUrls(ctx.repoKey)
+        .switchMap(urls => requestGraphQL(ctx, query, variables, urls) as Observable<QueryResult>)
 }
 
 /**
@@ -99,6 +95,8 @@ export function queryGraphQL(query: string, variables: any = {}): Observable<Que
  * @param variables A key/value object with variable values
  * @return Observable That emits the result or errors if the HTTP request failed
  */
-export function mutateGraphQL(mutation: string, variables: any = {}): Observable<MutationResult> {
-    return requestGraphQL(mutation, variables) as Observable<MutationResult>
+export function mutateGraphQL(ctx: RequestContext, mutation: string, variables: any = {}): Observable<MutationResult> {
+    return repoCache
+        .getUrls(ctx.repoKey)
+        .switchMap(urls => requestGraphQL(ctx, mutation, variables, urls) as Observable<MutationResult>)
 }

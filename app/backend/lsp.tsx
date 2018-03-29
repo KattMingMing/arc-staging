@@ -4,9 +4,10 @@ import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
-import { getModeFromExtension, getPathExtension, sourcegraphUrl, supportedExtensions } from '../util/context'
+import { getModeFromExtension, getPathExtension, supportedExtensions } from '../util/context'
 import { memoizeObservable } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
+import { repoCache } from './cache'
 import { getHeaders } from './headers'
 
 interface LSPRequest {
@@ -70,9 +71,11 @@ export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Obs
         pos.filePath
     )
 
+    const url = repoCache.getUrl(pos.repoPath)
+
     return Observable.ajax({
         method: 'POST',
-        url: `${sourcegraphUrl}/.api/xlang/textDocument/hover`,
+        url: `${url}/.api/xlang/textDocument/hover`,
         headers: getHeaders(),
         crossDomain: true,
         withCredentials: true,
@@ -103,9 +106,11 @@ export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition)
         pos.filePath
     )
 
+    const url = repoCache.getUrl(pos.repoPath)
+
     return Observable.ajax({
         method: 'POST',
-        url: `${sourcegraphUrl}/.api/xlang/textDocument/definition`,
+        url: `${url}/.api/xlang/textDocument/definition`,
         headers: getHeaders(),
         crossDomain: true,
         withCredentials: true,

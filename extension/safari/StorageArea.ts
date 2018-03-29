@@ -157,13 +157,13 @@ export default class SafariStorageArea implements chrome.storage.StorageArea {
         throw new Error('SafariStorageArea.prototype.getBytesInUse not implemented')
     }
 
-    public clear(callback?: () => void): void {
+    public clear = (callback?: () => void) => {
         if (this.area) {
             this.area.clear()
         }
     }
 
-    public set(items: Partial<StorageItems>, callback?: () => void): void {
+    public set = (items: Partial<StorageItems>, callback?: () => void) => {
         if (this.area) {
             for (const key of Object.keys(items)) {
                 this.area.setItem(key, items[key])
@@ -179,7 +179,7 @@ export default class SafariStorageArea implements chrome.storage.StorageArea {
         }
     }
 
-    public remove(keys: string | string[], callback?: () => void): void {
+    public remove = (keys: string | string[], callback?: () => void) => {
         if (this.area) {
             const arr: string[] = Array.isArray(keys) ? keys : [keys]
 
@@ -189,10 +189,10 @@ export default class SafariStorageArea implements chrome.storage.StorageArea {
         }
     }
 
-    public get(
+    public get = (
         keyOrCallback: keyof StorageItems | ((items: Partial<StorageItems>) => void),
         callback?: (items: Partial<StorageItems>) => void
-    ): void {
+    ) => {
         if (!this.area) {
             return
         }

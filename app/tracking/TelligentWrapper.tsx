@@ -1,3 +1,5 @@
+import { repoCache } from '../backend/cache'
+import { getContext } from '../backend/context'
 import { checkIsOnlySourcegraphDotCom, sourcegraphUrl } from '../util/context'
 
 const telligent = require('@sourcegraph/telligent-tracker')
@@ -5,6 +7,7 @@ const telligentFunctionName = 'telligent'
 
 export class TelligentWrapper {
     private t: any
+    private url = ''
 
     constructor(siteId: string, platform: string, forceSecure: boolean, installedChromeExtension: boolean) {
         checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom =>
@@ -81,6 +84,11 @@ export class TelligentWrapper {
     }
 
     public track(eventAction: string, requestPayload: any): void {
+        const cachedUrl = repoCache.getUrl(getContext().repoKey)
+        if (this.url !== cachedUrl) {
+            this.setUrl(cachedUrl)
+        }
+
         checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom =>
             this.trackEvent(eventAction, requestPayload, isOnlySourcegraphDotCom)
         )
@@ -103,6 +111,7 @@ export class TelligentWrapper {
     }
 
     public setUrl(url: string): void {
+        this.url = url
         this.t('setCollectorUrl', prepareEndpointUrl(`${url}/.api/telemetry`))
         checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom => this.t('setTrackUrls', isOnlySourcegraphDotCom))
     }

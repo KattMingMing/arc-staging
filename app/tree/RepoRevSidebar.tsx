@@ -16,6 +16,7 @@ import { Tab, Tabs } from './Tabs'
 const fetchTree = memoizeObservable(
     (args: { repoPath: string; commitID: string }): Observable<string[]> =>
         queryGraphQL(
+            { repoKey: args.repoPath },
             `
                 query FileTree($repoPath: String!, $commitID: String!) {
                     repository(uri: $repoPath) {

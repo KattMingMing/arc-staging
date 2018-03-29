@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
+import { getContext } from '../backend/context'
 import { mutateGraphQL } from '../backend/graphql'
 
 const inspectTelligentCookie = (): string[] | null => {
@@ -22,6 +23,7 @@ type IUserEventEnum = 'PAGEVIEW' | 'SEARCHQUERY'
 const userCookieID = getTelligentDuid()
 export const logUserEvent = (event: IUserEventEnum): Observable<void> =>
     mutateGraphQL(
+        getContext(),
         `mutation logUserEvent($event: UserEvent!, $userCookieID: String!) {
                 logUserEvent(event: $event, userCookieID: $userCookieID) {
                     alwaysNil

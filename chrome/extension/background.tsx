@@ -128,6 +128,10 @@ storage.addSyncMigration((items, set, remove) => {
 
         set(newItems)
     }
+
+    if (!items.repoLocations) {
+        set({ repoLocations: {} })
+    }
 })
 
 tabs.onUpdated((tabId, changeInfo, tab) => {

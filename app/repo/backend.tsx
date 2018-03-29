@@ -37,6 +37,7 @@ class RevNotFoundError extends Error {
 export const resolveRev = memoizeObservable(
     (ctx: { repoPath: string; rev?: string }): Observable<string> =>
         queryGraphQL(
+            { repoKey: ctx.repoPath },
             `query ResolveRev($repoPath: String!, $rev: String!) {
                 repository(uri: $repoPath) {
                     cloneInProgress
@@ -67,6 +68,7 @@ export const resolveRev = memoizeObservable(
 export const fetchTree = memoizeObservable(
     (args: { repoPath: string; commitID: string }): Observable<string[]> =>
         queryGraphQL(
+            { repoKey: args.repoPath },
             `
                 query FileTree($repoPath: String!, $commitID: String!) {
                     repository(uri: $repoPath) {
@@ -101,6 +103,7 @@ export const fetchTree = memoizeObservable(
 export const listAllSearchResults = memoizeAsync(
     (ctx: { query: string }): Promise<number> =>
         queryGraphQL(
+            { repoKey: '' },
             `query Search($query: String!) {
                 search(query: $query) {
                     results {
@@ -128,6 +131,7 @@ const trimRepoPath = ({ repoPath, ...rest }) => ({ ...rest, repoPath: repoPath.r
 export const fetchBlobContentLines = memoizeAsync(
     (ctx: AbsoluteRepoFile): Promise<string[]> =>
         queryGraphQL(
+            { repoKey: '' },
             `query BlobContent($repoPath: String, $commitID: String, $filePath: String) {
                 repository(uri: $repoPath) {
                     commit(rev: $commitID) {
