@@ -61,7 +61,7 @@ interface Props extends AbsoluteRepoFile, Partial<PositionSpec> {
     ) => HTMLElement | undefined
     findTokenCell: (td: HTMLElement, target: HTMLElement) => HTMLElement
     filterTarget: (target: HTMLElement) => boolean
-    getNodeToConvert: (td: HTMLTableDataCellElement) => HTMLElement
+    getNodeToConvert: (td: HTMLTableDataCellElement) => HTMLElement | null
     isCommit: boolean
     isPullRequest: boolean
     isSplitDiff: boolean

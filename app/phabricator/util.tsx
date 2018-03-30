@@ -454,6 +454,22 @@ export function tryGetBlobElement(file: HTMLElement): HTMLElement | null {
     return file.querySelector('.repository-crossreference') as HTMLElement | null
 }
 
+export function rowIsNotCode(row: HTMLElement): boolean {
+    let el = row
+    while (el.tagName !== 'TR' && el.parentElement !== null) {
+        el = el.parentElement
+    }
+    return !!el.getAttribute('data-sigil')
+}
+
+export function getNodeToConvert(row: HTMLElement): HTMLElement | null {
+    if (rowIsNotCode(row)) {
+        return null
+    }
+
+    return row
+}
+
 /**
  * getCodeCellsForAnnotation code cells which should be annotated
  */
@@ -461,6 +477,9 @@ export function getCodeCellsForAnnotation(table: HTMLTableElement): CodeCell[] {
     const cells: CodeCell[] = []
     // tslint:disable-next-line:prefer-for-of
     for (const row of Array.from(table.rows)) {
+        if (rowIsNotCode(row)) {
+            continue
+        }
         let line: number // line number of the current line
         let codeCell: HTMLTableDataCellElement // the actual cell that has code inside; each row contains multiple columns
         let isBlameEnabled = false
@@ -499,8 +518,7 @@ export function getCodeCellsForDifferentialAnnotations(
     const cells: CodeCell[] = []
     // tslint:disable-next-line:prefer-for-of
     for (const row of Array.from(table.rows)) {
-        if (row.getAttribute('data-sigil')) {
-            // skip rows that have expander links
+        if (rowIsNotCode(row)) {
             continue
         }
         if (isSplitView) {

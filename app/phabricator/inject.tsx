@@ -17,8 +17,10 @@ import {
     getCodeCellsForAnnotation,
     getCodeCellsForDifferentialAnnotations,
     getFilepathFromFile,
+    getNodeToConvert,
     getPhabricatorState,
     normalizeRepoPath,
+    rowIsNotCode,
     tryGetBlobElement,
 } from './util'
 
@@ -34,8 +36,7 @@ const differentialButtonProps = {
     style: {},
 }
 
-const noFilterFunction = () => true
-const identityFunction = (a: any) => a
+const filterFunc = (el: HTMLElement) => !rowIsNotCode(el)
 
 const findTokenCell = (td: HTMLElement, target: HTMLElement) => {
     let curr = target
@@ -174,8 +175,8 @@ function injectDiffusion(state: DiffusionState): void {
                     getTargetLineAndOffset={getTargetLineAndOffset(blobLines)}
                     findElementWithOffset={findElementWithOffset(blobLines)}
                     findTokenCell={findTokenCell}
-                    filterTarget={noFilterFunction}
-                    getNodeToConvert={identityFunction}
+                    filterTarget={filterFunc}
+                    getNodeToConvert={getNodeToConvert}
                     fileElement={file}
                     repoPath={state.repoPath}
                     commitID={state.commitID}
@@ -238,6 +239,9 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
             const filterTarget = (isBase: boolean) => (target: HTMLElement) => {
                 const td = getTableDataCell(target)
                 if (!td) {
+                    return false
+                }
+                if (rowIsNotCode(td)) {
                     return false
                 }
                 if (isSplitDiff) {
@@ -319,7 +323,7 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                                 getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                                 findElementWithOffset={findElementWithOffset(baseFile)}
                                                 findTokenCell={findTokenCell}
-                                                getNodeToConvert={identityFunction}
+                                                getNodeToConvert={getNodeToConvert}
                                                 fileElement={file}
                                                 isPullRequest={true}
                                                 isCommit={false}
@@ -340,7 +344,7 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                                 getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                                 findElementWithOffset={findElementWithOffset(headFile)}
                                                 findTokenCell={findTokenCell}
-                                                getNodeToConvert={identityFunction}
+                                                getNodeToConvert={getNodeToConvert}
                                                 fileElement={file}
                                                 isPullRequest={true}
                                                 isCommit={false}
@@ -378,7 +382,7 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                         getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                         findElementWithOffset={findElementWithOffset(baseFile)}
                                         findTokenCell={findTokenCell}
-                                        getNodeToConvert={identityFunction}
+                                        getNodeToConvert={getNodeToConvert}
                                         fileElement={file}
                                         repoPath={repoPath}
                                         commitID={baseCommitID}
@@ -401,7 +405,7 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                         getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                         findElementWithOffset={findElementWithOffset(headFile)}
                                         findTokenCell={findTokenCell}
-                                        getNodeToConvert={identityFunction}
+                                        getNodeToConvert={getNodeToConvert}
                                         fileElement={file}
                                         repoPath={repoPath}
                                         commitID={headCommitID}
@@ -439,7 +443,7 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                             getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
                                             findElementWithOffset={findElementWithOffset(baseFile)}
                                             findTokenCell={findTokenCell}
-                                            getNodeToConvert={identityFunction}
+                                            getNodeToConvert={getNodeToConvert}
                                             fileElement={file}
                                             repoPath={repoPath}
                                             commitID={baseRev}
@@ -462,7 +466,7 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                             getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
                                             findElementWithOffset={findElementWithOffset(headFile)}
                                             findTokenCell={findTokenCell}
-                                            getNodeToConvert={identityFunction}
+                                            getNodeToConvert={getNodeToConvert}
                                             fileElement={file}
                                             repoPath={repoPath}
                                             commitID={commitID}
