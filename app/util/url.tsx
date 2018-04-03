@@ -1,6 +1,6 @@
 import { Position } from 'vscode-languageserver-types'
+import { repoCache } from '../backend/cache'
 import { AbsoluteRepoFile, PositionSpec, ReferencesModeSpec, Repo, RepoFile, ResolvedRevSpec } from '../repo'
-import { sourcegraphUrl } from './context'
 
 type Modal = 'references'
 type ModalMode = 'local' | 'external'
@@ -45,35 +45,42 @@ function toReferencesHash(group: 'local' | 'external' | undefined): string {
 }
 
 export function toRepoURL(ctx: Repo & Partial<ResolvedRevSpec>): string {
+    const url = repoCache.getUrl(ctx.repoPath)
     const rev = ctx.commitID || ctx.rev || ''
-    return `${sourcegraphUrl}/${ctx.repoPath}${rev ? '@' + rev : ''}`
+    return `${url}/${ctx.repoPath}${rev ? '@' + rev : ''}`
 }
 
 export function toPrettyRepoURL(ctx: Repo): string {
-    return `${sourcegraphUrl}/${ctx.repoPath}${ctx.rev ? '@' + ctx.rev : ''}`
+    const url = repoCache.getUrl(ctx.repoPath)
+    return `${url}/${ctx.repoPath}${ctx.rev ? '@' + ctx.rev : ''}`
 }
 
 export function toBlobURL(ctx: RepoFile & Partial<PositionSpec>): string {
+    const url = repoCache.getUrl(ctx.repoPath)
     const rev = ctx.commitID || ctx.rev || ''
-    return `${sourcegraphUrl}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/blob/${ctx.filePath}`
+    return `${url}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/blob/${ctx.filePath}`
 }
 
 export function toPrettyBlobURL(ctx: RepoFile & Partial<PositionSpec> & Partial<ReferencesModeSpec>): string {
-    return `${sourcegraphUrl}/${ctx.repoPath}${ctx.rev ? '@' + ctx.rev : ''}/-/blob/${ctx.filePath}${toPositionHash(
+    const url = repoCache.getUrl(ctx.repoPath)
+    return `${url}/${ctx.repoPath}${ctx.rev ? '@' + ctx.rev : ''}/-/blob/${ctx.filePath}${toPositionHash(
         ctx.position
     )}${toReferencesHash(ctx.referencesMode)}`
 }
 
 export function toAbsoluteBlobURL(ctx: AbsoluteRepoFile & Partial<PositionSpec> & Partial<ReferencesModeSpec>): string {
     const rev = ctx.commitID ? ctx.commitID : ctx.rev
-    return `${sourcegraphUrl}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/blob/${ctx.filePath}${toPositionHash(
+    const url = repoCache.getUrl(ctx.repoPath)
+
+    return `${url}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/blob/${ctx.filePath}${toPositionHash(
         ctx.position
     )}${toReferencesHash(ctx.referencesMode)}`
 }
 
 export function toTreeURL(ctx: RepoFile): string {
+    const url = repoCache.getUrl(ctx.repoPath)
     const rev = ctx.commitID || ctx.rev || ''
-    return `${sourcegraphUrl}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/tree/${ctx.filePath}`
+    return `${url}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/tree/${ctx.filePath}`
 }
 
 export function toEditorURL(repoPath: string, rev?: string, filePath?: string, position?: { line?: number }): string {
