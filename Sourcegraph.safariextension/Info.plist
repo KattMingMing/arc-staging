@@ -7,15 +7,15 @@
 	<key>Builder Version</key>
 	<string>13604.5.6</string>
 	<key>CFBundleDisplayName</key>
-	<string>Sourcegraph - Beta</string>
+	<string>Sourcegraph</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.sourcegraph.sourcegraph</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.7</string>
 	<key>CFBundleVersion</key>
-	<string>1.0.0.0</string>
+	<string>1.7.2</string>
 	<key>Chrome</key>
 	<dict>
 		<key>Database Quota</key>
@@ -67,7 +67,7 @@
 		</array>
 	</dict>
 	<key>Description</key>
-	<string>test description</string>
+	<string>Get Code Intelligence in code files and code review diffs on GitHub and Phabricator.</string>
 	<key>DeveloperIdentifier</key>
 	<string>74A5FJ7P96</string>
 	<key>ExtensionInfoDictionaryVersion</key>

@@ -55,8 +55,20 @@ export const getContentScripts = () => {
     return []
 }
 
-export const onInstalled = (handler: (info: chrome.runtime.InstalledDetails) => void) => {
+export const onInstalled = (handler: (info?: chrome.runtime.InstalledDetails) => void) => {
     if (chrome && chrome.runtime && chrome.runtime.onInstalled) {
         chrome.runtime.onInstalled.addListener(handler)
+    }
+
+    if (safari && !(safari.extension as SafariExtension).settings._wasInitialized) {
+        handler()
+
+        // Access settings directly here because we don't want to go through our
+        // storage implementation to avoid onChange events and others from firing.
+        //
+        // This is ok here because we are only accessing this var from within this
+        // function and we are inside a check to ensure safari exists.
+        const settings = (safari.extension as SafariExtension).settings
+        settings._wasInitialized = true
     }
 }

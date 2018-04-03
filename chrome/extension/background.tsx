@@ -221,10 +221,18 @@ function removeEnterpriseUrl(url: string, cb: (res?: any) => void): void {
 runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
 
 runtime.onInstalled(() =>
-    storage.getSync(items =>
-        storage.setSync({
-            ...defaultStorageItems,
-            ...items,
-        })
-    )
+    storage.getSync(items => {
+        if (window.safari) {
+            // Safari settings returns null for getters of values that don't exist so
+            // values get returned with null and we can't override then with defaults like below.
+            storage.setSync({
+                ...defaultStorageItems,
+            })
+        } else {
+            storage.setSync({
+                ...defaultStorageItems,
+                ...items,
+            })
+        }
+    })
 )
