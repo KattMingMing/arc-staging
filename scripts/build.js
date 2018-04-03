@@ -1,6 +1,6 @@
 var webpack = require('webpack')
 var tasks = require('./tasks')
-var config = require('../webpack/dev.config')
+var config = require('../webpack/prod.config')
 
 const buildChrome = tasks.buildChrome('prod')
 const buildFirefox = tasks.buildFirefox('prod')

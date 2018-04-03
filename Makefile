@@ -9,7 +9,7 @@ build: install
 	npm run tslint
 	npm run build
 
-bundle: build all
+bundle: clean build all
 
 all: chrome-ext firefox safari
 
@@ -53,7 +53,7 @@ deploy-e2e:
 	cd ../../test/e2e2 && make deploy
 
 clean:
-	rm -rf dist/ dev/ .checksum chrome-bundle.zip firefox-bundle.xpi
+	rm -rf build/ dist/ dev/ .checksum chrome-bundle.zip firefox-bundle.xpi
 
 export CHROME_BUNDLE ?= $(shell pwd)/chrome-bundle.zip
 deploy: clean bundle test-unit deploy-e2e
