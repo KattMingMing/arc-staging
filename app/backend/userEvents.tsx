@@ -1,4 +1,3 @@
-import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { repoCache } from '../backend/cache'
 import { getContext } from '../backend/context'
