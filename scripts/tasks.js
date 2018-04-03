@@ -78,6 +78,8 @@ function buildForBrowser(browser) {
                 shelljs.exec(`cd ${buildDir} && zip -r ${zipDest} *`)
             }
 
+            shelljs.cp('-R', buildDir, zipDest + '.dir')
+
             console.log(`${title} ${env} bundle built.`)
         }
     }
