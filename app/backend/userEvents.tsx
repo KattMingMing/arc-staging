@@ -43,5 +43,11 @@ export const logUserEvent = (event: GQL.IUserEventEnum): void => {
                 return
             })
         )
-        .subscribe()
+        .subscribe(undefined, error => {
+            // Swallow errors. If a Server instance isn't upgraded, this request may fail
+            // (e.g., if CODEINTELINTEGRATION user events aren't yet supported).
+            // However, end users shouldn't experience this failure, as their admin is
+            // responsible for updating the Server, and has been (or will be) notified
+            // that an upgrade is available via site-admin messaging.
+        })
 }
