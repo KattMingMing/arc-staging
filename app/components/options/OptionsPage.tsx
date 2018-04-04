@@ -76,6 +76,8 @@ export class OptionsPage extends React.Component<{}, State> {
     }
 
     public render(): JSX.Element | null {
+        const version = getExtensionVersion()
+        console.log(version)
         return (
             <div className={`options__container ${!this.state.isPopup ? 'options__container-full' : ''}`}>
                 <ServerModal />
@@ -88,7 +90,7 @@ export class OptionsPage extends React.Component<{}, State> {
                                     src={getURL('img/sourcegraph-light-head-logo.svg')}
                                 />
                             </div>
-                            <div className="options__version">v{getExtensionVersion()}</div>
+                            {version !== 'NO_VERSION' && <div className="options__version">v{version}</div>}
                         </div>
                     )}
                     <div className="options__section">
