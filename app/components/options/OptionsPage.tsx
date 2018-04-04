@@ -77,7 +77,6 @@ export class OptionsPage extends React.Component<{}, State> {
 
     public render(): JSX.Element | null {
         const version = getExtensionVersion()
-        console.log(version)
         return (
             <div className={`options__container ${!this.state.isPopup ? 'options__container-full' : ''}`}>
                 <ServerModal />
