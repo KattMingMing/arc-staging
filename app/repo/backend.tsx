@@ -132,7 +132,7 @@ export const fetchBlobContentLines = memoizeAsync(
     (ctx: AbsoluteRepoFile): Promise<string[]> =>
         queryGraphQL(
             { repoKey: '' },
-            `query BlobContent($repoPath: String, $commitID: String, $filePath: String) {
+            `query BlobContent($repoPath: String!, $commitID: String!, $filePath: String!) {
                 repository(uri: $repoPath) {
                     commit(rev: $commitID) {
                         file(path: $filePath) {
