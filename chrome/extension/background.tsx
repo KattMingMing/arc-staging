@@ -100,16 +100,33 @@ permissions.getAll().then(permissions => {
 })
 
 permissions.onAdded(permissions => {
-    if (permissions.origins) {
-        const origins = without(permissions.origins, ...jsContentScriptOrigins)
-        customServerOrigins.push(...origins)
+    if (!permissions.origins) {
+        return
     }
+    storage.getSync(items => {
+        const enterpriseUrls = items.enterpriseUrls || []
+        for (const url of permissions.origins as string[]) {
+            enterpriseUrls.push(url.replace('/*', ''))
+        }
+        storage.setSync({ enterpriseUrls })
+    })
+    const origins = without(permissions.origins, ...jsContentScriptOrigins)
+    customServerOrigins.push(...origins)
 })
 
 permissions.onRemoved(permissions => {
-    if (permissions.origins) {
-        customServerOrigins = without(customServerOrigins, ...permissions.origins)
+    if (!permissions.origins) {
+        return
     }
+    customServerOrigins = without(customServerOrigins, ...permissions.origins)
+    storage.getSync(items => {
+        const enterpriseUrls = items.enterpriseUrls || []
+        const urlsToRemove: string[] = []
+        for (const url of permissions.origins as string[]) {
+            urlsToRemove.push(url.replace('/*', ''))
+        }
+        storage.setSync({ enterpriseUrls: without(enterpriseUrls, ...urlsToRemove) })
+    })
 })
 
 storage.addSyncMigration((items, set, remove) => {
