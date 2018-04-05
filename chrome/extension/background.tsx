@@ -2,7 +2,7 @@
 // prettier-ignore
 import '../../app/util/polyfill'
 
-import { first, without } from 'lodash'
+import { first, uniq, without } from 'lodash'
 
 import { createSuggestionFetcher, Suggestion } from '../../app/backend/search'
 import { setServerUrls, setSourcegraphUrl } from '../../app/util/context'
@@ -106,7 +106,7 @@ function upsertUrl(customUrl: string): void {
 
             storage.setSync({
                 sourcegraphURL: url.origin,
-                serverUrls: urls,
+                serverUrls: uniq(urls),
             })
         })
     } catch (e) {
