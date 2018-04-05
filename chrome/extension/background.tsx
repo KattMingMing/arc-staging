@@ -125,9 +125,8 @@ function handleCliEntered([cmd, ...args]: string[]): void {
 const suggestionFetcher = createSuggestionFetcher()
 
 omnibox.onInputChanged((query, suggest) => {
-    console.log(query)
     if (isCliCommand(query)) {
-        handleCliChanged(toCliArgs(query)).then(s => suggest((console.log(s), s)))
+        handleCliChanged(toCliArgs(query)).then(suggest)
         return
     }
 
