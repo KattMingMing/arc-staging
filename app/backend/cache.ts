@@ -1,10 +1,11 @@
-import { omitBy, uniq, xor } from 'lodash'
+import { omit, omitBy, uniq, xor } from 'lodash'
 import 'rxjs/add/observable/from'
 import 'rxjs/add/operator/map'
 import { Observable } from 'rxjs/Observable'
 
 import storage from '../../extension/storage'
 import { RepoLocations } from '../../extension/types'
+import { isBackground, isInPage } from '../context'
 import { serverUrls, sourcegraphUrl } from '../util/context'
 
 interface UrlChoices {
@@ -14,7 +15,7 @@ interface UrlChoices {
 }
 
 function getServerUrlChoices(): Observable<UrlChoices> {
-    if (window.SG_ENV === 'PAGE') {
+    if (isInPage) {
         return Observable.from([{ sourcegraphUrl, serverUrls, repoLocations: {} }])
     }
 
@@ -38,15 +39,19 @@ class RepoCache {
             [CURRENT_SG_URL_KEY]: sourcegraphUrl,
         }
 
-        if (window.SG_ENV === 'PAGE') {
+        if (isInPage) {
             return
         }
 
-        storage.getSync(({ repoLocations }) => {
+        storage.getSync(({ repoLocations, sourcegraphURL }) => {
             this.cache = repoLocations
+
+            if (isBackground) {
+                this.setCurrentUrl(sourcegraphURL)
+            }
         })
 
-        storage.onChanged(({ serverUrls }) => {
+        storage.onChanged(({ serverUrls, repoLocations }) => {
             if (!serverUrls) {
                 return
             }
@@ -55,11 +60,21 @@ class RepoCache {
                 return
             }
 
-            if (xor(serverUrls.oldValue, serverUrls.newValue).length > 0) {
+            const { oldValue, newValue } = serverUrls
+
+            if (xor(oldValue, newValue).length > 0 && oldValue.length > newValue.length) {
                 // Theres a diff, make sure the cache only contains urls in our list.
                 this.cleanCache(serverUrls.newValue)
             }
         })
+    }
+
+    private getCurrentUrl(): string {
+        return this.cache[CURRENT_SG_URL_KEY]
+    }
+
+    private setCurrentUrl(url: string): void {
+        this.cache[CURRENT_SG_URL_KEY] = url
     }
 
     private cleanCache(urls: string[]): void {
@@ -68,13 +83,19 @@ class RepoCache {
             valid[url] = true
         }
 
-        this.cache = omitBy(this.cache, url => !valid[url])
+        const wasRemoved = (url: string) => !valid[url]
 
-        storage.getSync(({ repoLocations }) =>
+        this.cache = omitBy(this.cache, wasRemoved)
+
+        storage.getSync(({ repoLocations, sourcegraphURL }) => {
             storage.setSync({
-                repoLocations: omitBy<{}, RepoLocations>(repoLocations, (url: string) => !valid[url]),
+                repoLocations: omitBy<{}, RepoLocations>(repoLocations, wasRemoved),
             })
-        )
+
+            if (sourcegraphURL !== this.getCurrentUrl()) {
+                this.setCurrentUrl(sourcegraphURL)
+            }
+        })
     }
 
     /**
@@ -82,8 +103,8 @@ class RepoCache {
      * This should be the default api for getting urls to try.
      */
     public getUrls(key: string): Observable<string[]> {
-        if (key === '' || window.SG_ENV === 'PAGE') {
-            return Observable.from([[this.getUrl(CURRENT_SG_URL_KEY)]])
+        if (key === '' || isInPage) {
+            return Observable.from([[this.getCurrentUrl()]])
         }
 
         const localCachedUrl = this.cache[key]
@@ -111,8 +132,8 @@ class RepoCache {
      * for us, thus we know the location.
      */
     public getUrl(key: string): string {
-        if (key === '' || window.SG_ENV === 'PAGE') {
-            return this.cache[CURRENT_SG_URL_KEY]!
+        if (key === '' || isInPage) {
+            return this.getCurrentUrl()
         }
 
         const url = this.cache[key]
@@ -121,24 +142,43 @@ class RepoCache {
             return url
         }
 
-        throw new Error(
-            `RepoCache.prototype.getUrl called for key ${key} without confidence. Use RepoCache.prototype.getUrls instead.`
-        )
+        // We couldn't find anything. Just try the current sourcegraphUrl.
+        // A lot of dependencies to repos we are looking at will come through here.
+        return this.getCurrentUrl()
     }
 
+    /**
+     * setUrl sets a url for a given repo. You should call this for requests
+     * where RequestContext.isRepoSpecific === true AND we successfully resolved
+     * a URL for repo.
+     */
     public setUrl(key: string, url: string): void {
-        if (window.SG_ENV === 'PAGE') {
+        if (isInPage) {
             return
         }
 
         if (key === '') {
-            this.cache[CURRENT_SG_URL_KEY] = url
+            this.setCurrentUrl(url)
             return
         }
 
         this.cache[key] = url
 
         storage.getSync(({ repoLocations }) => storage.setSync({ repoLocations: { ...repoLocations, [key]: url } }))
+    }
+
+    public removeUrlForKey(key: string): void {
+        this.cache = omit(this.cache, key)
+
+        if (isInPage) {
+            return
+        }
+
+        storage.getSync(({ repoLocations, sourcegraphURL }) =>
+            storage.setSync({
+                repoLocations: omit<{}, RepoLocations>(repoLocations, key),
+            })
+        )
     }
 }
 

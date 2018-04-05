@@ -23,7 +23,7 @@ type IUserEventEnum = 'PAGEVIEW' | 'SEARCHQUERY'
 const userCookieID = getTelligentDuid()
 export const logUserEvent = (event: IUserEventEnum): Observable<void> =>
     mutateGraphQL(
-        getContext(),
+        getContext({ isRepoSpecific: false }),
         `mutation logUserEvent($event: UserEvent!, $userCookieID: String!) {
                 logUserEvent(event: $event, userCookieID: $userCookieID) {
                     alwaysNil

@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators/map'
 import { switchMap } from 'rxjs/operators/switchMap'
 import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
+import { getContext } from '../backend/context'
 import { queryGraphQL } from '../backend/graphql'
 import { makeRepoURI } from '../repo'
 import { Tree } from '../tree/Tree'
@@ -16,7 +17,7 @@ import { Tab, Tabs } from './Tabs'
 const fetchTree = memoizeObservable(
     (args: { repoPath: string; commitID: string }): Observable<string[]> =>
         queryGraphQL(
-            { repoKey: args.repoPath },
+            getContext({ repoKey: args.repoPath }),
             `
                 query FileTree($repoPath: String!, $commitID: String!) {
                     repository(uri: $repoPath) {

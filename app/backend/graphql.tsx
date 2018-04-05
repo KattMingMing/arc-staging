@@ -59,10 +59,16 @@ function requestGraphQL(
                 response.data.repository === null ||
                 (response.errors && response.errors.length)
             ) {
+                if (url === repoCache.getUrl(ctx.repoKey)) {
+                    repoCache.removeUrlForKey(ctx.repoKey)
+                }
+
                 throw response
             }
 
-            repoCache.setUrl(ctx.repoKey, url)
+            if (ctx.isRepoSpecific) {
+                repoCache.setUrl(ctx.repoKey, url)
+            }
 
             return response
         })

@@ -2,6 +2,7 @@ import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/toPromise'
 import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
+import { getContext } from '../backend/context'
 import { queryGraphQL } from '../backend/graphql'
 import { memoizeAsync, memoizeObservable } from '../util/memoize'
 import { AbsoluteRepoFile, makeRepoURI, parseBrowserRepoURL } from './index'
@@ -37,7 +38,7 @@ class RevNotFoundError extends Error {
 export const resolveRev = memoizeObservable(
     (ctx: { repoPath: string; rev?: string }): Observable<string> =>
         queryGraphQL(
-            { repoKey: ctx.repoPath },
+            getContext({ repoKey: ctx.repoPath }),
             `query ResolveRev($repoPath: String!, $rev: String!) {
                 repository(uri: $repoPath) {
                     cloneInProgress
@@ -68,7 +69,7 @@ export const resolveRev = memoizeObservable(
 export const fetchTree = memoizeObservable(
     (args: { repoPath: string; commitID: string }): Observable<string[]> =>
         queryGraphQL(
-            { repoKey: args.repoPath },
+            getContext({ repoKey: args.repoPath }),
             `
                 query FileTree($repoPath: String!, $commitID: String!) {
                     repository(uri: $repoPath) {
@@ -103,7 +104,7 @@ export const fetchTree = memoizeObservable(
 export const listAllSearchResults = memoizeAsync(
     (ctx: { query: string }): Promise<number> =>
         queryGraphQL(
-            { repoKey: '' },
+            getContext({ repoKey: '' }),
             `query Search($query: String!) {
                 search(query: $query) {
                     results {
@@ -131,7 +132,7 @@ const trimRepoPath = ({ repoPath, ...rest }) => ({ ...rest, repoPath: repoPath.r
 export const fetchBlobContentLines = memoizeAsync(
     (ctx: AbsoluteRepoFile): Promise<string[]> =>
         queryGraphQL(
-            { repoKey: '' },
+            getContext({ repoKey: ctx.repoPath }),
             `query BlobContent($repoPath: String!, $commitID: String!, $filePath: String!) {
                 repository(uri: $repoPath) {
                     commit(rev: $commitID) {

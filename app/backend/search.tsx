@@ -10,6 +10,7 @@ import { switchMap } from 'rxjs/operators/switchMap'
 import { take } from 'rxjs/operators/take'
 import { toArray } from 'rxjs/operators/toArray'
 import { Subject } from 'rxjs/Subject'
+import { getContext } from './context'
 import { queryGraphQL } from './graphql'
 
 interface BaseSuggestion {
@@ -159,7 +160,7 @@ const createAggregateError = (errors: ErrorLike[] = []): AggregateError =>
 
 export const fetchSuggestions = (options: SearchOptions) =>
     queryGraphQL(
-        { repoKey: '' },
+        getContext({ repoKey: '', isRepoSpecific: false }),
         `
             query SearchSuggestions($query: String!, $first: Int!) {
                 search(query: $query) {

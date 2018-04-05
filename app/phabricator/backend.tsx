@@ -1,5 +1,6 @@
 import 'rxjs/add/operator/map'
 import { Observable } from 'rxjs/Observable'
+import { getContext } from '../backend/context'
 import { mutateGraphQL } from '../backend/graphql'
 import { memoizeObservable } from '../util/memoize'
 import { normalizeRepoPath } from './util'
@@ -197,7 +198,7 @@ interface CreatePhabricatorRepoOptions {
 export const createPhabricatorRepo = memoizeObservable(
     (options: CreatePhabricatorRepoOptions): Observable<void> =>
         mutateGraphQL(
-            { repoKey: options.repoPath },
+            getContext({ repoKey: options.repoPath }),
             `mutation addPhabricatorRepo(
             $callsign: String!,
             $repoPath: String!
