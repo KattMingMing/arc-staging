@@ -20,6 +20,14 @@ $emphasis-color: #666;
     overflow: auto;
     border-radius: 3px;
     box-shadow: 0 3px 12px rgba(27, 31, 35, 0.15);
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+    will-change: transform;
+
 
     .tooltip__title {
         font-family: $code-font-family;

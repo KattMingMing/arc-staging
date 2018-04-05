@@ -66,51 +66,6 @@ export function injectGitHubApplication(marker: HTMLElement): void {
     })
 }
 
-function progressiveContainerObserver(): void {
-    const progressiveLoaders = document.getElementsByClassName('diff-progressive-loader')
-    // Check that there is a progressive loader that will be removed.
-    if (progressiveLoaders.length === 0) {
-        return
-    }
-    const loaders: Element[] = []
-    // tslint:disable-next-line
-    for (let i = 0; i < progressiveLoaders.length; i++) {
-        const element = progressiveLoaders[i]
-        loaders.push(element)
-    }
-    const observer = new MutationObserver(mutations => {
-        // tslint:disable-next-line
-        mutations.forEach(mutation => {
-            const nodes = Array.prototype.slice.call(mutation.removedNodes)
-            // tslint:disable-next-line
-            nodes.forEach(node => {
-                // tslint:disable-next-line
-                loaders.forEach(loader => {
-                    if (loader === node) {
-                        const index = loaders.indexOf(loader)
-                        loaders.splice(index)
-                        injectBlobAnnotators()
-                        if (loaders.length === 0) {
-                            observer.disconnect()
-                            return
-                        }
-                    }
-                })
-            })
-        })
-    })
-    const filebucket = document.getElementById('files_bucket')
-    if (!filebucket) {
-        return
-    }
-    observer.observe(filebucket, {
-        childList: true,
-        subtree: true,
-        attributes: false,
-        characterData: false,
-    })
-}
-
 function inject(): void {
     injectBlobAnnotators()
     injectServerBanner()
@@ -119,7 +74,6 @@ function inject(): void {
     injectCodeSnippetAnnotator(getCodeCommentContainers(), '.border.rounded-1.my-2', false)
     injectCodeSnippetAnnotator(getRepoCodeSearchContainers(), '.d-inline-block', true)
     injectFileTree()
-    progressiveContainerObserver()
 }
 
 function hideFileTree(): void {
@@ -503,10 +457,48 @@ function injectBlobAnnotators(): void {
         )
     }
 
+    // Get first loaded files and annotate them.
     const files = getFileContainers()
     for (const file of Array.from(files)) {
         addBlobAnnotator(file as HTMLElement)
     }
+    const mutationObserver = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+            const nodes = Array.prototype.slice.call(mutation.addedNodes)
+            for (const node of nodes) {
+                if (node && node.classList && node.classList.contains('file') && node.classList.contains('js-file')) {
+                    const intersectionObserver = new IntersectionObserver(
+                        entries => {
+                            for (const file of entries) {
+                                // File is an IntersectionObserverEntry, which has `isIntersecting` as a prop, but TS
+                                // complains that it does not exist.
+                                if ((file as any).isIntersecting && !file.target.classList.contains('annotated')) {
+                                    file.target.classList.add('annotated')
+                                    addBlobAnnotator(file.target as HTMLElement)
+                                }
+                            }
+                        },
+                        {
+                            rootMargin: '200px',
+                            threshold: 0,
+                        }
+                    )
+                    intersectionObserver.observe(node)
+                }
+            }
+        }
+    })
+    const filebucket = document.getElementById('files')
+    if (!filebucket) {
+        return
+    }
+
+    mutationObserver.observe(filebucket, {
+        childList: true,
+        subtree: true,
+        attributes: false,
+        characterData: false,
+    })
 }
 
 /**

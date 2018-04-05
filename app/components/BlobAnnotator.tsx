@@ -289,6 +289,15 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 .debounceTime(50)
                 .map(e => e.target as HTMLElement)
                 .filter(this.props.filterTarget)
+                .filter(target => {
+                    if (!target.lastChild) {
+                        return false
+                    }
+                    if (!target.lastChild.textContent || target.lastChild.textContent.trim().length === 0) {
+                        return false
+                    }
+                    return true
+                })
                 .map(target => {
                     const td = getTableDataCell(target)
                     if (!td) {
@@ -329,7 +338,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 })
         )
         this.subscriptions.add(
-            Observable.fromEvent<MouseEvent>(ref, 'mouseout').subscribe(e => {
+            Observable.fromEvent<MouseEvent>(ref, 'mouseout', { passive: true }).subscribe(e => {
                 for (const el of this.props.fileElement.querySelectorAll('.selection-highlight')) {
                     el.classList.remove('selection-highlight')
                 }
@@ -345,7 +354,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
             })
         )
         this.subscriptions.add(
-            Observable.fromEvent<MouseEvent>(ref, 'click', { passive: true })
+            Observable.fromEvent<MouseEvent>(ref, 'mouseup', { passive: true })
+                .debounceTime(50)
                 .map(e => e.target as HTMLElement)
                 .filter(this.props.filterTarget)
                 .filter(target => {
@@ -356,6 +366,13 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     if (tooltip && tooltip.contains(target)) {
                         return false
                     }
+                    if (!target.lastChild) {
+                        return false
+                    }
+                    if (!target.lastChild.textContent || target.lastChild.textContent.trim().length === 0) {
+                        return false
+                    }
+
                     return true
                 })
                 .subscribe(target => {

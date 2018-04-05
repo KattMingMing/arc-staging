@@ -50,6 +50,11 @@ export function isBrowserExtension(): boolean {
 }
 
 export function isOnlySourcegraphDotCom(urls: string[]): boolean {
+    // HACK (@kingy): If no urls are passed in return true since the default URL is sourcegraph.com.
+    // this fixes safari from failing after install.
+    if (!urls) {
+        return true
+    }
     return !urls.some(url => url !== 'https://sourcegraph.com')
 }
 

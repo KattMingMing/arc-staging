@@ -44,7 +44,6 @@ export function createTooltips(): void {
     if (document.querySelector('.sg-tooltip')) {
         return // idempotence
     }
-
     tooltip = document.createElement('DIV')
     tooltip.classList.add('sg-tooltip')
     tooltip.style.visibility = 'hidden'
@@ -282,18 +281,26 @@ window.addEventListener('keyup', (e: KeyboardEvent) => {
     }
 })
 
-document.body.addEventListener('click', (e: MouseEvent) => {
-    if (!getTableDataCell(e.target as HTMLElement)) {
-        hideTooltip()
-    }
-})
+document.body.addEventListener(
+    'click',
+    (e: MouseEvent) => {
+        if (!getTableDataCell(e.target as HTMLElement)) {
+            hideTooltip()
+        }
+    },
+    { passive: true } as any
+)
 
-window.addEventListener('resize', () => {
-    if (tooltipTarget) {
-        const targetBound = tooltipTarget.getBoundingClientRect()
-        tooltip.style.left = targetBound.left + window.scrollX + 'px'
-    }
-})
+window.addEventListener(
+    'resize',
+    () => {
+        if (tooltipTarget) {
+            const targetBound = tooltipTarget.getBoundingClientRect()
+            tooltip.style.left = targetBound.left + window.scrollX + 'px'
+        }
+    },
+    { passive: true } as any
+)
 
 /**
  * convertNode modifies a DOM node so that we can identify precisely token a user has clicked or hovered over.

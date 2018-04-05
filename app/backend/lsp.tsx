@@ -80,6 +80,7 @@ export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Obs
         crossDomain: true,
         withCredentials: true,
         body: JSON.stringify(body),
+        async: true,
     }).map(({ response }) => {
         if (!response || !response[1] || !response[1].result) {
             return []
@@ -115,6 +116,7 @@ export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition)
         crossDomain: true,
         withCredentials: true,
         body: JSON.stringify(body),
+        async: true,
     }).map(({ response }) => {
         if (!response || !response[1] || !response[1].result) {
             return []

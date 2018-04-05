@@ -49,6 +49,7 @@ function requestGraphQL(
         crossDomain: true,
         withCredentials: true,
         body: JSON.stringify({ query: request, variables }),
+        async: true,
     })
         .map(({ response }) => {
             // If the query should return a repository and the response is null, throw an error

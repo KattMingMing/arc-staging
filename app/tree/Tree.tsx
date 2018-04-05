@@ -79,12 +79,10 @@ export class Tree extends React.PureComponent<Props, State> {
 
     public componentDidMount(): void {
         if (this.props.selectedPath) {
-            setTimeout(() => {
-                const el = this.locateDomNode(this.props.selectedPath!)
-                if (el && !this.elementInViewport(el)) {
-                    el.scrollIntoView({ behavior: 'instant', inline: 'nearest' })
-                }
-            }, 500)
+            const el = this.locateDomNode(this.props.selectedPath!)
+            if (el && !this.elementInViewport(el)) {
+                el.scrollIntoView({ behavior: 'instant', inline: 'nearest' })
+            }
         }
     }
 
@@ -114,7 +112,7 @@ export class Tree extends React.PureComponent<Props, State> {
                 if (selectedPath) {
                     const el = this.locateDomNode(selectedPath)
                     if (el && !this.elementInViewport(el)) {
-                        el.scrollIntoView({ behavior: 'instant' })
+                        el.scrollIntoView({ behavior: 'instant', inline: 'nearest' })
                     }
                 }
             }, 250)
