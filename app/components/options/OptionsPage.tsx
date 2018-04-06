@@ -6,6 +6,7 @@ import * as browserAction from '../../../extension/browserAction'
 import { getURL } from '../../../extension/extension'
 import storage from '../../../extension/storage'
 import { ConfigWarning } from './ConfigWarning'
+import { PhabricatorSettings } from './PhabricatorSettings'
 import { ServerConnection } from './ServerConnection'
 import { ServerInstallation } from './ServerInstallation'
 import { ServerModal } from './ServerModal'
@@ -167,6 +168,11 @@ export class OptionsPage extends React.Component<{}, State> {
                 <div className="options__divider" />
                 <div className="options__section">
                     <SupportedCodeHosts />
+                </div>
+                <div className="options__divider" />
+                <div className="options__section">
+                    <div className="options__section-header">Phabricator Settings</div>
+                    <PhabricatorSettings />
                 </div>
                 <ServerInstallation />
             </div>

@@ -1,5 +1,10 @@
 export type RepoLocations = { [key: string]: string }
 
+export interface PhabricatorMapping {
+    callsign: string
+    path: string
+}
+
 export interface StorageItems {
     sourcegraphURL: string
     gitHubEnterpriseURL: string
@@ -15,6 +20,7 @@ export interface StorageItems {
     serverUserId: string
     hasSeenServerModal: boolean
     repoLocations: RepoLocations
+    phabricatorMappings: PhabricatorMapping[]
 }
 
 export const defaultStorageItems: StorageItems = {
@@ -32,6 +38,7 @@ export const defaultStorageItems: StorageItems = {
     serverUserId: '',
     hasSeenServerModal: false,
     repoLocations: {},
+    phabricatorMappings: [],
 }
 
 export type StorageChange = { [key in keyof StorageItems]: chrome.storage.StorageChange }

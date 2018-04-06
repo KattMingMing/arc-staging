@@ -134,7 +134,8 @@ function getDiffIdFromDifferentialPage(): string | null {
     return matches[1]
 }
 
-const PHAB_DIFFUSION_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/(source|diffusion)\/([A-Za-z0-9]+)\/browse\/([\w-]+\/)?([^;$]+)(;[0-9a-f]{40})?(?:\$[0-9]+)?/i
+// tslint:disable-next-line
+const PHAB_DIFFUSION_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/(source|diffusion)\/([A-Za-z0-9\-\_]+)\/browse\/([\w-]+\/)?([^;$]+)(;[0-9a-f]{40})?(?:\$[0-9]+)?/i
 const PHAB_DIFFERENTIAL_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/(D[0-9]+)(?:\?(?:(?:id=([0-9]+))|(vs=(?:[0-9]+|on)&id=[0-9]+)))?/i
 const PHAB_REVISION_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/r([0-9A-z]+)([0-9a-f]{40})/i
 // http://phabricator.aws.sgdev.org/source/nmux/change/master/mux.go

@@ -1,5 +1,7 @@
 import 'rxjs/add/operator/map'
 import { Observable } from 'rxjs/Observable'
+import { isExtension } from '../../app/context'
+import storage from '../../extension/storage'
 import { getContext } from '../backend/context'
 import { mutateGraphQL } from '../backend/graphql'
 import { memoizeObservable } from '../util/memoize'
@@ -225,7 +227,6 @@ export function getRepoDetailsFromCallsign(callsign: string): Promise<Phabricato
         const form = createConduitRequestForm()
         form.set('params[constraints]', JSON.stringify({ callsigns: [callsign] }))
         form.set('params[attachments]', '{ "uris": true }')
-
         fetch(window.location.origin + '/api/diffusion.repository.search', {
             method: 'POST',
             body: form,
@@ -245,16 +246,17 @@ export function getRepoDetailsFromCallsign(callsign: string): Promise<Phabricato
                     reject(new Error(`could not locate git uri for repo with callsign ${callsign}`))
                 }
 
-                const details = convertConduitRepoToRepoDetails(repo)
-                if (details) {
-                    createPhabricatorRepo({
-                        callsign,
-                        repoPath: details.repoPath,
-                        phabricatorURL: window.location.origin,
-                    }).subscribe(() => resolve(details))
-                } else {
-                    reject(new Error('could not parse repo details'))
-                }
+                return convertConduitRepoToRepoDetails(repo).then(details => {
+                    if (details) {
+                        return createPhabricatorRepo({
+                            callsign,
+                            repoPath: details.repoPath,
+                            phabricatorURL: window.location.origin,
+                        }).subscribe(() => resolve(details))
+                    } else {
+                        reject(new Error('could not parse repo details'))
+                    }
+                })
             })
             .catch(reject)
     })
@@ -285,20 +287,21 @@ export function getRepoDetailsFromRepoPHID(phid: string): Promise<PhabricatorRep
                     throw new Error(`could not locate git uri for repo with phid ${phid}`)
                 }
 
-                const details = convertConduitRepoToRepoDetails(repo)
-                if (details) {
-                    createPhabricatorRepo({
-                        callsign: repo.fields.callsign,
-                        repoPath: details.repoPath,
-                        phabricatorURL: window.location.origin,
-                    })
-                        .map(() => details)
-                        .subscribe(() => {
-                            resolve(details)
+                return convertConduitRepoToRepoDetails(repo).then(details => {
+                    if (details) {
+                        return createPhabricatorRepo({
+                            callsign: repo.fields.callsign,
+                            repoPath: details.repoPath,
+                            phabricatorURL: window.location.origin,
                         })
-                } else {
-                    reject(new Error('could not parse repo details'))
-                }
+                            .map(() => details)
+                            .subscribe(() => {
+                                resolve(details)
+                            })
+                    } else {
+                        reject(new Error('could not parse repo details'))
+                    }
+                })
             })
             .catch(reject)
     })
@@ -308,7 +311,29 @@ export function getRepoDetailsFromDifferentialID(differentialID: number): Promis
     return getRepoPHIDForDifferentialID(differentialID).then(getRepoDetailsFromRepoPHID)
 }
 
-function convertConduitRepoToRepoDetails(repo: ConduitRepo): PhabricatorRepoDetails | null {
+function convertConduitRepoToRepoDetails(repo: ConduitRepo): Promise<PhabricatorRepoDetails | null> {
+    return new Promise((resolve, reject) => {
+        if (isExtension) {
+            return storage.getSync(items => {
+                if (items.phabricatorMappings) {
+                    for (const mapping of items.phabricatorMappings) {
+                        if (mapping.callsign === repo.fields.callsign) {
+                            return resolve({
+                                callsign: repo.fields.callsign,
+                                repoPath: mapping.path,
+                            })
+                        }
+                    }
+                }
+                return resolve(convertToDetails(repo))
+            })
+        } else {
+            return resolve(convertToDetails(repo))
+        }
+    })
+}
+
+function convertToDetails(repo: ConduitRepo): PhabricatorRepoDetails | null {
     let uri: ConduitURI | undefined
     for (const u of repo.attachments.uris.uris) {
         const normalPath = u.fields.uri.normalized.replace('\\', '')
