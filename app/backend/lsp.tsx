@@ -25,10 +25,6 @@ function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
             id: 0,
             method: 'initialize',
             params: {
-                // TODO(sqs): rootPath is deprecated but xlang client proxy currently
-                // requires it. Pass rootUri as well (below) for forward compat.
-                rootPath: `git://${ctx.repoPath}?${ctx.commitID}`,
-
                 rootUri: `git://${ctx.repoPath}?${ctx.commitID}`,
                 mode: `${getModeFromExtension(getPathExtension(path))}`,
             },
