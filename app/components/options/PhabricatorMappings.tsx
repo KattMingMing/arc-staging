@@ -14,8 +14,8 @@ enum errors {
 
 interface State {
     error: errors | null
-    callsign: string | null
-    path: string | null
+    callsign: string
+    path: string
     mappings: PhabricatorMapping[]
 }
 
