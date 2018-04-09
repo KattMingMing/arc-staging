@@ -18,6 +18,7 @@ interface State {
     eventTrackingEnabled: boolean
     displayHeader: boolean
     isPopup: boolean
+    version: string
 }
 
 // Make safari not be abnoxious <angry face>
@@ -43,11 +44,13 @@ export class OptionsPage extends React.Component<{}, State> {
             eventTrackingEnabled: false,
             displayHeader: params.popup || params.fullPage,
             isPopup: params.popup,
+            version: '',
         }
     }
 
     public componentDidMount(): void {
         browserAction.setBadgeText({ text: '' })
+
         storage.getSync(items => {
             this.setState(() => ({
                 repositoryFileTreeEnabled:
@@ -56,6 +59,10 @@ export class OptionsPage extends React.Component<{}, State> {
                 eventTrackingEnabled: items.eventTrackingEnabled,
             }))
         })
+
+        getExtensionVersion()
+            .then(version => this.setState({ version }))
+            .catch(() => this.setState({ version: '' }))
     }
 
     private onFileTreeToggled = () => {
@@ -77,7 +84,7 @@ export class OptionsPage extends React.Component<{}, State> {
     }
 
     public render(): JSX.Element | null {
-        const version = getExtensionVersion()
+        const { version } = this.state
         return (
             <div className={`options__container ${!this.state.isPopup ? 'options__container-full' : ''}`}>
                 <ServerModal />

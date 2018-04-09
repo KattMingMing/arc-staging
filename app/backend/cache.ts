@@ -44,7 +44,9 @@ class RepoCache {
         }
 
         storage.getSync(({ repoLocations, sourcegraphURL }) => {
-            this.cache = repoLocations
+            if (repoLocations) {
+                this.cache = repoLocations
+            }
 
             if (isBackground) {
                 this.setCurrentUrl(sourcegraphURL)

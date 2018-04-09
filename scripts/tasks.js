@@ -1,8 +1,11 @@
 var fs = require('fs')
 var path = require('path')
 var shelljs = require('shelljs')
-var omit = require('lodash').omit
+var _ = require('lodash')
 var extensionInfo = require('../chrome/extension.info.json')
+
+var omit = _.omit
+var pick = _.pick
 
 const BUILDS_DIR = 'build'
 
@@ -13,7 +16,7 @@ function ensurePaths() {
     shelljs.mkdir('-p', 'build/firefox')
 }
 
-exports.copyAssets = function(env) {
+exports.copyAssets = function (env) {
     const dir = 'build/dist'
     shelljs.rm('-rf', dir)
     shelljs.mkdir('-p', dir)
@@ -41,6 +44,11 @@ const browserBundleZips = {
 const browserBlacklist = {
     chrome: ['applications'],
     firefox: ['key'],
+    safari: [],
+}
+
+const browserWhitelist = {
+    safari: ['version'],
 }
 
 const browserFlip = {
@@ -48,26 +56,38 @@ const browserFlip = {
     chrome: 'firefox',
 }
 
+function writeManifest(env, browser, writeDir) {
+    let envInfo = omit(extensionInfo[env], browserBlacklist[browser])
+
+    let manifest
+    const whitelist = browserWhitelist[browser]
+    if (whitelist) {
+        manifest = pick(extensionInfo, whitelist)
+        envInfo = pick(envInfo, whitelist)
+    } else {
+        manifest = omit(extensionInfo, ['dev', 'prod', ...browserBlacklist[browser]])
+    }
+
+    manifest = { ...manifest, ...envInfo }
+
+    if (browser === 'firefox') {
+        manifest.permissions.push('<all_urls>')
+        manifest.permissions.push('<all_urls>')
+    }
+
+    fs.writeFileSync(`${writeDir}/manifest.json`, JSON.stringify(manifest, null, 4))
+}
+
 function buildForBrowser(browser) {
     ensurePaths()
-    return function(env) {
+    return function (env) {
         const title = browserTitles[browser]
 
         const buildDir = path.resolve(process.cwd(), `${BUILDS_DIR}/${browser}`)
 
-        let envInfo = omit(extensionInfo[env], browserBlacklist[browser])
+        writeManifest(env, browser, buildDir)
 
-        if (browser === 'firefox') {
-            extensionInfo.dev.permissions.push('<all_urls>')
-            extensionInfo.prod.permissions.push('<all_urls>')
-        }
-
-        let manifest = omit(extensionInfo, ['dev', 'prod', ...browserBlacklist[browser]])
-        manifest = { ...manifest, ...envInfo }
-
-        fs.writeFileSync(`${buildDir}/manifest.json`, JSON.stringify(manifest, null, 4))
-
-        return function() {
+        return function () {
             console.log(`Building ${title} ${env} bundle...`)
 
             copyDist(buildDir)
@@ -86,8 +106,11 @@ function buildForBrowser(browser) {
 exports.buildFirefox = buildForBrowser('firefox')
 exports.buildChrome = buildForBrowser('chrome')
 
-exports.buildSafari = function(env) {
+exports.buildSafari = function (env) {
     console.log(`Building Safari ${env} bundle...`)
+
     shelljs.exec('cp -r build/dist/* Sourcegraph.safariextension')
+    writeManifest(env, 'safari', 'Sourcegraph.safariextension')
+
     console.log(`Safari ${env} bundle built.`)
 }

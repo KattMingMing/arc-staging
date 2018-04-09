@@ -1,3 +1,4 @@
+import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
 
@@ -149,24 +150,20 @@ export function getPlatformName(): string {
     if (window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
         return 'phabricator-integration'
     }
+
+    if (typeof window.safari !== 'undefined') {
+        return 'safari-extension'
+    }
+
     return isFirefoxExtension() ? 'firefox-extension' : 'chrome-extension'
 }
 
-export function getExtensionVersion(): string {
-    const c = global.chrome as any
-    if (c && c.app && c.app.getDetails) {
-        const details = c.app.getDetails()
-        if (details && details.version) {
-            return details.version
-        }
-    }
-    if (c && c.runtime && c.runtime.getManifest) {
-        const manifest = c.runtime.getManifest()
-        if (manifest && manifest.version) {
-            return manifest.version
-        }
-    }
-    return 'NO_VERSION'
+export function getExtensionVersionSync(): string {
+    return runtime.getExtensionVersionSync()
+}
+
+export function getExtensionVersion(): Promise<string> {
+    return runtime.getExtensionVersion()
 }
 
 export function isFirefoxExtension(): boolean {

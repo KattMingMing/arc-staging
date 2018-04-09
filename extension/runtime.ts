@@ -1,4 +1,5 @@
 import safariMessager from './safari/SafariMessager'
+import { getURL } from './extension'
 
 const safari = window.safari
 const chrome = global.chrome
@@ -53,6 +54,72 @@ export const getContentScripts = () => {
         return chrome.runtime.getManifest().content_scripts
     }
     return []
+}
+
+function getSafariExtensionVersion(): Promise<string> {
+    return fetch(getURL('manifest.json'))
+        .then(res => res.json())
+        .then(({ version }: { version: string }) => version)
+        .catch(err => {
+            console.error('could not load manifest.json', err)
+
+            return 'NO_VERSION'
+        })
+}
+
+let safariVersion = 'NO_VERSION'
+
+function initSafariVersion(): void {
+    getSafariExtensionVersion()
+        .then(version => {
+            safariVersion = version
+        })
+        .catch(() => {
+            // Don't care
+        })
+}
+
+if (safari) {
+    initSafariVersion()
+}
+
+// getExtensionVersionSync will be reliable on Chrome and Firefox but should only be used
+// in safari when we know that `initSafariVersion` has had time to resolve. This is not
+// sufficient for the options menu.
+export const getExtensionVersionSync = (): string => {
+    // Content scripts don't have access to the manifest, but do have chrome.app.getDetails
+    const c = chrome as any
+    if (c && c.app && c.app.getDetails) {
+        const details = c.app.getDetails()
+        if (details && details.version) {
+            return details.version
+        }
+    }
+
+    if (chrome && chrome.runtime && chrome.runtime.getManifest) {
+        const manifest = chrome.runtime.getManifest()
+        if (manifest) {
+            return manifest.version
+        }
+    }
+
+    if (safari) {
+        return safariVersion
+    }
+
+    return 'NO_VERSION'
+}
+
+export const getExtensionVersion = (): Promise<string> => {
+    if (chrome && chrome.runtime && chrome.runtime.getManifest) {
+        return Promise.resolve(getExtensionVersionSync())
+    }
+
+    if (safari) {
+        return getSafariExtensionVersion()
+    }
+
+    return Promise.resolve('NO_VERSION')
 }
 
 export const onInstalled = (handler: (info?: chrome.runtime.InstalledDetails) => void) => {
