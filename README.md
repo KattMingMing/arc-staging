@@ -126,7 +126,7 @@ Coming soon...
 * Naviate to https://chrome.google.com/webstore/developer/dashboard?pli=1
 * Click "edit" in the row associated with Sourcegraph for GitHub
 * Click "Upload Updated Package" in the top section (inside Upload).
-* Click choose file and select the `chrome-bundle.zip` file.
+* Click choose file and select the `build/bundles/chrome-bundle.zip` file.
 * Add release notes and submit the build. It will be availble for the submitter instantly, but users will see it in a couple of hours. If this is a big fix for a bug then it is worth telling users they can go to `chrome://extensions` and clicking "Update extensions now" (This option is only available if "Developer mode" is enabled).
 * Click "Publish Changes"
 
@@ -158,7 +158,7 @@ $ make deploy
 * Sign into Firefox under a Sourcegraph developer account
 * Go to https://addons.mozilla.org/en-US/developers/addon/sourcegraph-addon-for-github/versions/submit/
 * Ensure you have completed the steps above for release a production version. The three most important steps are: 1) Ensure it runs and there are no errors 2) Bump the version. 3) The `dist` build reflects the current changes you've made.
-* Click "Select a file..." and click the `firefox-bundle.xpi` that was generated from `make bundle`.
+* Click "Select a file..." and click the `build/bundles/firefox-bundle.xpi` that was generated from `make bundle`.
 * Following the upload, create a zip of the entire browser-extension reposiotry.
 * Upload all of the source code to the Firefox store before clicking continue.
 * Append to the version notes if there is something significant. Otherwise use the previous version notes. You can find previous version notes by going to https://addons.mozilla.org/en-US/developers/addon/sourcegraph-addon-for-github/versions and clicking the previous submission.
