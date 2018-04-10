@@ -27,6 +27,18 @@ export const getActive = (callback: (tab: chrome.tabs.Tab) => void) => {
     }
 }
 
+export const query = (queryInfo: chrome.tabs.QueryInfo, handler: (tabs: chrome.tabs.Tab[]) => void) => {
+    if (chrome && chrome.tabs && chrome.tabs.onUpdated) {
+        chrome.tabs.query(queryInfo, handler)
+    }
+}
+
+export const reload = (tabId: number) => {
+    if (chrome && chrome.tabs && chrome.tabs.reload) {
+        chrome.tabs.reload(tabId)
+    }
+}
+
 interface InjectDetails extends chrome.tabs.InjectDetails {
     origin?: string
     whitelist?: string[]

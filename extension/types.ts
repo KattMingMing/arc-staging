@@ -1,4 +1,6 @@
-export type RepoLocations = { [key: string]: string }
+export interface RepoLocations {
+    [key: string]: string
+}
 
 export interface PhabricatorMapping {
     callsign: string
@@ -21,6 +23,7 @@ export interface StorageItems {
     hasSeenServerModal: boolean
     repoLocations: RepoLocations
     phabricatorMappings: PhabricatorMapping[]
+    openFileOnSourcegraph: boolean
 }
 
 export const defaultStorageItems: StorageItems = {
@@ -39,6 +42,7 @@ export const defaultStorageItems: StorageItems = {
     hasSeenServerModal: false,
     repoLocations: {},
     phabricatorMappings: [],
+    openFileOnSourcegraph: true,
 }
 
 export type StorageChange = { [key in keyof StorageItems]: chrome.storage.StorageChange }

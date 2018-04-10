@@ -2,11 +2,10 @@
 // prettier-ignore
 import '../../app/util/polyfill'
 
-import { first, uniq, without } from 'lodash'
+import { without } from 'lodash'
 
-import { createSuggestionFetcher, Suggestion } from '../../app/backend/search'
+import initializeCli from '../../app/cli'
 import { setServerUrls, setSourcegraphUrl } from '../../app/util/context'
-import { buildSearchURLQuery } from '../../app/util/url'
 import * as browserAction from '../../extension/browserAction'
 import * as omnibox from '../../extension/omnibox'
 import * as permissions from '../../extension/permissions'
@@ -37,142 +36,7 @@ const configureOmnibox = (serverUrl: string) => {
     })
 }
 
-const cliLeader = ':'
-const isCliCommand = (input: string) => input.charAt(0) === cliLeader
-const toCliArgs = (input: string) =>
-    input
-        .substr(1) // drop cliLeader
-        .split(' ') // split into args
-
-function handleCliChanged([cmd, ...args]: string[]): Promise<chrome.omnibox.SuggestResult[]> {
-    return new Promise(resolve => {
-        if (cmd === '') {
-            resolve([
-                {
-                    content: `${cliLeader}add-url `,
-                    description: 'Add a Sourcegraph Server URL',
-                },
-                {
-                    content: `${cliLeader}set-url `,
-                    description: 'Set your primary Sourcegraph Server URL',
-                },
-            ])
-            return
-        }
-
-        if ('set-url'.includes(cmd)) {
-            storage.getSync(({ sourcegraphURL, serverUrls }) => {
-                const suggestions: chrome.omnibox.SuggestResult[] = serverUrls.map(url => ({
-                    content: `${cliLeader}set-url ${url}`,
-                    description: `${url}${url === sourcegraphURL ? ' (current)' : ''}`,
-                }))
-
-                resolve(suggestions)
-            })
-
-            return
-        } else if ('add-url'.includes(cmd)) {
-            resolve([
-                {
-                    content: `${cliLeader}add-url `,
-                    description: 'Add a Sourcegraph Server URL',
-                },
-            ])
-            return
-        }
-    })
-}
-
-function upsertUrl(customUrl: string): void {
-    try {
-        const url = new URL(customUrl)
-        if (!url || !url.origin || url.origin === 'null') {
-            // TODO: On error here, theres no way to provide feedback. Figure out something to do.
-            // (Not urgent, this feature is more of an easter egg/power user helper)
-            return
-        }
-
-        if (window.safari && url.protocol === 'http:') {
-            // TODO: On error here, theres no way to provide feedback. Figure out something to do.
-            // (Not urgent, this feature is more of an easter egg/power user helper)
-            return
-        }
-
-        storage.getSync(({ serverUrls, sourcegraphURL }) => {
-            const urls = serverUrls
-            if (!urls.includes(url.origin)) {
-                urls.push(url.origin)
-            }
-
-            storage.setSync({
-                sourcegraphURL: url.origin,
-                serverUrls: uniq(urls),
-            })
-        })
-    } catch (e) {
-        // TODO: On error here, theres no way to provide feedback. Figure out something to do.
-        // (Not urgent, this feature is more of an easter egg/power user helper)
-        return
-    }
-}
-
-function handleCliEntered([cmd, ...args]: string[]): void {
-    if (cmd === 'set-url' || cmd === 'add-url') {
-        upsertUrl(args[0])
-    }
-}
-
-const suggestionFetcher = createSuggestionFetcher()
-
-omnibox.onInputChanged((query, suggest) => {
-    if (isCliCommand(query)) {
-        handleCliChanged(toCliArgs(query)).then(suggest)
-        return
-    }
-
-    storage.getSync(({ serverUrls, sourcegraphURL }) => {
-        const sgUrl = sourcegraphURL || first(serverUrls)
-
-        suggestionFetcher({
-            query,
-            handler: (suggestions: Suggestion[]) =>
-                suggest(
-                    suggestions.map(({ title, url, urlLabel }) => ({
-                        content: `${sgUrl}${url}`,
-                        description: `${title} - ${urlLabel}`,
-                    }))
-                ),
-        })
-    })
-})
-
-const isURL = /^https?:\/\//
-
-omnibox.onInputEntered((query, disposition) => {
-    if (isCliCommand(query)) {
-        handleCliEntered(toCliArgs(query))
-        return
-    }
-
-    storage.getSync(({ serverUrls, sourcegraphURL }) => {
-        const url = sourcegraphURL || first(serverUrls)
-        const props = {
-            url: isURL.test(query) ? query : `${url}/search?${buildSearchURLQuery(query)}`,
-        }
-
-        switch (disposition) {
-            case 'currentTab':
-                tabs.update(props)
-                break
-            case 'newForegroundTab':
-                tabs.create(props)
-                break
-            case 'newBackgroundTab':
-                tabs.create({ ...props, active: false })
-                break
-        }
-    })
-})
+initializeCli(omnibox)
 
 storage.getSync(({ sourcegraphURL }) => configureOmnibox(sourcegraphURL))
 
@@ -243,6 +107,10 @@ storage.addSyncMigration((items, set, remove) => {
 
     if (!items.repoLocations) {
         set({ repoLocations: {} })
+    }
+
+    if (items.openFileOnSourcegraph === undefined) {
+        set({ openFileOnSourcegraph: true })
     }
 })
 

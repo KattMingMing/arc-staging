@@ -158,7 +158,7 @@ const createAggregateError = (errors: ErrorLike[] = []): AggregateError =>
         errors: errors.map(asError),
     })
 
-export const fetchSuggestions = (options: SearchOptions) =>
+export const fetchSuggestions = (options: SearchOptions, first: number) =>
     queryGraphQL(
         getContext({ repoKey: '', isRepoSpecific: false }),
         `
@@ -201,7 +201,7 @@ export const fetchSuggestions = (options: SearchOptions) =>
         {
             query: options.query,
             // The browser extension API only takes 5 suggestions
-            first: 5,
+            first,
         }
     ).pipe(
         mergeMap(({ data, errors }) => {
@@ -217,7 +217,7 @@ interface SuggestionInput {
     handler: (suggestion: Suggestion[]) => void
 }
 
-export const createSuggestionFetcher = () => {
+export const createSuggestionFetcher = (first = 5) => {
     const fetcher = new Subject<SuggestionInput>()
 
     fetcher
@@ -236,8 +236,8 @@ export const createSuggestionFetcher = () => {
                 const options: SearchOptions = {
                     query,
                 }
-                return fetchSuggestions(options).pipe(
-                    take(5),
+                return fetchSuggestions(options, first).pipe(
+                    take(first),
                     map(createSuggestion),
                     // createSuggestion will return null if we get a type we don't recognize
                     filter(f => !!f),

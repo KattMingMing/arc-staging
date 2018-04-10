@@ -4,10 +4,13 @@ import * as React from 'react'
 import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { switchMap } from 'rxjs/operators/switchMap'
+import { tap } from 'rxjs/operators/tap'
 import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
+import * as runtime from '../../extension/runtime'
 import { getContext } from '../backend/context'
 import { queryGraphQL } from '../backend/graphql'
+import { isExtension } from '../context'
 import { makeRepoURI } from '../repo'
 import { Tree } from '../tree/Tree'
 import { memoizeObservable } from '../util/memoize'
@@ -15,7 +18,7 @@ import { Resizable } from './Resizable'
 import { Tab, Tabs } from './Tabs'
 
 const fetchTree = memoizeObservable(
-    (args: { repoPath: string; commitID: string }): Observable<string[]> =>
+    (args: { repoPath: string; commitID: string; rev: string }): Observable<string[]> =>
         queryGraphQL(
             getContext({ repoKey: args.repoPath }),
             `
@@ -44,6 +47,18 @@ const fetchTree = memoizeObservable(
                     throw new Error('could not fetch file tree data.')
                 }
                 return data.repository.commit.tree.files.map(file => (file as any).path)
+            }),
+            tap(files => {
+                if (isExtension) {
+                    runtime.sendMessage({
+                        type: 'fetched-files',
+                        payload: {
+                            name: args.repoPath,
+                            rev: args.rev,
+                            files,
+                        },
+                    })
+                }
             })
         ),
     makeRepoURI
@@ -99,7 +114,11 @@ export class RepoRevSidebar extends React.PureComponent<Props, State> {
         // Fetch repository revision.
         this.subscriptions.add(
             this.specChanges
-                .pipe(switchMap(({ repoPath, commitID }) => fetchTree({ repoPath, commitID })))
+                .pipe(
+                    switchMap(({ repoPath, commitID }) =>
+                        fetchTree({ repoPath, commitID, rev: this.props.rev || this.props.defaultBranch })
+                    )
+                )
                 .subscribe(
                     files => this.setState({ files, loading: false }),
                     err => this.setState({ error: err.message })

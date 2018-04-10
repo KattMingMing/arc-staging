@@ -1,5 +1,5 @@
-import safariMessager from './safari/SafariMessager'
 import { getURL } from './extension'
+import safariMessager from './safari/SafariMessager'
 
 const safari = window.safari
 const chrome = global.chrome

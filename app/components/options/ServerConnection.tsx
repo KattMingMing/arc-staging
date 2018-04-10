@@ -1,18 +1,13 @@
 import AddIcon from '@sourcegraph/icons/lib/Add'
 import * as React from 'react'
 import { Button, FormText, Input, InputGroup, InputGroupAddon } from 'reactstrap'
+import { upsertSourcegraphUrl, URLError } from '../../../extension/helpers/storage'
 import storage from '../../../extension/storage'
 import { ServerURLSelection } from './ServerURLSelection'
 
-enum errors {
-    Empty,
-    Invalid,
-    HTTPNotSupported,
-}
-
 interface State {
     customUrl: string
-    error: errors | null
+    error: number | null
     serverUrls: string[]
 }
 
@@ -44,38 +39,16 @@ export class ServerConnection extends React.Component<{}, State> {
     }
 
     private addSourcegraphServerURL = (): void => {
-        try {
-            const url = new URL(this.state.customUrl)
-            if (!url || !url.origin || url.origin === 'null') {
-                this.handleInvalidUrl(errors.Empty)
-                return
-            }
-
-            if (window.safari && url.protocol === 'http:') {
-                this.handleInvalidUrl(errors.HTTPNotSupported)
-                return
-            }
-
-            storage.getSync(items => {
-                let serverUrls = items.serverUrls || []
-                serverUrls = [...serverUrls, url.origin]
-
-                storage.setSync(
-                    {
-                        sourcegraphURL: url.origin,
-                        serverUrls: [...new Set(serverUrls)],
-                    },
-                    () => {
-                        this.setState(() => ({ customUrl: '', serverUrls, error: null }))
-                    }
-                )
-            })
-        } catch {
-            this.handleInvalidUrl(errors.Invalid)
+        // upsertSourcegraphUrl returns null or an error code
+        const err = upsertSourcegraphUrl(this.state.customUrl, (urls: string[]) =>
+            this.setState({ customUrl: '', serverUrls: urls, error: null })
+        )
+        if (err) {
+            this.handleInvalidUrl(err)
         }
     }
 
-    private handleInvalidUrl = (error: errors): void => {
+    private handleInvalidUrl = (error: number): void => {
         this.setState(
             () => ({ error }),
             () => {
@@ -121,11 +94,11 @@ export class ServerConnection extends React.Component<{}, State> {
                                 </Button>
                             </InputGroupAddon>
                         </InputGroup>
-                        {this.state.error === errors.Invalid && (
+                        {this.state.error === URLError.Invalid && (
                             <FormText color="muted">Please enter a valid URL.</FormText>
                         )}
-                        {this.state.error === errors.Empty && <FormText color="muted">Please enter a URL.</FormText>}
-                        {this.state.error === errors.HTTPNotSupported && (
+                        {this.state.error === URLError.Empty && <FormText color="muted">Please enter a URL.</FormText>}
+                        {this.state.error === URLError.HTTPNotSupported && (
                             <FormText color="muted">
                                 Extensions cannot communicate over HTTPS in your browser. We suggest using a tool like{' '}
                                 <a href="https://ngrok.com/">ngrok</a> for trying the extension out with your local
