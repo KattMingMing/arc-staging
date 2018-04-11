@@ -16,7 +16,7 @@ function ensurePaths() {
     shelljs.mkdir('-p', 'build/firefox')
 }
 
-exports.copyAssets = function (env) {
+exports.copyAssets = function(env) {
     const dir = 'build/dist'
     shelljs.rm('-rf', dir)
     shelljs.mkdir('-p', dir)
@@ -72,7 +72,6 @@ function writeManifest(env, browser, writeDir) {
 
     if (browser === 'firefox') {
         manifest.permissions.push('<all_urls>')
-        manifest.permissions.push('<all_urls>')
     }
 
     fs.writeFileSync(`${writeDir}/manifest.json`, JSON.stringify(manifest, null, 4))
@@ -80,14 +79,14 @@ function writeManifest(env, browser, writeDir) {
 
 function buildForBrowser(browser) {
     ensurePaths()
-    return function (env) {
+    return function(env) {
         const title = browserTitles[browser]
 
         const buildDir = path.resolve(process.cwd(), `${BUILDS_DIR}/${browser}`)
 
         writeManifest(env, browser, buildDir)
 
-        return function () {
+        return function() {
             console.log(`Building ${title} ${env} bundle...`)
 
             copyDist(buildDir)
@@ -106,7 +105,7 @@ function buildForBrowser(browser) {
 exports.buildFirefox = buildForBrowser('firefox')
 exports.buildChrome = buildForBrowser('chrome')
 
-exports.buildSafari = function (env) {
+exports.buildSafari = function(env) {
     console.log(`Building Safari ${env} bundle...`)
 
     shelljs.exec('cp -r build/dist/* Sourcegraph.safariextension')
