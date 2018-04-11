@@ -1,3 +1,4 @@
+import { first } from 'lodash'
 import * as OmniCLI from 'omnicli'
 import score from 'string-score'
 
@@ -87,9 +88,10 @@ class FileCommand implements OmniCLI.Command {
             return
         } catch (e) {
             // If it's not a valid url, fall through to just searching for the input
-            storage.getSync(({ sourcegraphURL }) => {
+            storage.getSync(({ sourcegraphURL, serverUrls }) => {
+                const url = sourcegraphURL || first(serverUrls)
                 const query = `type:path ${[raw, ...rest].join(' ').trim()}`
-                const props = { url: `${sourcegraphURL}/search?${buildSearchURLQuery(query)}` }
+                const props = { url: `${url}/search?${buildSearchURLQuery(query)}` }
 
                 executeEnter(props, disposition)
             })

@@ -36,7 +36,7 @@ class RepoCache {
 
     constructor() {
         this.cache = {
-            [CURRENT_SG_URL_KEY]: sourcegraphUrl,
+            [CURRENT_SG_URL_KEY]: sourcegraphUrl || 'https://sourcegraph.com',
         }
 
         if (isInPage) {
@@ -44,8 +44,11 @@ class RepoCache {
         }
 
         storage.getSync(({ repoLocations, sourcegraphURL }) => {
+            console.log(isBackground, repoLocations, sourcegraphURL)
             if (repoLocations) {
-                this.cache = repoLocations
+                this.cache = {
+                    ...repoLocations,
+                }
             }
 
             if (isBackground) {
@@ -72,10 +75,12 @@ class RepoCache {
     }
 
     private getCurrentUrl(): string {
+        console.log('uring current url', this.cache[CURRENT_SG_URL_KEY])
         return this.cache[CURRENT_SG_URL_KEY]
     }
 
-    private setCurrentUrl(url: string): void {
+    private setCurrentUrl(url = 'https://sourcegraph.com'): void {
+        console.log('setting current url', url)
         this.cache[CURRENT_SG_URL_KEY] = url
     }
 
