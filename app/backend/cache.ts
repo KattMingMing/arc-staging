@@ -60,11 +60,8 @@ class RepoCache {
                 return
             }
 
-            if (!serverUrls.oldValue && !serverUrls.newValue) {
-                return
-            }
-
-            const { oldValue, newValue } = serverUrls
+            const oldValue = serverUrls.oldValue || []
+            const newValue = serverUrls.newValue || []
 
             if (xor(oldValue, newValue).length > 0 && oldValue.length > newValue.length) {
                 // Theres a diff, make sure the cache only contains urls in our list.
@@ -115,11 +112,12 @@ class RepoCache {
         if (key !== '' && localCachedUrl) {
             this.setUrl('', localCachedUrl)
 
+            // If it's in memory, we can confidently say it's the correct match.
             return Observable.from([[localCachedUrl]])
         }
 
         return getServerUrlChoices().map(choices => {
-            const cachedUrl = choices.repoLocations[key]
+            const cachedUrl = this.cache[key] || choices.repoLocations[key]
             if (cachedUrl) {
                 return uniq([cachedUrl, choices.sourcegraphUrl, ...choices.serverUrls])
             }

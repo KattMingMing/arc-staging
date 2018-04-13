@@ -129,8 +129,8 @@ export const listAllSearchResults = memoizeAsync(
 
 const trimRepoPath = ({ repoPath, ...rest }) => ({ ...rest, repoPath: repoPath.replace(/.git$/, '') })
 
-export const fetchBlobContentLines = memoizeAsync(
-    (ctx: AbsoluteRepoFile): Promise<string[]> =>
+export const fetchBlobContentLines = memoizeObservable(
+    (ctx: AbsoluteRepoFile): Observable<string[]> =>
         queryGraphQL(
             getContext({ repoKey: ctx.repoPath }),
             `query BlobContent($repoPath: String!, $commitID: String!, $filePath: String!) {
@@ -143,19 +143,19 @@ export const fetchBlobContentLines = memoizeAsync(
                 }
             }`,
             trimRepoPath(ctx)
-        )
-            .toPromise()
-            .then(result => {
+        ).pipe(
+            map(({ data, errors }) => {
                 if (
-                    !result.data ||
-                    !result.data.repository ||
-                    !result.data.repository.commit ||
-                    !result.data.repository.commit.file ||
-                    !result.data.repository.commit.file.content
+                    !data ||
+                    !data.repository ||
+                    !data.repository.commit ||
+                    !data.repository.commit.file ||
+                    !data.repository.commit.file.content
                 ) {
                     return []
                 }
-                return result.data.repository.commit.file!.content.split('\n')
-            }),
+                return data.repository.commit.file!.content.split('\n')
+            })
+        ),
     makeRepoURI
 )

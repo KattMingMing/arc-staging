@@ -1,3 +1,4 @@
+import { without } from 'lodash'
 import 'rxjs/add/observable/dom/ajax'
 import 'rxjs/add/operator/catch'
 import 'rxjs/add/operator/map'
@@ -37,14 +38,18 @@ function requestGraphQL(
     variables: any = {},
     urlsToTry: string[]
 ): Observable<GQL.IGraphQLResponseRoot> {
-    const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
-    if (urlsToTry.length === 0) {
+    const urls: string[] = ctx.blacklist ? without(urlsToTry, ...ctx.blacklist) : urlsToTry
+    if (urls.length === 0) {
         throw new Error('no sourcegraph urls are configured')
     }
-    const url = urlsToTry[0]
+    const url = urls[0]
+
+    const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
+    const queryName = nameMatch ? '?' + nameMatch[1] : ''
+
     return Observable.ajax({
         method: 'POST',
-        url: `${url}/.api/graphql` + (nameMatch ? '?' + nameMatch[1] : ''),
+        url: `${url}/.api/graphql` + queryName,
         headers: getHeaders(),
         crossDomain: true,
         withCredentials: true,
@@ -66,19 +71,18 @@ function requestGraphQL(
 
                 throw response
             }
-
-            if (ctx.isRepoSpecific) {
+            if (ctx.isRepoSpecific && response.data.repository) {
                 repoCache.setUrl(ctx.repoKey, url)
             }
-
             return response
         })
         .catch(err => {
             if (urlsToTry.length === 1) {
+                repoCache.removeUrlForKey(ctx.repoKey)
                 // We just tried the last url
                 throw err
             }
-            return requestGraphQL(ctx, request, variables, urlsToTry.slice(1))
+            return requestGraphQL(ctx, request, variables, urls.slice(1))
         })
 }
 

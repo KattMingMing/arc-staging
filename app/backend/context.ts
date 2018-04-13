@@ -9,6 +9,10 @@ import { parseURL } from '../github/util'
 export interface RequestContext {
     repoKey: string
     isRepoSpecific: boolean
+    /**
+     * Requests can provide a blacklist of urls that we don't ever want to try for that given request.
+     */
+    blacklist?: string[]
 }
 
 const defaultContext: RequestContext = {

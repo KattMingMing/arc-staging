@@ -200,7 +200,7 @@ interface CreatePhabricatorRepoOptions {
 export const createPhabricatorRepo = memoizeObservable(
     (options: CreatePhabricatorRepoOptions): Observable<void> =>
         mutateGraphQL(
-            getContext({ repoKey: options.repoPath }),
+            getContext({ repoKey: options.repoPath, blacklist: ['https://sourcegraph.com'] }),
             `mutation addPhabricatorRepo(
             $callsign: String!,
             $repoPath: String!

@@ -1,5 +1,8 @@
 import * as React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
+import 'rxjs/add/observable/zip'
+import 'rxjs/add/operator/toPromise'
+import { Observable } from 'rxjs/Observable'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { fetchBlobContentLines, resolveRev } from '../repo/backend'
 import { getTableDataCell } from '../repo/tooltips'
@@ -161,38 +164,33 @@ function injectDiffusion(state: DiffusionState): void {
         }
         return getCodeCellsForAnnotation(table)
     }
-
-    fetchBlobContentLines(state)
-        .then(blobLines => {
-            if (blobLines.length === 0) {
-                return
-            }
-            const mount = createBlobAnnotatorMount(file, '.phui-header-action-links', true)
-            render(
-                <BlobAnnotator
-                    getTableElement={getTableElement}
-                    getCodeCells={getCodeCells}
-                    getTargetLineAndOffset={getTargetLineAndOffset(blobLines)}
-                    findElementWithOffset={findElementWithOffset(blobLines)}
-                    findTokenCell={findTokenCell}
-                    filterTarget={filterFunc}
-                    getNodeToConvert={getNodeToConvert}
-                    fileElement={file}
-                    repoPath={state.repoPath}
-                    commitID={state.commitID}
-                    filePath={state.filePath}
-                    isPullRequest={false}
-                    isSplitDiff={false}
-                    isCommit={false}
-                    isBase={false}
-                    buttonProps={diffusionButtonProps}
-                />,
-                mount
-            )
-        })
-        .catch(() => {
-            // noop
-        })
+    fetchBlobContentLines(state).subscribe(blobLines => {
+        if (blobLines.length === 0) {
+            return
+        }
+        const mount = createBlobAnnotatorMount(file, '.phui-header-action-links', true)
+        render(
+            <BlobAnnotator
+                getTableElement={getTableElement}
+                getCodeCells={getCodeCells}
+                getTargetLineAndOffset={getTargetLineAndOffset(blobLines)}
+                findElementWithOffset={findElementWithOffset(blobLines)}
+                findTokenCell={findTokenCell}
+                filterTarget={filterFunc}
+                getNodeToConvert={getNodeToConvert}
+                fileElement={file}
+                repoPath={state.repoPath}
+                commitID={state.commitID}
+                filePath={state.filePath}
+                isPullRequest={false}
+                isSplitDiff={false}
+                isCommit={false}
+                isBase={false}
+                buttonProps={diffusionButtonProps}
+            />,
+            mount
+        )
+    })
 }
 
 function injectChangeset(state: DifferentialState | RevisionState | ChangeState): void {
@@ -297,11 +295,12 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                         isSplitDiff,
                         filterTarget: filterTarget(false),
                     }
+
                     Promise.all([resolveDiff(resolveBaseRevOpt), resolveDiff(resolveHeadRevOpt)])
                         .then(([baseRev, headRev]) => {
                             const actualBaseRepoPath = baseRev.stagingRepoPath || baseRepoPath
                             const actualHeadRepoPath = headRev.stagingRepoPath || headRepoPath
-                            Promise.all([
+                            Observable.zip(
                                 fetchBlobContentLines({
                                     repoPath: actualBaseRepoPath,
                                     commitID: baseRev.commitID,
@@ -311,121 +310,119 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                     repoPath: actualHeadRepoPath,
                                     commitID: headRev.commitID,
                                     filePath,
-                                }),
-                            ])
-                                .then(([baseFile, headFile]) => {
-                                    if (baseFile.length > 0) {
-                                        render(
-                                            <BlobAnnotator
-                                                {...resolveBaseRevOpt}
-                                                repoPath={actualBaseRepoPath}
-                                                commitID={baseRev.commitID}
-                                                getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
-                                                findElementWithOffset={findElementWithOffset(baseFile)}
-                                                findTokenCell={findTokenCell}
-                                                getNodeToConvert={getNodeToConvert}
-                                                fileElement={file}
-                                                isPullRequest={true}
-                                                isCommit={false}
-                                                buttonProps={differentialButtonProps}
-                                                getTableElement={getTableElement}
-                                                getCodeCells={getCodeCells(true)}
-                                            />,
-                                            mountBase
-                                        )
-                                    }
-
-                                    if (headFile.length > 0) {
-                                        render(
-                                            <BlobAnnotator
-                                                {...resolveHeadRevOpt}
-                                                repoPath={actualHeadRepoPath}
-                                                commitID={headRev.commitID}
-                                                getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
-                                                findElementWithOffset={findElementWithOffset(headFile)}
-                                                findTokenCell={findTokenCell}
-                                                getNodeToConvert={getNodeToConvert}
-                                                fileElement={file}
-                                                isPullRequest={true}
-                                                isCommit={false}
-                                                buttonProps={differentialButtonProps}
-                                                getTableElement={getTableElement}
-                                                getCodeCells={getCodeCells(false)}
-                                            />,
-                                            mountHead
-                                        )
-                                    }
                                 })
-                                .catch(e => {
-                                    // TODO: handle error
-                                    console.log(e)
-                                })
-                        })
-                        .catch(e => {
-                            // TODO: handle error
-                            console.log(e)
-                        })
+                            ).subscribe(([baseFile, headFile]) => {
+                                if (baseFile.length > 0) {
+                                    render(
+                                        <BlobAnnotator
+                                            {...resolveBaseRevOpt}
+                                            repoPath={actualBaseRepoPath}
+                                            commitID={baseRev.commitID}
+                                            getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
+                                            findElementWithOffset={findElementWithOffset(baseFile)}
+                                            findTokenCell={findTokenCell}
+                                            getNodeToConvert={getNodeToConvert}
+                                            fileElement={file}
+                                            isPullRequest={true}
+                                            isCommit={false}
+                                            buttonProps={differentialButtonProps}
+                                            getTableElement={getTableElement}
+                                            getCodeCells={getCodeCells(true)}
+                                        />,
+                                        mountBase
+                                    )
+                                }
 
+                                if (headFile.length > 0) {
+                                    render(
+                                        <BlobAnnotator
+                                            {...resolveHeadRevOpt}
+                                            repoPath={actualHeadRepoPath}
+                                            commitID={headRev.commitID}
+                                            getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
+                                            findElementWithOffset={findElementWithOffset(headFile)}
+                                            findTokenCell={findTokenCell}
+                                            getNodeToConvert={getNodeToConvert}
+                                            fileElement={file}
+                                            isPullRequest={true}
+                                            isCommit={false}
+                                            buttonProps={differentialButtonProps}
+                                            getTableElement={getTableElement}
+                                            getCodeCells={getCodeCells(false)}
+                                        />,
+                                        mountHead
+                                    )
+                                }
+                            })
+                        })
+                        .catch(err => {
+                            /** noop */
+                            console.error('Failed to resolve diff information:', err)
+                        })
                     break // end inner switch
                 }
 
                 case PhabricatorMode.Revision: {
                     const { repoPath, baseCommitID, headCommitID } = state as RevisionState
-                    Promise.all([
-                        fetchBlobContentLines({ repoPath, commitID: baseCommitID, filePath }),
-                        fetchBlobContentLines({ repoPath, commitID: headCommitID, filePath }),
-                    ])
-                        .then(([baseFile, headFile]) => {
-                            if (baseFile.length > 0) {
-                                render(
-                                    <BlobAnnotator
-                                        getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
-                                        findElementWithOffset={findElementWithOffset(baseFile)}
-                                        findTokenCell={findTokenCell}
-                                        getNodeToConvert={getNodeToConvert}
-                                        fileElement={file}
-                                        repoPath={repoPath}
-                                        commitID={baseCommitID}
-                                        filePath={filePath}
-                                        isPullRequest={true}
-                                        isCommit={true}
-                                        isBase={true}
-                                        isSplitDiff={isSplitDiff}
-                                        buttonProps={differentialButtonProps}
-                                        getTableElement={getTableElement}
-                                        getCodeCells={getCodeCells(true)}
-                                        filterTarget={filterTarget(true)}
-                                    />,
-                                    mountBase
-                                )
-                            }
-                            if (headFile.length > 0) {
-                                render(
-                                    <BlobAnnotator
-                                        getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
-                                        findElementWithOffset={findElementWithOffset(headFile)}
-                                        findTokenCell={findTokenCell}
-                                        getNodeToConvert={getNodeToConvert}
-                                        fileElement={file}
-                                        repoPath={repoPath}
-                                        commitID={headCommitID}
-                                        filePath={filePath}
-                                        isPullRequest={false}
-                                        isCommit={true}
-                                        isBase={false}
-                                        isSplitDiff={isSplitDiff}
-                                        buttonProps={differentialButtonProps}
-                                        getTableElement={getTableElement}
-                                        getCodeCells={getCodeCells(false)}
-                                        filterTarget={filterTarget(false)}
-                                    />,
-                                    mountHead
-                                )
-                            }
+                    Observable.zip(
+                        fetchBlobContentLines({
+                            repoPath,
+                            commitID: baseCommitID,
+                            filePath,
+                        }),
+                        fetchBlobContentLines({
+                            repoPath,
+                            commitID: headCommitID,
+                            filePath,
                         })
-                        .catch(() => {
-                            // TODO: handle error
-                        })
+                    ).subscribe(([baseFile, headFile]) => {
+                        if (baseFile.length > 0) {
+                            render(
+                                <BlobAnnotator
+                                    getTargetLineAndOffset={getTargetLineAndOffset(baseFile)}
+                                    findElementWithOffset={findElementWithOffset(baseFile)}
+                                    findTokenCell={findTokenCell}
+                                    getNodeToConvert={getNodeToConvert}
+                                    fileElement={file}
+                                    repoPath={repoPath}
+                                    commitID={baseCommitID}
+                                    filePath={filePath}
+                                    isPullRequest={true}
+                                    isCommit={true}
+                                    isBase={true}
+                                    isSplitDiff={isSplitDiff}
+                                    buttonProps={differentialButtonProps}
+                                    getTableElement={getTableElement}
+                                    getCodeCells={getCodeCells(true)}
+                                    filterTarget={filterTarget(true)}
+                                />,
+                                mountBase
+                            )
+                        }
+                        if (headFile.length > 0) {
+                            render(
+                                <BlobAnnotator
+                                    getTargetLineAndOffset={getTargetLineAndOffset(headFile)}
+                                    findElementWithOffset={findElementWithOffset(headFile)}
+                                    findTokenCell={findTokenCell}
+                                    getNodeToConvert={getNodeToConvert}
+                                    fileElement={file}
+                                    repoPath={repoPath}
+                                    commitID={headCommitID}
+                                    filePath={filePath}
+                                    isPullRequest={false}
+                                    isCommit={true}
+                                    isBase={false}
+                                    isSplitDiff={isSplitDiff}
+                                    buttonProps={differentialButtonProps}
+                                    getTableElement={getTableElement}
+                                    getCodeCells={getCodeCells(false)}
+                                    filterTarget={filterTarget(false)}
+                                />,
+                                mountHead
+                            )
+                        }
+                    })
                     break // end inner switch
                 }
 
@@ -433,8 +430,8 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                     const { repoPath, commitID } = state as ChangeState
                     resolveRev({ repoPath, rev: commitID + '~1' }).subscribe(baseRev => {
                         Promise.all([
-                            fetchBlobContentLines({ repoPath, commitID: baseRev, filePath }),
-                            fetchBlobContentLines({ repoPath, commitID, filePath }),
+                            fetchBlobContentLines({ repoPath, commitID: baseRev, filePath }).toPromise(),
+                            fetchBlobContentLines({ repoPath, commitID, filePath }).toPromise(),
                         ])
                             .then(([baseFile, headFile]) => {
                                 if (baseFile.length > 0) {

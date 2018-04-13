@@ -85,7 +85,7 @@ export class TelligentWrapper {
 
     public track(eventAction: string, requestPayload: any): void {
         const cachedUrl = repoCache.getUrl(getContext().repoKey)
-        if (this.url !== cachedUrl) {
+        if (this.url !== cachedUrl && cachedUrl) {
             this.setUrl(cachedUrl)
         }
 
