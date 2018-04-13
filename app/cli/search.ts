@@ -4,6 +4,7 @@ import * as OmniCLI from 'omnicli'
 import storage from '../../extension/storage'
 import * as tabs from '../../extension/tabs'
 
+import { repoCache } from '../backend/cache'
 import { createSuggestionFetcher } from '../backend/search'
 import { buildSearchURLQuery } from '../util/url'
 
@@ -15,33 +16,34 @@ class SearchCommand implements OmniCLI.Command {
 
     private suggestionFetcher = createSuggestionFetcher(20)
 
-    private cache = new Map<string, OmniCLI.Suggestion[]>()
+    private prev: { query: string; suggestions: OmniCLI.Suggestion[] } = { query: '', suggestions: [] }
 
     public getSuggestions = (args: string[]): Promise<OmniCLI.Suggestion[]> => {
         const query = args.join(' ')
 
         return new Promise(resolve => {
-            if (this.cache.has(query)) {
-                resolve(this.cache.get(query))
+            if (this.prev.query === query) {
+                resolve(this.prev.suggestions)
                 return
             }
 
-            storage.getSync(({ serverUrls, sourcegraphURL }) => {
-                const sgUrl = sourcegraphURL || first(serverUrls)
+            const sgUrl = repoCache.getUrl('')
 
-                this.suggestionFetcher({
-                    query,
-                    handler: suggestions => {
-                        const built = suggestions.map(({ title, url, urlLabel }) => ({
-                            content: `${sgUrl}${url}`,
-                            description: `${title} - ${urlLabel}`,
-                        }))
+            this.suggestionFetcher({
+                query,
+                handler: suggestions => {
+                    const built = suggestions.map(({ title, url, urlLabel }) => ({
+                        content: `${sgUrl}${url}`,
+                        description: `${title} - ${urlLabel}`,
+                    }))
 
-                        this.cache.set(query, built)
+                    this.prev = {
+                        query,
+                        suggestions: built,
+                    }
 
-                        resolve(built)
-                    },
-                })
+                    resolve(built)
+                },
             })
         })
     }
@@ -69,18 +71,6 @@ class SearchCommand implements OmniCLI.Command {
             }
         })
     }
-
-    public clearCache(): void {
-        this.cache.clear()
-    }
 }
-
-const cmd = new SearchCommand()
-
-storage.onChanged(({ sourcegraphURL }) => {
-    if (sourcegraphURL && sourcegraphURL.newValue) {
-        cmd.clearCache()
-    }
-})
 
 export default new SearchCommand()

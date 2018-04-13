@@ -55,7 +55,11 @@ class RepoCache {
             }
         })
 
-        storage.onChanged(({ serverUrls, repoLocations }) => {
+        storage.onChanged(({ serverUrls, repoLocations, sourcegraphURL }) => {
+            if (sourcegraphURL && sourcegraphURL.newValue) {
+                this.setCurrentUrl(sourcegraphURL.newValue)
+            }
+
             if (!serverUrls) {
                 return
             }
