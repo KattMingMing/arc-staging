@@ -2,10 +2,11 @@ import { without } from 'lodash'
 import 'rxjs/add/observable/dom/ajax'
 import 'rxjs/add/operator/catch'
 import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/switchMap'
 import { Observable } from 'rxjs/Observable'
 
-import { repoCache } from './cache'
+import sortBy from 'lodash/sortBy'
+import { isPhabricator } from '../context'
+import { repoUrlCache, serverUrls, sourcegraphUrl } from '../util/context'
 import { RequestContext } from './context'
 import { getHeaders } from './headers'
 
@@ -38,7 +39,14 @@ function requestGraphQL(
     variables: any = {},
     urlsToTry: string[]
 ): Observable<GQL.IGraphQLResponseRoot> {
-    const urls: string[] = ctx.blacklist ? without(urlsToTry, ...ctx.blacklist) : urlsToTry
+    let urls: string[] = ctx.blacklist ? without(urlsToTry, ...ctx.blacklist) : urlsToTry
+    const defaultUrl = repoUrlCache[ctx.repoKey] || sourcegraphUrl
+    urls = sortBy(urls, url => (url === defaultUrl ? 0 : 1))
+    // Check if it's a private repo - if so don't make a request to Sourcegraph.com.
+    if (isPrivateRepository()) {
+        urls = without(urls, 'https://sourcegraph.com')
+    }
+
     if (urls.length === 0) {
         throw new Error('no sourcegraph urls are configured')
     }
@@ -65,25 +73,36 @@ function requestGraphQL(
                 response.data.repository === null ||
                 (response.errors && response.errors.length)
             ) {
-                if (url === repoCache.getUrl(ctx.repoKey)) {
-                    repoCache.removeUrlForKey(ctx.repoKey)
-                }
-
+                delete repoUrlCache[ctx.repoKey]
                 throw response
             }
             if (ctx.isRepoSpecific && response.data.repository) {
-                repoCache.setUrl(ctx.repoKey, url)
+                repoUrlCache[ctx.repoKey] = url
             }
             return response
         })
         .catch(err => {
             if (urlsToTry.length === 1) {
-                repoCache.removeUrlForKey(ctx.repoKey)
+                delete repoUrlCache[ctx.repoKey]
                 // We just tried the last url
                 throw err
             }
             return requestGraphQL(ctx, request, variables, urls.slice(1))
         })
+}
+
+/**
+ * Check the DOM to see if we can determine if a repository is private or public.
+ */
+function isPrivateRepository(): boolean {
+    if (isPhabricator) {
+        return true
+    }
+    const header = document.querySelector('.repohead-details-container')
+    if (!header) {
+        return false
+    }
+    return !!header.querySelector('.private')
 }
 
 /**
@@ -94,9 +113,7 @@ function requestGraphQL(
  * @return Observable That emits the result or errors if the HTTP request failed
  */
 export function queryGraphQL(ctx: RequestContext, query: string, variables: any = {}): Observable<QueryResult> {
-    return repoCache
-        .getUrls(ctx.repoKey)
-        .switchMap(urls => requestGraphQL(ctx, query, variables, urls) as Observable<QueryResult>)
+    return requestGraphQL(ctx, query, variables, serverUrls) as Observable<QueryResult>
 }
 
 /**
@@ -107,7 +124,5 @@ export function queryGraphQL(ctx: RequestContext, query: string, variables: any 
  * @return Observable That emits the result or errors if the HTTP request failed
  */
 export function mutateGraphQL(ctx: RequestContext, mutation: string, variables: any = {}): Observable<MutationResult> {
-    return repoCache
-        .getUrls(ctx.repoKey)
-        .switchMap(urls => requestGraphQL(ctx, mutation, variables, urls) as Observable<MutationResult>)
+    return requestGraphQL(ctx, mutation, variables, serverUrls) as Observable<MutationResult>
 }

@@ -23,6 +23,12 @@ export let repositorySearchEnabled = false
 
 export let repositoryFileTreeEnabled = false
 
+interface UrlCache {
+    [key: string]: string
+}
+
+export const repoUrlCache: UrlCache = {}
+
 if (window.SG_ENV === 'EXTENSION') {
     storage.getSync(items => {
         serverUrls = items.serverUrls

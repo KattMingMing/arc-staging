@@ -4,8 +4,8 @@ import * as OmniCLI from 'omnicli'
 import storage from '../../extension/storage'
 import * as tabs from '../../extension/tabs'
 
-import { repoCache } from '../backend/cache'
 import { createSuggestionFetcher } from '../backend/search'
+import { sourcegraphUrl } from '../util/context'
 import { buildSearchURLQuery } from '../util/url'
 
 const isURL = /^https?:\/\//
@@ -27,13 +27,11 @@ class SearchCommand implements OmniCLI.Command {
                 return
             }
 
-            const sgUrl = repoCache.getUrl('')
-
             this.suggestionFetcher({
                 query,
                 handler: suggestions => {
                     const built = suggestions.map(({ title, url, urlLabel }) => ({
-                        content: `${sgUrl}${url}`,
+                        content: `${sourcegraphUrl}${url}`,
                         description: `${title} - ${urlLabel}`,
                     }))
 

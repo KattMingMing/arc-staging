@@ -4,10 +4,9 @@ import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
-import { getModeFromExtension, getPathExtension, supportedExtensions } from '../util/context'
+import { getModeFromExtension, getPathExtension, repoUrlCache, supportedExtensions } from '../util/context'
 import { memoizeObservable } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
-import { repoCache } from './cache'
 import { getHeaders } from './headers'
 
 interface LSPRequest {
@@ -67,7 +66,10 @@ export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Obs
         pos.filePath
     )
 
-    const url = repoCache.getUrl(pos.repoPath)
+    const url = repoUrlCache[pos.repoPath]
+    if (!url) {
+        throw new Error('Error fetching hover: No URL found.')
+    }
 
     return Observable.ajax({
         method: 'POST',
@@ -103,7 +105,10 @@ export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition)
         pos.filePath
     )
 
-    const url = repoCache.getUrl(pos.repoPath)
+    const url = repoUrlCache[pos.repoPath]
+    if (!url) {
+        throw new Error('Error fetching definition: No URL found.')
+    }
 
     return Observable.ajax({
         method: 'POST',

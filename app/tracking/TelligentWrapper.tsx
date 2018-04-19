@@ -1,6 +1,5 @@
-import { repoCache } from '../backend/cache'
 import { getContext } from '../backend/context'
-import { checkIsOnlySourcegraphDotCom, sourcegraphUrl } from '../util/context'
+import { checkIsOnlySourcegraphDotCom, repoUrlCache, sourcegraphUrl } from '../util/context'
 
 const telligent = require('@sourcegraph/telligent-tracker')
 const telligentFunctionName = 'telligent'
@@ -84,9 +83,12 @@ export class TelligentWrapper {
     }
 
     public track(eventAction: string, requestPayload: any): void {
-        const cachedUrl = repoCache.getUrl(getContext().repoKey)
+        const cachedUrl = repoUrlCache[getContext().repoKey] || sourcegraphUrl
         if (this.url !== cachedUrl && cachedUrl) {
             this.setUrl(cachedUrl)
+        }
+        if (!this.url) {
+            return
         }
 
         checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom =>
