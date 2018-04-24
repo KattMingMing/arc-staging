@@ -1,7 +1,7 @@
 import { map } from 'rxjs/operators/map'
-import { repoCache } from '../backend/cache'
 import { getContext } from '../backend/context'
 import { mutateGraphQL } from '../backend/graphql'
+import { repoUrlCache } from '../util/context'
 
 const inspectTelligentCookie = (): string[] | null => {
     const cookieName = '_te_'
@@ -22,8 +22,8 @@ const getTelligentDuid = (): string | null => {
 const userCookieID = getTelligentDuid()
 export const logUserEvent = (event: GQL.IUserEventEnum): void => {
     const ctx = getContext({ isRepoSpecific: true })
-    const url = repoCache.getUrl(ctx.repoKey)
-    if (url === 'https://sourcegraph.com') {
+    const url = repoUrlCache[ctx.repoKey]
+    if (!url || url === 'https://sourcegraph.com') {
         return
     }
     mutateGraphQL(
