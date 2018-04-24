@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { getContext } from '../backend/context'
 import { mutateGraphQL } from '../backend/graphql'
+import { repoUrlCache } from '../util/context'
 
 const inspectTelligentCookie = (): string[] | null => {
     const cookieName = '_te_'
@@ -19,22 +19,35 @@ const getTelligentDuid = (): string | null => {
     return cookieProps ? cookieProps[0] : null
 }
 
-type IUserEventEnum = 'PAGEVIEW' | 'SEARCHQUERY'
 const userCookieID = getTelligentDuid()
-export const logUserEvent = (event: IUserEventEnum): Observable<void> =>
+export const logUserEvent = (event: GQL.IUserEventEnum): void => {
+    const ctx = getContext({ isRepoSpecific: true })
+    const url = repoUrlCache[ctx.repoKey]
+    if (!url || url === 'https://sourcegraph.com') {
+        return
+    }
     mutateGraphQL(
-        getContext({ isRepoSpecific: true }),
+        ctx,
         `mutation logUserEvent($event: UserEvent!, $userCookieID: String!) {
                 logUserEvent(event: $event, userCookieID: $userCookieID) {
                     alwaysNil
                 }
             }`,
         { event, userCookieID }
-    ).pipe(
-        map(({ data, errors }) => {
-            if (!data || (errors && errors.length > 0)) {
-                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
-            }
-            return
-        })
     )
+        .pipe(
+            map(({ data, errors }) => {
+                if (!data || (errors && errors.length > 0)) {
+                    throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
+                }
+                return
+            })
+        )
+        .subscribe(undefined, error => {
+            // Swallow errors. If a Server instance isn't upgraded, this request may fail
+            // (e.g., if CODEINTELINTEGRATION user events aren't yet supported).
+            // However, end users shouldn't experience this failure, as their admin is
+            // responsible for updating the Server, and has been (or will be) notified
+            // that an upgrade is available via site-admin messaging.
+        })
+}

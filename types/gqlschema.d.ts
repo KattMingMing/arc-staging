@@ -2383,7 +2383,7 @@ the connection check succeeded.
         acceptInviteURL: string
     }
 
-    type IUserEventEnum = 'PAGEVIEW' | 'SEARCHQUERY'
+    type IUserEventEnum = 'PAGEVIEW' | 'SEARCHQUERY' | 'CODEINTEL' | 'CODEINTELINTEGRATION'
 
     /**
     description: Input for Mutation.configuration, which contains fields that all configuration

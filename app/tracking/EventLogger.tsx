@@ -6,7 +6,7 @@ export abstract class EventLogger {
         this.logEventForCategory('BrowserExtension', 'Hover', 'SymbolHovered', eventProperties)
         // TODO(farhan): log a code intelligence event instead of page view.
         if (eventTrackingEnabled) {
-            logUserEvent('PAGEVIEW').subscribe()
+            logUserEvent('CODEINTELINTEGRATION')
         }
     }
 
@@ -16,10 +16,16 @@ export abstract class EventLogger {
 
     public logJumpToDef(eventProperties: any = {}): void {
         this.logEventForCategory('BrowserExtension', 'Click', 'GoToDefClicked', eventProperties)
+        if (eventTrackingEnabled) {
+            logUserEvent('CODEINTELINTEGRATION')
+        }
     }
 
     public logFindRefs(eventProperties: any = {}): void {
         this.logEventForCategory('BrowserExtension', 'Click', 'FindRefsClicked', eventProperties)
+        if (eventTrackingEnabled) {
+            logUserEvent('CODEINTELINTEGRATION')
+        }
     }
 
     public logSearch(eventProperties: any = {}): void {
