@@ -1,5 +1,5 @@
 {
-    "version": "1.7.9",
+    "version": "1.7.10",
     "name": "Sourcegraph",
     "manifest_version": 2,
     "description": "Gives your Code Host IDE powers: jump to definition and hover tooltips in code, PRs, and diffs",
