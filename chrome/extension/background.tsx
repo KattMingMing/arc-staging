@@ -117,7 +117,7 @@ storage.addSyncMigration((items, set, remove) => {
 tabs.onUpdated((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete') {
         for (const origin of customServerOrigins) {
-            if (!tab.url || !tab.url.startsWith(origin.replace('/*', ''))) {
+            if (origin !== '<all_urls>' && (!tab.url || !tab.url.startsWith(origin.replace('/*', '')))) {
                 continue
             }
             tabs.executeScript(tabId, { file: 'js/inject.bundle.js', runAt: 'document_end', origin })
