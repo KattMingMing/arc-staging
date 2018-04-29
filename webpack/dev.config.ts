@@ -1,13 +1,13 @@
-const webpack = require('webpack')
-
-const baseConfig = require('./base.config')
+import * as webpack from 'webpack'
+import baseConfig from './base.config'
 
 const { plugins, ...base } = baseConfig
 
-module.exports = {
+export default {
     ...base,
+    mode: 'development',
     devtool: 'cheap-module-source-map',
-    plugins: plugins.concat(
+    plugins: (plugins || []).concat(
         ...[
             new webpack.DefinePlugin({
                 'process.env': {
@@ -16,4 +16,4 @@ module.exports = {
             }),
         ]
     ),
-}
+} as webpack.Configuration

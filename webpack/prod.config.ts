@@ -1,20 +1,18 @@
-const webpack = require('webpack')
-
-const baseConfig = require('./base.config')
+import * as webpack from 'webpack'
+import baseConfig from './base.config'
 
 const { plugins, ...base } = baseConfig
 
-module.exports = {
+export default {
     ...base,
-    plugins: plugins.concat(
+    mode: 'production',
+    optimization: { minimize: true },
+    plugins: (plugins || []).concat(
         ...[
             new webpack.DefinePlugin({
                 'process.env': {
                     NODE_ENV: JSON.stringify('production'),
                 },
-            }),
-            new webpack.optimize.UglifyJsPlugin({
-                sourceMap: false,
             }),
             new webpack.ProvidePlugin({
                 // tslint:disable-next-line object-literal-key-quotes
@@ -25,4 +23,4 @@ module.exports = {
             }),
         ]
     ),
-}
+} as webpack.Configuration

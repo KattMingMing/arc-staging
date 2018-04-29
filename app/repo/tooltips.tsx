@@ -106,7 +106,7 @@ export function hideTooltip(): void {
     }
     tooltip.style.visibility = 'hidden' // prevent black dot of empty content
 
-    document.dispatchEvent(new CustomEvent('sourcegraph:dismissTooltip', {}))
+    document.dispatchEvent(new CustomEvent<{}>('sourcegraph:dismissTooltip', {}))
 }
 
 export function isTooltipVisible(ctx: AbsoluteRepoFile, isBase: boolean): boolean {

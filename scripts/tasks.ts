@@ -1,22 +1,24 @@
-var fs = require('fs')
-var path = require('path')
-var shelljs = require('shelljs')
-var _ = require('lodash')
-var extensionInfo = require('../chrome/extension.info.json')
+import fs from 'fs'
+import _ from 'lodash'
+import path from 'path'
+import shelljs from 'shelljs'
+import extensionInfo from '../chrome/extension.info.json'
 
-var omit = _.omit
-var pick = _.pick
+export type BuildEnv = 'dev' | 'prod'
+
+const omit = _.omit
+const pick = _.pick
 
 const BUILDS_DIR = 'build'
 
-function ensurePaths() {
+function ensurePaths(): void {
     shelljs.mkdir('-p', 'build/dist')
     shelljs.mkdir('-p', 'build/bundles')
     shelljs.mkdir('-p', 'build/chrome')
     shelljs.mkdir('-p', 'build/firefox')
 }
 
-exports.copyAssets = function(env) {
+export function copyAssets(env: BuildEnv): void {
     const dir = 'build/dist'
     shelljs.rm('-rf', dir)
     shelljs.mkdir('-p', dir)
@@ -24,9 +26,7 @@ exports.copyAssets = function(env) {
     shelljs.cp('-R', 'chrome/views/*', dir)
 }
 
-function copyDist(toDir) {
-    const dir = 'dist'
-
+function copyDist(toDir: string): void {
     shelljs.mkdir('-p', toDir)
     shelljs.cp('-R', 'build/dist/*', toDir)
 }
@@ -51,12 +51,7 @@ const browserWhitelist = {
     safari: ['version'],
 }
 
-const browserFlip = {
-    firefox: 'chrome',
-    chrome: 'firefox',
-}
-
-function writeManifest(env, browser, writeDir) {
+function writeManifest(env, browser, writeDir): void {
     let envInfo = omit(extensionInfo[env], browserBlacklist[browser])
 
     let manifest
@@ -77,16 +72,16 @@ function writeManifest(env, browser, writeDir) {
     fs.writeFileSync(`${writeDir}/manifest.json`, JSON.stringify(manifest, null, 4))
 }
 
-function buildForBrowser(browser) {
+function buildForBrowser(browser): (env: string) => () => void {
     ensurePaths()
-    return function(env) {
+    return env => {
         const title = browserTitles[browser]
 
         const buildDir = path.resolve(process.cwd(), `${BUILDS_DIR}/${browser}`)
 
         writeManifest(env, browser, buildDir)
 
-        return function() {
+        return () => {
             console.log(`Building ${title} ${env} bundle...`)
 
             copyDist(buildDir)
@@ -102,10 +97,10 @@ function buildForBrowser(browser) {
     }
 }
 
-exports.buildFirefox = buildForBrowser('firefox')
-exports.buildChrome = buildForBrowser('chrome')
+export const buildFirefox = buildForBrowser('firefox')
+export const buildChrome = buildForBrowser('chrome')
 
-exports.buildSafari = function(env) {
+export function buildSafari(env: BuildEnv): void {
     console.log(`Building Safari ${env} bundle...`)
 
     shelljs.exec('cp -r build/dist/* Sourcegraph.safariextension')

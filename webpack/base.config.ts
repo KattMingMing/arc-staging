@@ -1,6 +1,6 @@
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
-const path = require('path')
-const webpack = require('webpack')
+import ExtractTextPlugin from 'extract-text-webpack-plugin'
+import * as path from 'path'
+import * as webpack from 'webpack'
 
 const buildEntry = (...files) => files.map(file => path.join(__dirname, file))
 
@@ -9,7 +9,7 @@ const backgroundEntry = '../pre/background.entry.js'
 const pageEntry = '../pre/page.entry.js'
 const extEntry = '../pre/extension.entry.js'
 
-module.exports = {
+export default {
     entry: {
         background: buildEntry(extEntry, backgroundEntry, '../chrome/extension/background.tsx'),
         link: buildEntry(extEntry, contentEntry, '../chrome/extension/link.tsx'),
@@ -72,4 +72,4 @@ module.exports = {
             },
         ],
     },
-}
+} as webpack.Configuration

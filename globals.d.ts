@@ -9,3 +9,8 @@ interface Window {
         send: (message: { type: string; payload: any }, cb?: (res?: any) => void) => void
     }
 }
+
+declare module '*.json' {
+    const value: any
+    export default value
+}
