@@ -71,7 +71,7 @@ export function injectPhabricatorBlobAnnotators(): Promise<void> {
 
 function createBlobAnnotatorMount(
     fileContainer: HTMLElement,
-    buttonClass: string,
+    actionLinks: Element,
     isBase: boolean
 ): HTMLElement | null {
     const className = 'sourcegraph-app-annotator' + (isBase ? '-base' : '')
@@ -85,10 +85,6 @@ function createBlobAnnotatorMount(
     mountEl.style.display = 'inline-block'
     mountEl.className = className
 
-    const actionLinks = fileContainer.querySelector(buttonClass)
-    if (!actionLinks) {
-        return null
-    }
     actionLinks.appendChild(mountEl)
     return mountEl
 }
@@ -144,7 +140,9 @@ function monitorFileContainers(
 }
 
 function injectDiffusion(state: DiffusionState): void {
-    const file = document.getElementsByClassName('phui-main-column')[0] as HTMLElement
+    const file: HTMLElement =
+        document.querySelector('[data-sigil="diffusion-file-content-view"]') ||
+        (document.getElementsByClassName('phui-main-column')[0] as HTMLElement)
     const blob = tryGetBlobElement(file)
     if (!blob) {
         return
@@ -168,7 +166,14 @@ function injectDiffusion(state: DiffusionState): void {
         if (blobLines.length === 0) {
             return
         }
-        const mount = createBlobAnnotatorMount(file, '.phui-header-action-links', true)
+        const actionLinks =
+            file.parentElement!.querySelector('.diffusion-action-bar .phui-right-view') ||
+            file.querySelector('.phui-header-action-links')
+        if (!actionLinks) {
+            console.warn('Unable to find actionLinks', file)
+            return
+        }
+        const mount = createBlobAnnotatorMount(file, actionLinks, true)
         render(
             <BlobAnnotator
                 getTableElement={getTableElement}
@@ -205,14 +210,20 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
 
             file.classList.add('sg-blob-annotated')
 
-            const mountBase = createBlobAnnotatorMount(file, '.differential-changeset-buttons', true)
+            const actionLinks = file.querySelector('.differential-changeset-buttons')
+            if (!actionLinks) {
+                console.warn('Unable to find actionLinks', file)
+                return
+            }
+
+            const mountBase = createBlobAnnotatorMount(file, actionLinks, true)
             // TODO(isaac): Find a better way to patch the components.
             // MonitoredBlobAnnotator was not sufficient.
             unmountComponentAtNode(mountBase)
             if (!mountBase) {
                 return
             }
-            const mountHead = createBlobAnnotatorMount(file, '.differential-changeset-buttons', false)
+            const mountHead = createBlobAnnotatorMount(file, actionLinks, false)
             // TODO(isaac): Find a better way to patch the components.
             // MonitoredBlobAnnotator was not sufficient.
             unmountComponentAtNode(mountHead)
