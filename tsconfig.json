@@ -1,31 +1,27 @@
 {
-  "compilerOptions": {
-    "outDir": "./out",
-    "target": "es2015",
-    "module": "commonjs",
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "lib": [
-      "es2017",
-      "dom",
-      "dom.iterable",
-      "es2017.object"
-    ],
-    "jsx": "react",
-    "allowJs": true,
-    "sourceMap": true,
-    "strictNullChecks": true,
-    "experimentalDecorators": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": false,
-    "downlevelIteration": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitThis": true,
-    "plugins": [
-      {
-        "name": "tslint-language-service",
-        "configFile": "./tslint.json"
-      }
-    ]
-  }
+    "compilerOptions": {
+        "outDir": "./out",
+        "target": "es2015",
+        "module": "commonjs",
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "node",
+        "lib": ["es2017", "dom", "dom.iterable", "es2017.object"],
+        "jsx": "react",
+        "allowJs": true,
+        "sourceMap": true,
+        "strictNullChecks": true,
+        "experimentalDecorators": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "downlevelIteration": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitThis": true,
+        "plugins": [
+            {
+                "name": "tslint-language-service",
+                "configFile": "./tslint.json"
+            }
+        ]
+    },
+    "exclude": ["./node_modules", "./build"]
 }
