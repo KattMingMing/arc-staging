@@ -9,7 +9,6 @@ module.exports = {
     devtool: 'cheap-module-source-map',
     plugins: plugins.concat(
         ...[
-            new webpack.NoEmitOnErrorsPlugin(),
             new webpack.DefinePlugin({
                 'process.env': {
                     NODE_ENV: JSON.stringify('development'),
