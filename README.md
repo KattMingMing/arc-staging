@@ -49,7 +49,7 @@ It works as follows:
 ## Requirements
 
 * `node`
-* `yarn`
+* `npm`
 * `make`
 
 ## Development
