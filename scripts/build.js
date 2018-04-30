@@ -19,6 +19,7 @@ function run() {
         console.log(stats.toString('normal'))
 
         if (stats.hasErrors()) {
+            process.exit(1)
             return
         }
 
