@@ -80,7 +80,7 @@ function injectApplication(): void {
                     type: 'insertCSS',
                     payload: { file: 'css/style.bundle.css', origin: window.location.origin },
                 })
-            } else {
+            } else if (isPhabricator || isGitHub || isGitHubEnterprise) {
                 const styleSheet = document.createElement('link') as HTMLLinkElement
                 styleSheet.id = 'ext-style-sheet'
                 styleSheet.rel = 'stylesheet'
