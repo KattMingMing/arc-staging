@@ -141,7 +141,7 @@ function monitorFileContainers(
 
 function injectDiffusion(state: DiffusionState): void {
     const file: HTMLElement =
-        document.querySelector('[data-sigil="diffusion-file-content-view"]') ||
+        document.querySelector<HTMLElement>('[data-sigil="diffusion-file-content-view"]') ||
         (document.getElementsByClassName('phui-main-column')[0] as HTMLElement)
     const blob = tryGetBlobElement(file)
     if (!blob) {
