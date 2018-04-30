@@ -159,13 +159,13 @@ $ make deploy
 * Go to https://addons.mozilla.org/en-US/developers/addon/sourcegraph-addon-for-github/versions/submit/
 * Ensure you have completed the steps above for release a production version. The three most important steps are: 1) Ensure it runs and there are no errors 2) Bump the version. 3) The `dist` build reflects the current changes you've made.
 * Click "Select a file..." and click the `build/bundles/firefox-bundle.xpi` that was generated from `make bundle`.
-* Following the upload, create a zip of the entire browser-extension reposiotry.
+* Following the upload, create a zip of the entire browser-extension repository.
 * Upload all of the source code to the Firefox store before clicking continue.
 * Append to the version notes if there is something significant. Otherwise use the previous version notes. You can find previous version notes by going to https://addons.mozilla.org/en-US/developers/addon/sourcegraph-addon-for-github/versions and clicking the previous submission.
 * ALWAYS INCLUDE NOTES FOR REVIEWERS: (Copy paste what is below, if a significant change happened include it and update the README.)
   Running from source:
 
-1. make bundle
+1. npm run build
 2. Go to about:debugging
 3. Select "Enable add-on debugging"
 4. Load Temporary Add-on
