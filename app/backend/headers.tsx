@@ -7,8 +7,5 @@ export function getHeaders(): Headers | undefined {
     const h = {
         'x-sourcegraph-client': `${getPlatformName()} v${getExtensionVersionSync()}`,
     }
-    if (window.OIDC_TOKEN) {
-        h['X-Oidc-Override'] = window.OIDC_TOKEN
-    }
     return new Headers(h)
 }
