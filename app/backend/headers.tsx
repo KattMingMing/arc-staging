@@ -1,11 +1,6 @@
-import { getExtensionVersionSync, getPlatformName } from '../util/context'
-
-export function getHeaders(): Headers | undefined {
+export function getHeaders(): { [name: string]: string } | undefined {
     if (window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
         return undefined
     }
-    const h = {
-        'x-sourcegraph-client': `${getPlatformName()} v${getExtensionVersionSync()}`,
-    }
-    return new Headers(h)
+    return undefined
 }
