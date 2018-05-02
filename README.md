@@ -120,7 +120,7 @@ Coming soon...
 
 ## Deploy (Chrome)
 
-* Ensure that you have bumped and commited the version in both the `manifest.json` and the `manifest.dev.json` files.
+* Ensure that you have bumped and committed the version in `chrome/extension.info.json`
 * Run `make bundle` to generate the new production build.
 * Sign in via Google with your Sourcegraph email address.
 * Naviate to https://chrome.google.com/webstore/developer/dashboard?pli=1
