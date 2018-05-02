@@ -108,7 +108,10 @@ export function isDomSplitDiff(): boolean {
 
         const diffToggles = headerBar[0].getElementsByClassName('BtnGroup')
         const disabledToggle = diffToggles[0].getElementsByTagName('A')[0] as HTMLAnchorElement
-        return disabledToggle && !disabledToggle.href.includes('diff=split')
+        return (
+            (disabledToggle && !disabledToggle.href.includes('diff=split')) ||
+            !!document.querySelector('.file-diff-split')
+        )
     } else {
         // delta for a commit view
         const headerBar = document.getElementsByClassName('details-collapse table-of-contents js-details-container')
@@ -118,7 +121,10 @@ export function isDomSplitDiff(): boolean {
 
         const diffToggles = headerBar[0].getElementsByClassName('BtnGroup float-right')
         const selectedToggle = diffToggles[0].querySelector('.selected') as HTMLAnchorElement
-        return selectedToggle && selectedToggle.href.includes('diff=split')
+        return (
+            (selectedToggle && selectedToggle.href.includes('diff=split')) ||
+            !!document.querySelector('.file-diff-split')
+        )
     }
 }
 
