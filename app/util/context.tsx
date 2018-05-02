@@ -152,7 +152,11 @@ export function getPathExtension(path: string): string {
     return pathSplit[pathSplit.length - 1].toLowerCase()
 }
 
-export function getPlatformName(): string {
+export function getPlatformName():
+    | 'phabricator-integration'
+    | 'safari-extension'
+    | 'firefox-extension'
+    | 'chrome-extension' {
     if (window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
         return 'phabricator-integration'
     }
