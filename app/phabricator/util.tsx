@@ -68,6 +68,9 @@ function getMaxDiffFromTabView(): { diffID: number; revDescription: string } | n
             if (!matches) {
                 continue
             }
+            if (!link.parentNode!.parentNode!.childNodes[2].childNodes[0]) {
+                continue
+            }
             const revDescription = (link.parentNode!.parentNode!.childNodes[2].childNodes[0] as any).href
             const shaMatch = TAG_PATTERN.exec(revDescription!)
             if (!shaMatch) {
@@ -451,8 +454,10 @@ export function getFilepathFromFile(fileContainer: HTMLElement): { filePath: str
 }
 
 export function tryGetBlobElement(file: HTMLElement): HTMLElement | null {
-    // TODO(@uforic): https://secure.phabricator.com/diffusion/ARC/browse/master/NOTICE , repository-crossreference doesn't work.
-    return file.querySelector('.repository-crossreference') as HTMLElement | null
+    return (
+        (file.querySelector('.repository-crossreference') as HTMLElement) ||
+        (file.querySelector('.phabricator-source-code-container') as HTMLElement)
+    )
 }
 
 export function rowIsNotCode(row: HTMLElement): boolean {
@@ -476,7 +481,6 @@ export function getNodeToConvert(row: HTMLElement): HTMLElement | null {
  */
 export function getCodeCellsForAnnotation(table: HTMLTableElement): CodeCell[] {
     const cells: CodeCell[] = []
-    // tslint:disable-next-line:prefer-for-of
     for (const row of Array.from(table.rows)) {
         if (rowIsNotCode(row)) {
             continue
@@ -484,7 +488,10 @@ export function getCodeCellsForAnnotation(table: HTMLTableElement): CodeCell[] {
         let line: number // line number of the current line
         let codeCell: HTMLTableDataCellElement // the actual cell that has code inside; each row contains multiple columns
         let isBlameEnabled = false
-        if (row.cells[0].classList.contains('diffusion-blame-link')) {
+        if (
+            row.cells[0].classList.contains('diffusion-blame-link') ||
+            row.cells[0].classList.contains('phabricator-source-blame-skip')
+        ) {
             isBlameEnabled = true
         }
         const lineElem = row.cells[isBlameEnabled ? 2 : 0].childNodes[0]
@@ -492,7 +499,11 @@ export function getCodeCellsForAnnotation(table: HTMLTableElement): CodeCell[] {
             // No line number; this is likely the empty side of an added or removed file in a diff
             continue
         }
-        line = parseInt(lineElem.textContent as string, 10)
+        const lineNumber = getlineNumberForCell(lineElem as Element)
+        if (!lineNumber) {
+            continue
+        }
+        line = lineNumber
         codeCell = row.cells[isBlameEnabled ? 3 : 1]
         if (!codeCell) {
             continue
@@ -523,8 +534,10 @@ export function getCodeCellsForDifferentialAnnotations(
             continue
         }
         if (isSplitView) {
-            const baseLine = parseInt(row.cells[0].textContent as string, 10)
-            const headLine = parseInt(row.cells[2].textContent as string, 10)
+            const base = row.cells[0]
+            const head = row.cells[2]
+            const baseLine = getlineNumberForCell(base)
+            const headLine = getlineNumberForCell(head)
             const baseCodeCell = row.cells[1]
             const headCodeCell = row.cells[4]
 
@@ -546,8 +559,10 @@ export function getCodeCellsForDifferentialAnnotations(
                 })
             }
         } else {
-            const baseLine = parseInt(row.cells[0].textContent as string, 10)
-            const headLine = parseInt(row.cells[1].textContent as string, 10)
+            const base = row.cells[0]
+            const head = row.cells[1]
+            const baseLine = getlineNumberForCell(base)
+            const headLine = getlineNumberForCell(head)
 
             // find first cell that is not <th> and also has code in it
             const codeCell = Array.from(row.cells).find((c, idx) => c.tagName !== 'TH' && !c.matches('td.copy'))
@@ -573,6 +588,12 @@ export function getCodeCellsForDifferentialAnnotations(
     }
 
     return cells
+}
+
+export function getlineNumberForCell(cell: Element): number | undefined {
+    // Newer versions of Phabricator (end of 2017) rely on the data-n attribute for setting the line number.
+    const lineString = cell.textContent || cell.getAttribute('data-n')
+    return parseInt(lineString as string, 10)
 }
 
 /**
@@ -678,4 +699,32 @@ export function normalizeRepoPath(origin: string): string {
     }
 
     return repoPath.replace(/.git$/, '')
+}
+
+export function getContainerForBlobAnnotation(): {
+    file: HTMLElement | null
+    diffusionButtonProps: {
+        className: string
+        iconStyle: any
+        style: any
+    }
+} {
+    const diffusionButtonProps = {
+        className: 'button grey has-icon msl phui-header-action-link',
+        iconStyle: { marginTop: '-1px', paddingRight: '4px', fontSize: '18px', height: '.8em', width: '.8em' },
+        style: {},
+    }
+    const blobContainer = document.querySelector('.repository-crossreference')
+    if (blobContainer && blobContainer.parentElement) {
+        return { file: blobContainer.parentElement, diffusionButtonProps }
+    }
+
+    let file = document.querySelector('.phui-two-column-content.phui-two-column-footer') as HTMLElement
+    if (file) {
+        diffusionButtonProps.className = 'button button-grey has-icon has-text phui-button-default'
+        return { file, diffusionButtonProps }
+    }
+    file = document.getElementsByClassName('phui-main-column')[0] as HTMLElement
+
+    return { file, diffusionButtonProps }
 }

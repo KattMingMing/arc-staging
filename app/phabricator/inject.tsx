@@ -19,6 +19,7 @@ import {
 import {
     getCodeCellsForAnnotation,
     getCodeCellsForDifferentialAnnotations,
+    getContainerForBlobAnnotation,
     getFilepathFromFile,
     getNodeToConvert,
     getPhabricatorState,
@@ -26,18 +27,6 @@ import {
     rowIsNotCode,
     tryGetBlobElement,
 } from './util'
-
-const diffusionButtonProps = {
-    className: 'button grey has-icon msl phui-header-action-link',
-    iconStyle: { marginTop: '-1px', paddingRight: '4px', fontSize: '18px', height: '.8em', width: '.8em' },
-    style: {},
-}
-
-const differentialButtonProps = {
-    className: 'button grey has-icon msl',
-    iconStyle: { marginTop: '-1px', paddingRight: '4px', fontSize: '18px', height: '.8em', width: '.8em' },
-    style: {},
-}
 
 const filterFunc = (el: HTMLElement) => !rowIsNotCode(el)
 
@@ -140,11 +129,14 @@ function monitorFileContainers(
 }
 
 function injectDiffusion(state: DiffusionState): void {
-    const file: HTMLElement =
-        (document.querySelector('[data-sigil="diffusion-file-content-view"]') as HTMLElement) ||
-        (document.getElementsByClassName('phui-main-column')[0] as HTMLElement)
+    const { file, diffusionButtonProps } = getContainerForBlobAnnotation()
+    if (!file) {
+        console.warn('Unable to find differential blob.')
+        return
+    }
     const blob = tryGetBlobElement(file)
     if (!blob) {
+        console.warn('Unable to find blob element for file', file)
         return
     }
     if (file.className.includes('sg-blob-annotated')) {
@@ -158,12 +150,14 @@ function injectDiffusion(state: DiffusionState): void {
     const getCodeCells = () => {
         const table = getTableElement()
         if (!table) {
+            console.warn('Unable to find table element for file', file)
             return []
         }
         return getCodeCellsForAnnotation(table)
     }
     fetchBlobContentLines(state).subscribe(blobLines => {
         if (blobLines.length === 0) {
+            console.warn('Unable to inject blob annotator. No blob lines.')
             return
         }
         const actionLinks =
@@ -174,6 +168,9 @@ function injectDiffusion(state: DiffusionState): void {
             return
         }
         const mount = createBlobAnnotatorMount(file, actionLinks, true)
+        if (!mount) {
+            console.warn('Unable to find BlobAnnotatorMount', file)
+        }
         render(
             <BlobAnnotator
                 getTableElement={getTableElement}
@@ -190,7 +187,7 @@ function injectDiffusion(state: DiffusionState): void {
                 isPullRequest={false}
                 isSplitDiff={false}
                 isCommit={false}
-                isBase={false}
+                isBase={true}
                 buttonProps={diffusionButtonProps}
             />,
             mount
@@ -271,6 +268,14 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                     return td.classList.contains('left')
                 }
                 return !td.classList.contains('left')
+            }
+            const differentialClassname = actionLinks.firstElementChild
+                ? `${actionLinks.firstElementChild!.className} msl`
+                : 'button grey has-icon msl'
+            const differentialButtonProps = {
+                className: differentialClassname,
+                iconStyle: { marginTop: '-1px', paddingRight: '4px', fontSize: '18px', height: '.8em', width: '.8em' },
+                style: {},
             }
 
             switch (state.mode) {

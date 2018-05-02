@@ -1,5 +1,6 @@
 import { AbsoluteRepoFile } from '../repo/index'
 import { MaybeDiffSpec } from '../repo/index'
+import { getlineNumberForCell } from './util'
 
 export enum PhabricatorMode {
     Diffusion = 1,
@@ -85,7 +86,14 @@ export function getTargetLineAndOffset(
         }
         let line = 0
         if (!isDelta) {
-            line = parseInt(target.previousElementSibling!.textContent!, 10)
+            let innerText = target.previousElementSibling!.textContent!
+            if (!innerText && target.previousElementSibling!.firstElementChild) {
+                innerText = getComputedStyle(
+                    target.previousElementSibling!.firstElementChild!,
+                    ':before'
+                ).getPropertyValue('content')
+            }
+            line = parseInt(innerText.replace(`"`, ''), 10)
         } else {
             let lineEl = target.previousElementSibling
             let seenFirstHeader = false
@@ -96,8 +104,9 @@ export function getTargetLineAndOffset(
                         seenFirstHeader = true
                         continue
                     }
-                    if (lineEl.textContent) {
-                        line = parseInt(lineEl.textContent!, 10)
+                    const lineNumber = getlineNumberForCell(lineEl)
+                    if (lineNumber) {
+                        line = lineNumber
                         break
                     }
                 }

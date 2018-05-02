@@ -243,7 +243,6 @@ export function updateTooltip(data: TooltipData, docked: boolean, actions: Actio
             tooltip.addEventListener(
                 'wheel',
                 (e: WheelEvent) => {
-                    e.preventDefault()
                     tooltipDoc.scrollTop += e.deltaY
                 },
                 { passive: true } as any
