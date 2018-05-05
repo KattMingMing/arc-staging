@@ -8,9 +8,9 @@ export class TelligentWrapper {
     private t: any
     private url = ''
 
-    constructor(siteId: string, platform: string, forceSecure: boolean, installedChromeExtension: boolean) {
+    constructor(siteId: string, platform: string, installedChromeExtension: boolean) {
         checkIsOnlySourcegraphDotCom(isOnlySourcegraphDotCom =>
-            this.initTelligent(isOnlySourcegraphDotCom, siteId, platform, forceSecure, installedChromeExtension)
+            this.initTelligent(isOnlySourcegraphDotCom, siteId, platform, installedChromeExtension)
         )
     }
 
@@ -18,7 +18,6 @@ export class TelligentWrapper {
         trackUrls: boolean,
         siteId: string,
         platform: string,
-        forceSecure,
         installedChromeExtension: boolean
     ) => {
         // Create the initializing function
@@ -36,6 +35,20 @@ export class TelligentWrapper {
 
         this.t = (window as any).telligent
 
+        const url = new URL(sourcegraphUrl)
+
+        // Unless we explicitely tell the telligent tracker to either send to http or https, it will send it to whichever protocol
+        // the page is on. This means that when we want to send tracking to http://localhost:3080, tracking messaged will be sent
+        // to https://localhost:3080 because github and other code hosts will be on https.
+        //
+        // https://sourcegraph.sgdev.org/github.com/sourcegraph/telligent-javascript-tracker@c4e5f9710924dbac5cde697fe076611c90d6407a/-/blob/src/js/tracker.js#L737:1
+        const securityParam: { forceSecureTracker?: true; forceUnsecureTracker?: true } = {}
+        if (url.protocol === 'https:') {
+            securityParam.forceSecureTracker = true
+        } else {
+            securityParam.forceUnsecureTracker = true
+        }
+
         // Send events to the Server telemetry endpoint. If a custom bi-logger is being used, the redirect
         // is handled on the backend.
         const telemetryUrl = `${sourcegraphUrl}/.api/telemetry`
@@ -45,8 +58,8 @@ export class TelligentWrapper {
             appId: siteId,
             platform,
             env: process.env.NODE_ENV,
-            forceSecureTracker: forceSecure,
             trackUrls,
+            ...securityParam,
         })
 
         if (installedChromeExtension) {

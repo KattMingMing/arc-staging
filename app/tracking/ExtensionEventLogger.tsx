@@ -19,7 +19,7 @@ export class ExtensionEventLogger extends EventLogger {
         if (isE2ETest()) {
             return
         }
-        this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true, true)
+        this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'BrowserExtension', true)
 
         runtime.sendMessage({ type: 'getIdentity' }, this.updatePropsForUser.bind(this))
 

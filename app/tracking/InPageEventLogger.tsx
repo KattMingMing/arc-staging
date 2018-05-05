@@ -13,7 +13,7 @@ export class InPageEventLogger extends EventLogger {
 
     constructor() {
         super()
-        this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'PhabricatorExtension', false, false)
+        this.telligentWrapper = new TelligentWrapper('SourcegraphExtension', 'PhabricatorExtension', false)
     }
 
     public setUserId(userId: string | null): void {
