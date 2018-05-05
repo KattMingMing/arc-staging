@@ -6,7 +6,15 @@ import { Observable } from 'rxjs/Observable'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { fetchBlobContentLines, resolveRev } from '../repo/backend'
 import { getTableDataCell } from '../repo/tooltips'
-import { ConduitDiffChange, ConduitDiffDetails, getDiffDetailsFromConduit, searchForCommitID } from './backend'
+import {
+    ConduitDiffChange,
+    ConduitDiffDetails,
+    getDiffDetailsFromConduit,
+    getRawDiffFromConduit,
+    resolveStagingRev,
+    searchForCommitID,
+} from './backend'
+import { StagingAreaInformation } from './components/StagingAreaInformation'
 import {
     ChangeState,
     DifferentialState,
@@ -196,6 +204,7 @@ function injectDiffusion(state: DiffusionState): void {
 }
 
 function injectChangeset(state: DifferentialState | RevisionState | ChangeState): void {
+    console.log('injecting changeset')
     monitorFileContainers(
         'differential-changeset',
         'changeset-view-content',
@@ -371,9 +380,8 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                 }
                             })
                         })
-                        .catch(err => {
-                            /** noop */
-                            console.error('Failed to resolve diff information:', err)
+                        .catch(() => {
+                            render(<StagingAreaInformation {...differentialButtonProps} />, mountBase)
                         })
                     break // end inner switch
                 }
@@ -572,12 +580,37 @@ function resolveDiff(props: ResolveDiffOpt): Promise<ResolvedDiff> {
     return new Promise((resolve, reject) => {
         getPropsWithInfo(props)
             .then(propsWithInfo => {
-                if (!propsWithInfo.info.properties['arc.staging']) {
+                const stagingInfo = propsWithInfo.info.properties['arc.staging']
+                if (!stagingInfo || (stagingInfo && stagingInfo.status === 'repository.unconfigured')) {
                     // The last diff (final commit) is not found in the staging area, but rather on the description.
-                    if (propsWithInfo.isBase) {
+                    if (propsWithInfo.isBase && !propsWithInfo.useDiffForBase) {
                         resolve({ commitID: propsWithInfo.info.sourceControlBaseRevision })
                         return
                     }
+
+                    if (stagingInfo.status === 'repository.unconfigured') {
+                        getRawDiffFromConduit(propsWithInfo.diffID)
+                            .then(patch =>
+                                resolveStagingRev({
+                                    repoName: propsWithInfo.repoPath,
+                                    diffID: propsWithInfo.diffID,
+                                    baseRev: propsWithInfo.info.sourceControlBaseRevision,
+                                    date: propsWithInfo.info.dateCreated,
+                                    authorName: propsWithInfo.info.authorName,
+                                    authorEmail: propsWithInfo.info.authorEmail,
+                                    description: propsWithInfo.info.description,
+                                    patch,
+                                }).subscribe(commitID => {
+                                    if (commitID) {
+                                        resolve({ commitID })
+                                    }
+                                    reject(new Error('unable to resolve staging object'))
+                                })
+                            )
+                            .catch(() => reject(new Error('unable to fetch raw diff')))
+                        return
+                    }
+
                     resolve({ commitID: propsWithInfo.info.description.substr(-40) })
                     return
                 }

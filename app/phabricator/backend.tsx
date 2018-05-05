@@ -71,6 +71,9 @@ export interface ConduitDiffDetails {
     sourceControlBaseRevision: string // the merge base commit
     description: string // e.g. 'rNZAP9bee3bc2cd3068dd97dfa87068c4431c5d6093ef'
     changes: ConduitDiffChange[]
+    dateCreated: string
+    authorName: string
+    authorEmail: string
     properties: {
         'arc.staging': {
             status: string
@@ -116,6 +119,34 @@ export function getDiffDetailsFromConduit(diffID: number, differentialID: number
                     reject(new Error(`error ${res.error_code}: ${res.error_info}`))
                 }
                 resolve(res.result['' + diffID])
+            })
+            .catch(reject)
+    })
+}
+
+interface ConduitRawDiffResponse {
+    error_code?: string
+    error_info?: string
+    result: string
+}
+
+export function getRawDiffFromConduit(diffID: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const form = createConduitRequestForm()
+        form.set('params[diffID]', diffID.toString())
+
+        fetch(window.location.origin + '/api/differential.getrawdiff', {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+            headers: new Headers({ Accept: 'application/json' }),
+        })
+            .then(resp => resp.json())
+            .then((res: ConduitRawDiffResponse) => {
+                if (res.error_code) {
+                    reject(new Error(`error ${res.error_code}: ${res.error_info}`))
+                }
+                resolve(res.result)
             })
             .catch(reject)
     })
@@ -350,3 +381,52 @@ function convertToDetails(repo: ConduitRepo): PhabricatorRepoDetails | null {
     const repoPath = normalizeRepoPath(rawURI)
     return { callsign: repo.fields.callsign, repoPath }
 }
+
+interface ResolveStagingOptions {
+    repoName: string
+    diffID: number
+    baseRev: string
+    patch?: string
+    date?: string
+    authorName?: string
+    authorEmail?: string
+    description?: string
+}
+
+export const resolveStagingRev = memoizeObservable(
+    (options: ResolveStagingOptions): Observable<string | null> =>
+        mutateGraphQL(
+            getContext({ repoKey: options.repoName, blacklist: ['https://sourcegraph.com'] }),
+            `mutation ResolveStagingRev(
+                $repoName: String!,
+                $diffID: ID!,
+                $baseRev: String!,
+                $patch: String,
+                $date: String,
+                $authorName: String,
+                $authorEmail: String,
+                $description: String
+             ) {
+               resolvePhabricatorDiff(
+                   repoName: $repoName,
+                   diffID: $diffID,
+                   baseRev: $baseRev,
+                   patch: $patch,
+                   date: $date,
+                   authorName: $authorName,
+                   authorEmail: $authorEmail,
+                   description: $description,
+               ) {
+                   oid
+               }
+            }`,
+            options
+        ).map(({ data, errors }) => {
+            if (!(data && data.resolvePhabricatorDiff) || (errors && errors.length > 0)) {
+                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
+            }
+
+            return data.resolvePhabricatorDiff.oid
+        }),
+    ({ diffID }: ResolveStagingOptions) => diffID.toString()
+)

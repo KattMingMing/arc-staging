@@ -52,7 +52,7 @@ function injectApplication(): void {
         const isSourcegraphServer = window.location.origin === sourcegraphServerUrl || !!srcgEl
         const isPhabricator =
             Boolean(document.querySelector('.phabricator-wordmark')) &&
-            items.enterpriseUrls.find(url => url === window.location.origin)
+            Boolean(items.enterpriseUrls.find(url => url === window.location.origin))
 
         const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
         const ogSiteName = document.head.querySelector(`meta[property='og:site_name']`) as HTMLMetaElement

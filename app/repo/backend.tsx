@@ -41,7 +41,9 @@ export const resolveRev = memoizeObservable(
             getContext({ repoKey: ctx.repoPath }),
             `query ResolveRev($repoPath: String!, $rev: String!) {
                 repository(uri: $repoPath) {
-                    cloneInProgress
+                    mirrorInfo {
+                        cloneInProgress
+                    }
                     commit(rev: $rev) {
                         oid
                     }
@@ -55,7 +57,7 @@ export const resolveRev = memoizeObservable(
             if (!result.data.repository || !result.data.repository.commit) {
                 throw new RepoNotFoundError(ctx.repoPath)
             }
-            if (result.data.repository.cloneInProgress) {
+            if (result.data.repository.mirrorInfo.cloneInProgress) {
                 throw new CloneInProgressError(ctx.repoPath)
             }
             if (!result.data.repository.commit) {
