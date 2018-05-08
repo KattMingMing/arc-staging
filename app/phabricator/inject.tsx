@@ -204,7 +204,6 @@ function injectDiffusion(state: DiffusionState): void {
 }
 
 function injectChangeset(state: DifferentialState | RevisionState | ChangeState): void {
-    console.log('injecting changeset')
     monitorFileContainers(
         'differential-changeset',
         'changeset-view-content',

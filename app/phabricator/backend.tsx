@@ -418,7 +418,23 @@ function convertConduitRepoToRepoDetails(repo: ConduitRepo): Promise<Phabricator
                 return resolve(convertToDetails(repo))
             })
         } else {
-            return resolve(convertToDetails(repo))
+            // The path to a phabricator repository on a Sourcegraph instance may differ than it's URI / name from the
+            // phabricator conduit API. Since we do not currently send the PHID with the Phabricator repository this a
+            // backwards work around configuration setting to ensure mappings are correct. This logic currently exists
+            // in the browser extension options menu.
+            const configRepos = window.localStorage.PHABRICATOR_REPOS || window.PHABRICATOR_REPOS
+            const details = convertToDetails(repo)
+            if (configRepos && details) {
+                for (const configRepo of JSON.parse(configRepos)) {
+                    if (configRepo.callsign === details.callsign) {
+                        return resolve({
+                            callsign: details.callsign,
+                            repoPath: configRepo.path,
+                        })
+                    }
+                }
+            }
+            return resolve(details)
         }
     })
 }
