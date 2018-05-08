@@ -14,6 +14,7 @@
 
             position: absolute;
             z-index: 1; // overlay the content when sidebar is closed
+            margin-top: 2px;
         }
 
         &-resizable {
