@@ -2,6 +2,9 @@
     "name": "sourcegraph-chrome-extension",
     "version": "0.0.1",
     "description": "Sourcegraph browser extension for Chrome",
+    "engines": {
+        "npm": "^6.0.0"
+    },
     "scripts": {
         "dev": "NODE_ENV=development ts-node scripts/dev",
         "dev:firefox": "web-ext run --source-dir ./build/firefox",
