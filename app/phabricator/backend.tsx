@@ -4,6 +4,7 @@ import { isExtension } from '../../app/context'
 import storage from '../../extension/storage'
 import { getContext } from '../backend/context'
 import { mutateGraphQL } from '../backend/graphql'
+import { sourcegraphUrl } from '../util/context'
 import { memoizeObservable } from '../util/memoize'
 import { normalizeRepoPath } from './util'
 
@@ -50,6 +51,14 @@ interface ConduitReposResponse {
         }
         data: ConduitRepo[]
     }
+}
+
+interface SourcegraphConduitConfiguration {
+    result: {
+        url: string
+    }
+    error_code?: string
+    error_info?: string
 }
 
 export interface ConduitRef {
@@ -99,6 +108,23 @@ function createConduitRequestForm(): FormData {
     form.set('__csrf__', searchForm.querySelector('input[name=__csrf__]')!.value)
     form.set('__form__', searchForm.querySelector('input[name=__form__]')!.value)
     return form
+}
+
+/**
+ * Native installation of the Phabricator extension does not allow for us to fetch the style.bundle from a script element.
+ * To get around this we fetch the bundled CSS contents and append it to the DOM.
+ */
+export function getPhabricatorCSS(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        fetch(sourcegraphUrl + '/.assets/extension/css/style.bundle.css', {
+            method: 'GET',
+            credentials: 'include',
+            headers: new Headers({ Accept: 'text/html' }),
+        })
+            .then(resp => resp.text())
+            .then(resolve)
+            .catch(reject)
+    })
 }
 
 export function getDiffDetailsFromConduit(diffID: number, differentialID: number): Promise<ConduitDiffDetails> {
@@ -288,6 +314,39 @@ export function getRepoDetailsFromCallsign(callsign: string): Promise<Phabricato
                         reject(new Error('could not parse repo details'))
                     }
                 })
+            })
+            .catch(reject)
+    })
+}
+
+/**
+ *  getSourcegraphURLFromConduit returns the current Sourcegraph URL on the window object or will query the
+ *  sourcegraph.configuration conduit API endpoint. The Phabricator extension updates the window object automatically, but in the case it fails
+ *  we query the conduit API.
+ */
+export function getSourcegraphURLFromConduit(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const url = window.localStorage.SOURCEGRAPH_URL || window.SOURCEGRAPH_URL
+        if (url) {
+            return resolve(url)
+        }
+        const form = createConduitRequestForm()
+        fetch(window.location.origin + '/api/sourcegraph.configuration', {
+            method: 'POST',
+            body: form,
+            credentials: 'include',
+            headers: new Headers({ Accept: 'application/json' }),
+        })
+            .then(resp => resp.json())
+            .then((res: SourcegraphConduitConfiguration) => {
+                if (res.error_code) {
+                    throw new Error(`error ${res.error_code}: ${res.error_info}`)
+                }
+
+                if (!res || !res.result) {
+                    throw new Error(`error ${res}. could not fetch sourcegraph configuration.`)
+                }
+                resolve(res.result.url)
             })
             .catch(reject)
     })

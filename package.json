@@ -40,7 +40,7 @@
         "get-graphql-schema": "^2.1.1",
         "gql2ts": "^1.2.1",
         "jade": "^1.11.0",
-        "node-sass": "^4.5.3",
+        "node-sass": "^4.9.0",
         "postcss-loader": "^2.0.8",
         "prettier": "^1.7.4",
         "sass-loader": "^6.0.6",
