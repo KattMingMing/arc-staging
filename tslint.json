@@ -1,3 +1,8 @@
 {
-    "extends": ["@sourcegraph/tslint-config"]
+    "extends": ["@sourcegraph/tslint-config"],
+    "rules": {
+        "deprecation": {
+            "severity": "warning"
+        }
+    }
 }

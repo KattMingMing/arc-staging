@@ -73,7 +73,7 @@ export function createSuggestion(item: GQL.SearchSuggestion): Suggestion | null 
         case 'Repository': {
             return {
                 type: 'repo',
-                title: item.name,
+                title: item.uri,
                 url: `/${item.name}`,
                 urlLabel: 'go to repository',
             }
@@ -84,7 +84,7 @@ export function createSuggestion(item: GQL.SearchSuggestion): Suggestion | null 
             if (dir !== undefined && dir !== '.') {
                 descriptionParts.push(`${dir}/`)
             }
-            descriptionParts.push(basename(item.repository.name))
+            descriptionParts.push(basename(item.repository.uri))
             if (item.isDirectory) {
                 return {
                     type: 'dir',
@@ -108,7 +108,7 @@ export function createSuggestion(item: GQL.SearchSuggestion): Suggestion | null 
                 kind: item.kind,
                 title: item.name,
                 description: `${item.containerName || item.location.resource.path} — ${basename(
-                    item.location.resource.repository.name
+                    item.location.resource.repository.uri
                 )}`,
                 url: item.url,
                 urlLabel: 'go to definition',
@@ -167,7 +167,7 @@ export const fetchSuggestions = (options: SearchOptions, first: number) =>
                     suggestions(first: $first) {
                         ... on Repository {
                             __typename
-                            name
+                            uri
                         }
                         ... on File {
                             __typename
@@ -176,7 +176,7 @@ export const fetchSuggestions = (options: SearchOptions, first: number) =>
                             isDirectory
                             url
                             repository {
-                                name
+                                uri
                             }
                         }
                         ... on Symbol {
@@ -189,7 +189,7 @@ export const fetchSuggestions = (options: SearchOptions, first: number) =>
                                 resource {
                                     path
                                     repository {
-                                        name
+                                        uri
                                     }
                                 }
                             }
