@@ -422,14 +422,15 @@ function convertConduitRepoToRepoDetails(repo: ConduitRepo): Promise<Phabricator
             // phabricator conduit API. Since we do not currently send the PHID with the Phabricator repository this a
             // backwards work around configuration setting to ensure mappings are correct. This logic currently exists
             // in the browser extension options menu.
-            const configRepos = window.localStorage.PHABRICATOR_REPOS || window.PHABRICATOR_REPOS
+            const callsignMappings =
+                window.localStorage.PHABRICATOR_CALLSIGN_MAPPINGS || window.PHABRICATOR_CALLSIGN_MAPPINGS
             const details = convertToDetails(repo)
-            if (configRepos && details) {
-                for (const configRepo of JSON.parse(configRepos)) {
-                    if (configRepo.callsign === details.callsign) {
+            if (callsignMappings && details) {
+                for (const mapping of JSON.parse(callsignMappings)) {
+                    if (mapping.callsign === details.callsign) {
                         return resolve({
                             callsign: details.callsign,
-                            repoPath: configRepo.path,
+                            repoPath: mapping.path,
                         })
                     }
                 }

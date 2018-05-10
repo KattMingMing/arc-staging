@@ -1,6 +1,6 @@
 interface Window {
     SOURCEGRAPH_URL: string | undefined
-    PHABRICATOR_REPOS: {
+    PHABRICATOR_CALLSIGN_MAPPINGS: {
         callsign: string
         path: string
     }[] | undefined
