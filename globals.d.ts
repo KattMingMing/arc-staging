@@ -7,6 +7,7 @@ interface Window {
     SOURCEGRAPH_PHABRICATOR_EXTENSION: boolean | undefined
     SG_ENV: 'EXTENSION' | 'PAGE'
     EXTENSION_ENV: 'CONTENT' | 'BACKGROUND' | null
+    SOURCEGRAPH_BUNDLE_URL: string | undefined // Bundle Sourcegraph URL is set from the Phabricator extension.
 
     safariMessager?: {
         send: (message: { type: string; payload: any }, cb?: (res?: any) => void) => void

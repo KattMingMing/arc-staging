@@ -28,6 +28,16 @@ export function init(): void {
      */
     if (window.localStorage && window.localStorage.SOURCEGRAPH_DISABLED !== 'true') {
         document.addEventListener('phabPageLoaded', () => {
+            // Backwards compat: Support Legacy Phabricator extension. Check that the Phabricator integration
+            // passed the bundle url. Legacy Phabricator extensions inject CSS via the loader.js script
+            // so we do not need to do this here.
+            if (!window.SOURCEGRAPH_BUNDLE_URL && !window.localStorage.SOURCEGRAPH_BUNDLE_URL) {
+                injectModules()
+                metaClickOverride()
+                expanderListen()
+                return
+            }
+
             getSourcegraphURLFromConduit()
                 .then(sourcegraphUrl => {
                     getPhabricatorCSS()
