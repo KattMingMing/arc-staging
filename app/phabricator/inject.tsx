@@ -324,18 +324,12 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                         .then(([baseRev, headRev]) => {
                             const actualBaseRepoPath = baseRev.stagingRepoPath || baseRepoPath
                             const actualHeadRepoPath = headRev.stagingRepoPath || headRepoPath
-                            Observable.zip(
-                                fetchBlobContentLines({
-                                    repoPath: actualBaseRepoPath,
-                                    commitID: baseRev.commitID,
-                                    filePath: baseFilePath || filePath,
-                                }),
-                                fetchBlobContentLines({
-                                    repoPath: actualHeadRepoPath,
-                                    commitID: headRev.commitID,
-                                    filePath,
-                                })
-                            ).subscribe(([baseFile, headFile]) => {
+
+                            fetchBlobContentLines({
+                                repoPath: actualBaseRepoPath,
+                                commitID: baseRev.commitID,
+                                filePath: baseFilePath || filePath,
+                            }).subscribe(baseFile => {
                                 if (baseFile.length > 0) {
                                     render(
                                         <BlobAnnotator
@@ -356,7 +350,13 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                                         mountBase
                                     )
                                 }
+                            })
 
+                            fetchBlobContentLines({
+                                repoPath: actualHeadRepoPath,
+                                commitID: headRev.commitID,
+                                filePath,
+                            }).subscribe(headFile => {
                                 if (headFile.length > 0) {
                                     render(
                                         <BlobAnnotator
