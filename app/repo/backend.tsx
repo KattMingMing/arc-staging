@@ -1,6 +1,7 @@
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/toPromise'
 import { Observable } from 'rxjs/Observable'
+import { catchError } from 'rxjs/operators/catchError'
 import { map } from 'rxjs/operators/map'
 import { getContext } from '../backend/context'
 import { queryGraphQL } from '../backend/graphql'
@@ -157,6 +158,22 @@ export const fetchBlobContentLines = memoizeObservable(
                     return []
                 }
                 return data.repository.commit.file!.content.split('\n')
+            }),
+            catchError(({ errors, ...rest }) => {
+                if (errors.length === 1) {
+                    const err = errors[0]
+                    const isFileContent = err.path.join('.') === 'repository.commit.file.content'
+                    const isDNE = /does not exist/.test(err.message)
+
+                    // The error is the file DNE. Just ignore it and pass an empty array
+                    // to represent this.
+                    if (isFileContent && isDNE) {
+                        return []
+                    }
+                }
+
+                // Don't swollow unexpected errors
+                throw { errors, ...rest }
             })
         ),
     makeRepoURI
