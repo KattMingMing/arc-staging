@@ -13,7 +13,9 @@
         "lint": "npm run tslint && npm run stylelint",
         "tslint": "tslint -c tslint.json -p tsconfig.json 'app/**/*.ts?(x)'",
         "stylelint": "stylelint 'app/**/*.scss'",
-        "clean": "rm -rf dist/ *.zip *.xpi .checksum"
+        "clean": "rm -rf build/ dist/ *.zip *.xpi .checksum",
+        "cypress:open": "cypress open",
+        "test:e2e": "cypress run --browser chrome"
     },
     "author": "John Rothfels <john@sourcegraph.com>",
     "license": "MIT",
@@ -36,6 +38,7 @@
         "babel-plugin-transform-new-target": "^7.0.0-alpha.14",
         "babel-preset-env": "^1.6.1",
         "css-loader": "^0.28.7",
+        "cypress": "^2.1.0",
         "extract-text-webpack-plugin": "^4.0.0-beta.0",
         "get-graphql-schema": "^2.1.1",
         "gql2ts": "^1.2.1",
@@ -61,10 +64,12 @@
     "dependencies": {
         "@sourcegraph/icons": "^1.7.0",
         "@sourcegraph/telligent-tracker": "^0.1.6",
+        "@types/cypress": "^1.1.3",
         "@types/filesystem": "0.0.28",
         "autobind-decorator": "^1.3.4",
         "bluebird": "^3.3.4",
         "bootstrap": "^4.0.0",
+        "cypress-browser-extension-plugin": "^0.1.0",
         "formdata-polyfill": "^3.0.9",
         "highlight.js": "^9.12.0",
         "intersection-observer": "^0.5.0",
