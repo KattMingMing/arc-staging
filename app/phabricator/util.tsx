@@ -138,12 +138,12 @@ function getDiffIdFromDifferentialPage(): string | null {
 }
 
 // tslint:disable-next-line
-const PHAB_DIFFUSION_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/(source|diffusion)\/([A-Za-z0-9\-\_]+)\/browse\/([\w-]+\/)?([^;$]+)(;[0-9a-f]{40})?(?:\$[0-9]+)?/i
-const PHAB_DIFFERENTIAL_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/(D[0-9]+)(?:\?(?:(?:id=([0-9]+))|(vs=(?:[0-9]+|on)&id=[0-9]+)))?/i
-const PHAB_REVISION_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/r([0-9A-z]+)([0-9a-f]{40})/i
+const PHAB_DIFFUSION_REGEX = /^\/?(source|diffusion)\/([A-Za-z0-9\-\_]+)\/browse\/([\w-]+\/)?([^;$]+)(;[0-9a-f]{40})?(?:\$[0-9]+)?/i
+const PHAB_DIFFERENTIAL_REGEX = /^\/?(D[0-9]+)(?:\?(?:(?:id=([0-9]+))|(vs=(?:[0-9]+|on)&id=[0-9]+)))?/i
+const PHAB_REVISION_REGEX = /^\/?r([0-9A-z]+)([0-9a-f]{40})/i
 // http://phabricator.aws.sgdev.org/source/nmux/change/master/mux.go
-const PHAB_CHANGE_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/(source|diffusion)\/([A-Za-z0-9]+)\/change\/([\w-]+)\/([^;]+)(;[0-9a-f]{40})?/i
-const PHAB_CHANGESET_REGEX = /^(https?):\/\/([A-Z\d\.-]{2,})\.([A-Z]{2,})(:\d{2,4})?\/differential\/changeset.*/i
+const PHAB_CHANGE_REGEX = /^\/?(source|diffusion)\/([A-Za-z0-9]+)\/change\/([\w-]+)\/([^;]+)(;[0-9a-f]{40})?/i
+const PHAB_CHANGESET_REGEX = /^\/?\/differential\/changeset.*/i
 const COMPARISON_REGEX = /^vs=((?:[0-9]+|on))&id=([0-9]+)/i
 
 function getBaseCommitIDFromRevisionPage(): string | null {
@@ -151,9 +151,10 @@ function getBaseCommitIDFromRevisionPage(): string | null {
     for (const keyElement of Array.from(keyElements)) {
         if (keyElement.textContent === 'Parents ') {
             const parentUrl = ((keyElement.nextSibling as HTMLElement).children[0].children[0] as HTMLLinkElement).href
-            const revisionMatch = PHAB_REVISION_REGEX.exec(parentUrl)
+            const url = new URL(parentUrl)
+            const revisionMatch = PHAB_REVISION_REGEX.exec(url.pathname)
             if (revisionMatch) {
-                return revisionMatch[6]
+                return revisionMatch[2]
             }
         }
     }
@@ -164,18 +165,19 @@ export function getPhabricatorState(
     loc: Location
 ): Promise<DiffusionState | DifferentialState | RevisionState | ChangeState | null> {
     return new Promise((resolve, reject) => {
-        const diffusionMatch = PHAB_DIFFUSION_REGEX.exec(loc.href)
+        const stateUrl = loc.href.replace(loc.origin, '')
+        const diffusionMatch = PHAB_DIFFUSION_REGEX.exec(stateUrl)
+        const { protocol, hostname, port } = loc
         if (diffusionMatch) {
             const match = {
-                protocol: diffusionMatch[1],
-                hostname: diffusionMatch[2],
-                tld: diffusionMatch[3],
-                port: diffusionMatch[4],
-                viewType: diffusionMatch[5],
-                callsign: diffusionMatch[6],
-                branch: diffusionMatch[7],
-                filePath: diffusionMatch[8],
-                revInUrl: diffusionMatch[9], // only on previous versions
+                protocol,
+                hostname,
+                port,
+                viewType: diffusionMatch[1],
+                callsign: diffusionMatch[2],
+                branch: diffusionMatch[3],
+                filePath: diffusionMatch[4],
+                revInUrl: diffusionMatch[5], // only on previous versions
             }
             if (match.branch && match.branch.endsWith('/')) {
                 // Remove trailing slash (included b/c branch group is optional)
@@ -207,15 +209,13 @@ export function getPhabricatorState(
                 .catch(reject)
             return
         }
-
-        const differentialMatch = PHAB_DIFFERENTIAL_REGEX.exec(loc.href)
+        const differentialMatch = PHAB_DIFFERENTIAL_REGEX.exec(stateUrl)
         if (differentialMatch) {
             const match = {
-                protocol: differentialMatch[1],
-                hostname: differentialMatch[2],
-                tld: differentialMatch[3],
-                port: differentialMatch[4],
-                differentialID: differentialMatch[5],
+                protocol,
+                hostname,
+                port,
+                differentialID: differentialMatch[1],
                 diffID: differentialMatch[6],
                 comparison: differentialMatch[7],
             }
@@ -297,17 +297,15 @@ export function getPhabricatorState(
             return
         }
 
-        const revisionMatch = PHAB_REVISION_REGEX.exec(loc.href)
+        const revisionMatch = PHAB_REVISION_REGEX.exec(stateUrl)
         if (revisionMatch) {
             const match = {
-                protocol: revisionMatch[1],
-                hostname: revisionMatch[2],
-                tld: revisionMatch[3],
-                port: revisionMatch[4],
-                callsign: revisionMatch[5],
-                rev: revisionMatch[6],
+                protocol,
+                hostname,
+                port,
+                callsign: revisionMatch[1],
+                rev: revisionMatch[2],
             }
-
             getRepoDetailsFromCallsign(match.callsign)
                 .then(({ repoPath }) => {
                     const headCommitID = match.rev
@@ -327,7 +325,7 @@ export function getPhabricatorState(
             return
         }
 
-        const changeMatch = PHAB_CHANGE_REGEX.exec(loc.href)
+        const changeMatch = PHAB_CHANGE_REGEX.exec(stateUrl)
         if (changeMatch) {
             const match = {
                 protocol: changeMatch[1],
@@ -365,7 +363,7 @@ export function getPhabricatorState(
             return
         }
 
-        const changesetMatch = PHAB_CHANGESET_REGEX.exec(loc.href)
+        const changesetMatch = PHAB_CHANGESET_REGEX.exec(stateUrl)
         if (changesetMatch) {
             const crumbs = document.querySelector('.phui-crumbs-view')
             if (!crumbs) {
@@ -697,7 +695,6 @@ export function normalizeRepoPath(origin: string): string {
         repoPath = split[1]
         repoPath = repoPath.replace(':', '/')
     }
-
     return repoPath.replace(/.git$/, '')
 }
 

@@ -4,11 +4,12 @@ import 'rxjs/add/observable/zip'
 import 'rxjs/add/operator/toPromise'
 import { Observable } from 'rxjs/Observable'
 import { BlobAnnotator } from '../components/BlobAnnotator'
-import { fetchBlobContentLines, resolveRev } from '../repo/backend'
+import { fetchBlobContentLines, resolveRepo, resolveRev } from '../repo/backend'
 import { getTableDataCell } from '../repo/tooltips'
 import {
     ConduitDiffChange,
     ConduitDiffDetails,
+    ConduitRef,
     getDiffDetailsFromConduit,
     getRawDiffFromConduit,
     resolveStagingRev,
@@ -324,7 +325,6 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
                         .then(([baseRev, headRev]) => {
                             const actualBaseRepoPath = baseRev.stagingRepoPath || baseRepoPath
                             const actualHeadRepoPath = headRev.stagingRepoPath || headRepoPath
-
                             fetchBlobContentLines({
                                 repoPath: actualBaseRepoPath,
                                 commitID: baseRev.commitID,
@@ -575,61 +575,88 @@ function getPropsWithInfo(props: ResolveDiffOpt): Promise<PropsWithInfo> {
     })
 }
 
+function getStagingDetails(
+    propsWithInfo: PropsWithInfo
+): { repoPath: string; ref: ConduitRef; unconfigured: boolean } | undefined {
+    const stagingInfo = propsWithInfo.info.properties['arc.staging']
+    if (!stagingInfo) {
+        return undefined
+    }
+    let key: string
+    if (propsWithInfo.isBase) {
+        const type = propsWithInfo.useDiffForBase ? 'diff' : 'base'
+        key = `refs/tags/phabricator/${type}/${propsWithInfo.diffID}`
+    } else {
+        const type = propsWithInfo.useBaseForDiff ? 'base' : 'diff'
+        key = `refs/tags/phabricator/${type}/${propsWithInfo.diffID}`
+    }
+    for (const ref of propsWithInfo.info.properties['arc.staging'].refs) {
+        if (ref.ref === key) {
+            const remote = ref.remote.uri
+            if (remote) {
+                return {
+                    repoPath: normalizeRepoPath(remote),
+                    ref,
+                    unconfigured: stagingInfo.status === 'repository.unconfigured',
+                }
+            }
+        }
+    }
+    return undefined
+}
+
 function resolveDiff(props: ResolveDiffOpt): Promise<ResolvedDiff> {
     return new Promise((resolve, reject) => {
         getPropsWithInfo(props)
             .then(propsWithInfo => {
-                const stagingInfo = propsWithInfo.info.properties['arc.staging']
-                if (!stagingInfo || (stagingInfo && stagingInfo.status === 'repository.unconfigured')) {
+                const stagingDetails = getStagingDetails(propsWithInfo)
+                const conduitProps = {
+                    repoName: propsWithInfo.repoPath,
+                    diffID: propsWithInfo.diffID,
+                    baseRev: propsWithInfo.info.sourceControlBaseRevision,
+                    date: propsWithInfo.info.dateCreated,
+                    authorName: propsWithInfo.info.authorName,
+                    authorEmail: propsWithInfo.info.authorEmail,
+                    description: propsWithInfo.info.description,
+                }
+                if (!stagingDetails || stagingDetails.unconfigured) {
                     // The last diff (final commit) is not found in the staging area, but rather on the description.
                     if (propsWithInfo.isBase && !propsWithInfo.useDiffForBase) {
                         resolve({ commitID: propsWithInfo.info.sourceControlBaseRevision })
                         return
                     }
-
-                    if (stagingInfo.status === 'repository.unconfigured') {
-                        getRawDiffFromConduit(propsWithInfo.diffID)
-                            .then(patch =>
-                                resolveStagingRev({
-                                    repoName: propsWithInfo.repoPath,
-                                    diffID: propsWithInfo.diffID,
-                                    baseRev: propsWithInfo.info.sourceControlBaseRevision,
-                                    date: propsWithInfo.info.dateCreated,
-                                    authorName: propsWithInfo.info.authorName,
-                                    authorEmail: propsWithInfo.info.authorEmail,
-                                    description: propsWithInfo.info.description,
-                                    patch,
-                                }).subscribe(commitID => {
-                                    if (commitID) {
-                                        resolve({ commitID })
-                                    }
-                                    reject(new Error('unable to resolve staging object'))
-                                })
-                            )
-                            .catch(() => reject(new Error('unable to fetch raw diff')))
-                        return
-                    }
-
-                    resolve({ commitID: propsWithInfo.info.description.substr(-40) })
+                    getRawDiffFromConduit(propsWithInfo.diffID)
+                        .then(patch =>
+                            resolveStagingRev({ ...conduitProps, patch }).subscribe(commitID => {
+                                if (commitID) {
+                                    resolve({ commitID })
+                                }
+                            })
+                        )
+                        .catch(() => reject(new Error('unable to fetch raw diff')))
                     return
                 }
-                let key: string
-                if (propsWithInfo.isBase) {
-                    const type = propsWithInfo.useDiffForBase ? 'diff' : 'base'
-                    key = `refs/tags/phabricator/${type}/${propsWithInfo.diffID}`
-                } else {
-                    const type = propsWithInfo.useBaseForDiff ? 'base' : 'diff'
-                    key = `refs/tags/phabricator/${type}/${propsWithInfo.diffID}`
-                }
-                for (const ref of propsWithInfo.info.properties['arc.staging'].refs) {
-                    if (ref.ref === key) {
-                        const remote = ref.remote.uri
-                        let stagingRepoPath: string | undefined
-                        if (remote) {
-                            stagingRepoPath = normalizeRepoPath(remote)
+
+                if (!stagingDetails.unconfigured) {
+                    // Ensure the staging repo exists before resolving. Otherwise create the patch.
+                    resolveRepo({ repoPath: stagingDetails.repoPath }).subscribe(
+                        () =>
+                            resolve({ commitID: stagingDetails.ref.commit, stagingRepoPath: stagingDetails.repoPath }),
+                        error => {
+                            getRawDiffFromConduit(propsWithInfo.diffID)
+                                .then(patch =>
+                                    resolveStagingRev({ ...conduitProps, patch }).subscribe(commitID => {
+                                        if (commitID) {
+                                            resolve({ commitID })
+                                            return
+                                        }
+                                        reject(new Error('unable to resolve staging object'))
+                                    })
+                                )
+                                .catch(() => reject(new Error('unable to fetch raw diff')))
                         }
-                        return resolve({ commitID: ref.commit, stagingRepoPath })
-                    }
+                    )
+                    return
                 }
 
                 if (!propsWithInfo.isBase) {
@@ -637,7 +664,6 @@ function resolveDiff(props: ResolveDiffOpt): Promise<ResolvedDiff> {
                         return resolve({ commitID: cmit })
                     }
                 }
-
                 // last ditch effort to search conduit API for commit ID
                 try {
                     searchForCommitID(propsWithInfo)
@@ -646,7 +672,6 @@ function resolveDiff(props: ResolveDiffOpt): Promise<ResolvedDiff> {
                 } catch (e) {
                     // ignore
                 }
-
                 reject(new Error('did not find commitID'))
             })
             .catch(reject)

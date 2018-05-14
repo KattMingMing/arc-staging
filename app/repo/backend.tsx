@@ -33,6 +33,30 @@ class RevNotFoundError extends Error {
 }
 
 /**
+ * @return Observable that emits the repo URL
+ *         Errors with a `RepoNotFoundError` if the repo is not found
+ */
+export const resolveRepo = memoizeObservable(
+    (ctx: { repoPath: string }): Observable<string> =>
+        queryGraphQL(
+            getContext({ repoKey: ctx.repoPath }),
+            `query ResolveRepo($repoPath: String!) {
+                repository(uri: $repoPath) {
+                    url
+                }
+            }`,
+            { ...ctx }
+        ).map(result => {
+            if (!result.data || !result.data.repository) {
+                throw new RepoNotFoundError(ctx.repoPath)
+            }
+
+            return result.data.repository.url
+        }, catchError((err, caught) => caught)),
+    makeRepoURI
+)
+
+/**
  * @return Observable that emits the commit ID
  *         Errors with a `CloneInProgressError` if the repo is still being cloned.
  */
@@ -160,7 +184,7 @@ export const fetchBlobContentLines = memoizeObservable(
                 return data.repository.commit.file!.content.split('\n')
             }),
             catchError(({ errors, ...rest }) => {
-                if (errors.length === 1) {
+                if (errors && errors.length === 1) {
                     const err = errors[0]
                     const isFileContent = err.path.join('.') === 'repository.commit.file.content'
                     const isDNE = /does not exist/.test(err.message)
