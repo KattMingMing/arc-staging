@@ -95,7 +95,25 @@ export const supportedExtensions = new Set<string>([
     'java', // Java
     'py', // Python
     'php', // PHP
+    'bash', // Bash
+    'clojure', // Clojure
+    'cpp', // C++
+    'cs', // C#
+    'css', // CSS
+    'elixir', // Elixir
+    'html', // HTML
+    'lua', // Lua
+    'ocaml', // OCaml
+    'r', // R
+    'ruby', // Ruby
+    'rust', // Rust
 ])
+
+/**
+ * supportedFilenames are the filenames
+ * the extension will apply annotations to
+ */
+export const supportedFilenames = new Set<string>(['Dockerfile'])
 
 /**
  * getModeFromExtension returns the LSP mode for the
@@ -129,6 +147,77 @@ export function getModeFromExtension(ext: string): string {
         case 'php7':
         case 'phps':
             return 'php'
+        case 'sh':
+        case 'bash':
+        case 'zsh':
+            return 'bash'
+        case 'clj':
+        case 'cljs':
+        case 'cljx':
+            return 'clojure'
+        case 'c':
+        case 'cc':
+        case 'cpp':
+        case 'c++':
+        case 'h++':
+        case 'hh':
+        case 'h':
+            return 'cpp'
+        case 'cs':
+        case 'csx':
+            return 'cs'
+        case 'css':
+            return 'css'
+        case 'ex':
+        case 'exs':
+            return 'elixir'
+        case 'htm':
+        case 'html':
+        case 'xhtml':
+            return 'html'
+        case 'lua':
+        case 'fcgi':
+        case 'nse':
+        case 'pd_lua':
+        case 'rbxs':
+        case 'wlua':
+            return 'lua'
+        case 'ml':
+        case 'eliom':
+        case 'eliomi':
+        case 'ml4':
+        case 'mli':
+        case 'mll':
+        case 'mly':
+            return 'ocaml'
+        case 'r':
+        case 'rd':
+        case 'rsx':
+            return 'r'
+        case 'rb':
+        case 'builder':
+        case 'eye':
+        case 'fcgi':
+        case 'gemspec':
+        case 'god':
+        case 'jbuilder':
+        case 'mspec':
+        case 'pluginspec':
+        case 'podspec':
+        case 'rabl':
+        case 'rake':
+        case 'rbuild':
+        case 'rbw':
+        case 'rbx':
+        case 'ru':
+        case 'ruby':
+        case 'spec':
+        case 'thor':
+        case 'watchr':
+            return 'ruby'
+        case 'rs':
+        case 'rs.in':
+            return 'rust'
         default:
             return 'unknown'
     }

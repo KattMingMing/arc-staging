@@ -13,6 +13,7 @@ registerLanguage('typescript', require('highlight.js/lib/languages/typescript'))
 registerLanguage('java', require('highlight.js/lib/languages/java'))
 registerLanguage('python', require('highlight.js/lib/languages/python'))
 registerLanguage('php', require('highlight.js/lib/languages/php'))
+registerLanguage('csharp', require('highlight.js/lib/languages/cs'))
 
 let tooltip: HTMLElement
 let loadingTooltip: HTMLElement

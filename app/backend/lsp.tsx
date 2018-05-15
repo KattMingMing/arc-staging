@@ -1,10 +1,17 @@
+import * as path from 'path'
 import 'rxjs/add/observable/of'
 import 'rxjs/add/operator/map'
 import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
-import { getModeFromExtension, getPathExtension, repoUrlCache, supportedExtensions } from '../util/context'
+import {
+    getModeFromExtension,
+    getPathExtension,
+    repoUrlCache,
+    supportedExtensions,
+    supportedFilenames,
+} from '../util/context'
 import { memoizeObservable } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
 import { getHeaders } from './headers'
@@ -45,7 +52,8 @@ function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
 
 export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Observable<Hover> => {
     const ext = getPathExtension(pos.filePath)
-    if (!supportedExtensions.has(ext)) {
+    const basename = path.basename(pos.filePath)
+    if (!supportedExtensions.has(ext) && !supportedFilenames.has(basename)) {
         return Observable.of({ contents: [] })
     }
 
