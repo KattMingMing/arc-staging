@@ -130,17 +130,6 @@ export class BlobAnnotator extends React.Component<Props, State> {
         createTooltips()
     }
 
-    public getEventLoggerProps(): any {
-        return {
-            repo: this.props.repoPath,
-            path: this.props.filePath,
-            isPullRequest: this.props.isPullRequest,
-            isCommit: this.props.isCommit,
-            language: this.fileExtension,
-            isPrivateRepo: github.isPrivateRepo(),
-        }
-    }
-
     public render(): JSX.Element | null {
         let props: OpenInSourcegraphProps
         if (this.isDelta) {
@@ -176,7 +165,6 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     className={this.props.buttonProps.className}
                     style={this.props.buttonProps.style}
                     iconStyle={this.props.buttonProps.iconStyle}
-                    onClick={this.onClickOpenFile}
                 />
             </div>
         )
@@ -419,7 +407,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
         // Only log an event if there is no fixed tooltip docked, we have a
         // target element, and we have tooltip contents
         if (!this.state.fixedTooltip && data.target && !isEmpty(data.contents)) {
-            eventLogger.logHover(this.getEventLoggerProps())
+            eventLogger.logHover()
         }
     }
 
@@ -511,7 +499,6 @@ export class BlobAnnotator extends React.Component<Props, State> {
             el.classList.remove('selection-highlight-sticky')
         }
         if (data) {
-            eventLogger.logClick(this.getEventLoggerProps())
             const td = this.getCodeCell(data.ctx.position.line)
             this.props.findTokenCell(td, data.target).classList.add('selection-highlight-sticky')
         } else {
@@ -522,12 +509,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
         this.setState({ fixedTooltip: data || undefined })
     }
 
-    private onClickOpenFile = (): void => {
-        eventLogger.logOpenFile(this.getEventLoggerProps())
-    }
-
     private handleGoToDefinition = (defCtx: AbsoluteRepoFilePosition) => (e: MouseEvent) => {
-        eventLogger.logJumpToDef(this.getEventLoggerProps())
+        eventLogger.logJumpToDef()
         if (!window.SOURCEGRAPH_PHABRICATOR_EXTENSION) {
             // Assume it is GitHub, make default j2d be within github pages.
             if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
@@ -569,7 +552,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
     }
 
     private handleFindReferences = (ctx: AbsoluteRepoFilePosition) => (e: MouseEvent) => {
-        eventLogger.logFindRefs(this.getEventLoggerProps())
+        eventLogger.logFindRefs()
     }
 
     private handleDismiss = () => {

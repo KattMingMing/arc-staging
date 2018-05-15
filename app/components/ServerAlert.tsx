@@ -2,7 +2,6 @@ import Icon from '@sourcegraph/icons/lib/CircleChevronRight'
 import CloseIcon from '@sourcegraph/icons/lib/Close'
 import * as React from 'react'
 import storage from '../../extension/storage'
-import { eventLogger } from '../util/context'
 
 interface Props {
     onClose: () => void
@@ -14,10 +13,6 @@ interface Props {
  * to get code intelligence and search on private code.
  */
 export class NeedsServerConfigurationAlert extends React.Component<Props, {}> {
-    public componentDidMount(): void {
-        eventLogger.logServerInstallBannerViewed()
-    }
-
     private sync(): void {
         storage.setSync({ [this.props.alertKey]: true }, () => {
             this.props.onClose()
@@ -25,12 +20,10 @@ export class NeedsServerConfigurationAlert extends React.Component<Props, {}> {
     }
 
     private onClicked = () => {
-        eventLogger.logServerInstallBannerClicked()
         this.sync()
     }
 
     private onClose = () => {
-        eventLogger.logServerInstallBannerDismissed()
         this.sync()
     }
 

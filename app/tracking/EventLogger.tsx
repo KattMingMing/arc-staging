@@ -1,146 +1,113 @@
+import uuid from 'uuid'
+import storage from '../../extension/storage'
 import { logUserEvent } from '../backend/userEvents'
-import { eventTrackingEnabled, getPlatformName, isE2ETest } from '../util/context'
+import { isInPage } from '../context'
+import { eventTrackingEnabled } from '../util/context'
 
-export abstract class EventLogger {
-    public logHover(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Hover', 'SymbolHovered', eventProperties)
-        // TODO(farhan): log a code intelligence event instead of page view.
-        if (eventTrackingEnabled) {
-            logUserEvent('CODEINTELINTEGRATION')
-        }
+const uidKey = 'sourcegraphAnonymousUid'
+
+/**
+ * Deprecated, only used to migrate user IDs from old extension cookies.
+ */
+const inspectTelligentCookie = (): string[] | null => {
+    const cookieName = '_te_'
+    const matcher = new RegExp(cookieName + 'id\\.[a-f0-9]+=([^;]+);?')
+    const match = window.document.cookie.match(matcher)
+    if (match && match[1]) {
+        return match[1].split('.')
+    } else {
+        return null
     }
+}
 
-    public logClick(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'TooltipDocked', eventProperties)
-    }
+/**
+ * Deprecated, only used to migrate user IDs from old extension cookies.
+ */
+const getTelligentDuid = (): string | null => {
+    const cookieProps = inspectTelligentCookie()
+    return cookieProps ? cookieProps[0] : null
+}
 
-    public logJumpToDef(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'GoToDefClicked', eventProperties)
-        if (eventTrackingEnabled) {
-            logUserEvent('CODEINTELINTEGRATION')
-        }
-    }
+export class EventLogger {
+    private uid: string
 
-    public logFindRefs(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'FindRefsClicked', eventProperties)
-        if (eventTrackingEnabled) {
-            logUserEvent('CODEINTELINTEGRATION')
-        }
-    }
-
-    public logSearch(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'SearchClicked', eventProperties)
-    }
-
-    public logOpenFile(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'FileOpened', eventProperties)
-    }
-
-    public logAuthClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'AuthRedirected', eventProperties)
-    }
-
-    public logSourcegraphSearch(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'SourcegraphSearchClicked', eventProperties)
-    }
-
-    public logSourcegraphSearchTabClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'SourcegraphSearchTabClicked', eventProperties)
-    }
-
-    public logOpenOnSourcegraphButtonClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'OpenOnSourcegraphClicked', eventProperties)
-    }
-
-    public logViewRepositoryClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'ViewRepositoryClicked', eventProperties)
-    }
-
-    public logViewPullRequestClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'ViewPullRequestClicked', eventProperties)
-    }
-
-    public logOpenPullRequestClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'OpenPullRequestClicked', eventProperties)
-    }
-
-    public logSourcegraphRepoSearchToggled(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'SourcegraphRepoSearchToggleClicked', eventProperties)
-    }
-
-    public logSourcegraphRepoSearchSubmitted(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'SourcegraphRepoSearchSubmitted', eventProperties)
-    }
-
-    public logFileTreeToggleClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'FileTreeToggled', eventProperties)
-    }
-
-    public logFileTreeItemClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'FileTreeItemSelected', eventProperties)
-    }
-
-    public logExtensionConnected(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Success', 'BrowserExtensionConnectedToServer', eventProperties)
-    }
-
-    public logServerInstallBannerViewed(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'View', 'ServerInstallBannerViewed', eventProperties)
-    }
-
-    public logServerInstallBannerClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'ServerInstallBannerClicked', eventProperties)
-    }
-
-    public logServerInstallBannerDismissed(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'ServerInstallBannerDismissClicked', eventProperties)
-    }
-
-    public logServerEnableRepositoryBannerViewed(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'View', 'ServerEnableRepositoryBannerViewed', eventProperties)
-    }
-
-    public logServerEnableRepositoryBannerClicked(eventProperties: any = {}): void {
-        this.logEventForCategory('BrowserExtension', 'Click', 'ServerEnableRepositoryBannerClicked', eventProperties)
-    }
-
-    public logServerEnableRepositoryBannerDismissClicked(eventProperties: any = {}): void {
-        this.logEventForCategory(
-            'BrowserExtension',
-            'Click',
-            'ServerEnableRepositoryBannerDismissClicked',
-            eventProperties
+    constructor() {
+        // Fetch user ID on initial load.
+        this.getAnonUserID().then(
+            () => {
+                /* noop */
+            },
+            () => {
+                /* noop */
+            }
         )
     }
 
-    protected abstract sendEvent(eventAction: string, eventProps: any): void
+    /**
+     * Generate a new anonymous user ID if one has not yet been set and stored.
+     */
+    private generateAnonUserID = (): string => {
+        const telID = getTelligentDuid()
+        if (telID !== null) {
+            return telID
+        }
+        return uuid.v4()
+    }
 
-    private defaultProperties(): any {
-        return {
-            path_name: window.location.pathname,
-            Platform: getPlatformName(),
+    /**
+     * Get the anonymous identifier for this user (used to allow site admins
+     * on a Sourcegraph instance to see a count of unique users on a daily,
+     * weekly, and monthly basis).
+     *
+     * Not used at all for public/sourcegraph.com usage.
+     */
+    private getAnonUserID = (): Promise<string> =>
+        new Promise(resolve => {
+            if (this.uid) {
+                resolve(this.uid)
+                return
+            }
+
+            if (isInPage) {
+                let id = localStorage.getItem(uidKey)
+                if (id === null) {
+                    id = this.generateAnonUserID()
+                    localStorage.setItem(uidKey, id)
+                }
+                this.uid = id
+                resolve(this.uid)
+            } else {
+                storage.getSyncItem(uidKey, ({ sourcegraphAnonymousUid }) => {
+                    if (sourcegraphAnonymousUid === '') {
+                        sourcegraphAnonymousUid = this.generateAnonUserID()
+                        storage.setSync({ sourcegraphAnonymousUid })
+                    }
+                    this.uid = sourcegraphAnonymousUid
+                    resolve(sourcegraphAnonymousUid)
+                })
+            }
+        })
+
+    private logCodeIntelligenceEvent(): void {
+        if (eventTrackingEnabled) {
+            this.getAnonUserID().then(
+                anonUserId => logUserEvent('CODEINTELINTEGRATION', anonUserId),
+                () => {
+                    /* noop */
+                }
+            )
         }
     }
 
-    private logEventForCategory(
-        eventCategory: string,
-        eventAction: string,
-        eventLabel: string,
-        eventProperties: any = {}
-    ): void {
-        if (isE2ETest()) {
-            return
-        }
+    public logHover(): void {
+        this.logCodeIntelligenceEvent()
+    }
 
-        const decoratedEventProps = {
-            ...eventProperties,
-            ...this.defaultProperties(),
+    public logJumpToDef(): void {
+        this.logCodeIntelligenceEvent()
+    }
 
-            eventLabel,
-            eventCategory,
-            eventAction,
-        }
-
-        this.sendEvent(eventAction, decoratedEventProps)
+    public logFindRefs(): void {
+        this.logCodeIntelligenceEvent()
     }
 }

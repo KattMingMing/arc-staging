@@ -37,7 +37,8 @@ function requestGraphQL(
     ctx: RequestContext,
     request: string,
     variables: any = {},
-    urlsToTry: string[]
+    urlsToTry: string[],
+    retry = true
 ): Observable<GQL.IGraphQLResponseRoot> {
     let urls: string[] = ctx.blacklist ? without(urlsToTry, ...ctx.blacklist) : urlsToTry
     const defaultUrl = repoUrlCache[ctx.repoKey] || sourcegraphUrl
@@ -82,7 +83,7 @@ function requestGraphQL(
             return response
         })
         .catch(err => {
-            if (urlsToTry.length === 1) {
+            if (!retry || urls.length === 1) {
                 delete repoUrlCache[ctx.repoKey]
                 // We just tried the last url
                 throw err
@@ -125,4 +126,20 @@ export function queryGraphQL(ctx: RequestContext, query: string, variables: any 
  */
 export function mutateGraphQL(ctx: RequestContext, mutation: string, variables: any = {}): Observable<MutationResult> {
     return requestGraphQL(ctx, mutation, variables, serverUrls) as Observable<MutationResult>
+}
+
+/**
+ * Does a GraphQL mutation to the Sourcegraph GraphQL API running under `/.api/graphql`.
+ * Unlike mutateGraphQL, if the first request fails, this will not retry with the rest of the server URLs.
+ *
+ * @param mutation The GraphQL mutation
+ * @param variables A key/value object with variable values
+ * @return Observable That emits the result or errors if the HTTP request failed
+ */
+export function mutateGraphQLNoRetry(
+    ctx: RequestContext,
+    mutation: string,
+    variables: any = {}
+): Observable<MutationResult> {
+    return requestGraphQL(ctx, mutation, variables, serverUrls, false) as Observable<MutationResult>
 }

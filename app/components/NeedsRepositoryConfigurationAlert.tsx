@@ -3,7 +3,6 @@ import CloseIcon from '@sourcegraph/icons/lib/Close'
 import * as React from 'react'
 import storage from '../../extension/storage'
 import { sourcegraphUrl } from '../util/context'
-import { eventLogger } from '../util/context'
 
 interface Props {
     onClose: () => void
@@ -16,10 +15,6 @@ interface Props {
  * on this site.
  */
 export class NeedsRepositoryConfigurationAlert extends React.Component<Props, {}> {
-    public componentDidMount(): void {
-        eventLogger.logServerEnableRepositoryBannerViewed()
-    }
-
     private sync = () => {
         const obj = { [this.props.alertKey]: { [this.props.repoPath]: true } }
         storage.setSync(obj, () => {
@@ -28,12 +23,10 @@ export class NeedsRepositoryConfigurationAlert extends React.Component<Props, {}
     }
 
     private onClick = () => {
-        eventLogger.logServerEnableRepositoryBannerClicked()
         this.sync()
     }
 
     private onClose = () => {
-        eventLogger.logServerEnableRepositoryBannerDismissClicked()
         this.sync()
     }
 

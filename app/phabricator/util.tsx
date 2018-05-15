@@ -662,23 +662,6 @@ export function metaClickOverride(): void {
     }
 }
 
-const USERNAME_URL_PATTERN = /\/p\/([A-Z0-9-]+)/i
-export function getPhabricatorUsername(): string | null {
-    const coreMenuItems = document.getElementsByClassName('phabricator-core-user-menu')
-    for (const coreMenuItem of Array.from(coreMenuItems)) {
-        const possiblePersonUrl = coreMenuItem.getAttribute('href')
-        if (!possiblePersonUrl) {
-            continue
-        }
-        const match = USERNAME_URL_PATTERN.exec(possiblePersonUrl)
-        if (!match) {
-            continue
-        }
-        return match[1]
-    }
-    return null
-}
-
 export function normalizeRepoPath(origin: string): string {
     let repoPath = origin
     repoPath = repoPath.replace('\\', '')

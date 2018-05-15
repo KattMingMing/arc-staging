@@ -3,7 +3,7 @@ import { getURL } from '../../extension/extension'
 import storage from '../../extension/storage'
 import * as github from '../github/util'
 import { listAllSearchResults, resolveRev } from '../repo/backend'
-import { eventLogger, getPlatformName, repositorySearchEnabled, sourcegraphUrl } from '../util/context'
+import { getPlatformName, repositorySearchEnabled, sourcegraphUrl } from '../util/context'
 import { insertAfter } from '../util/dom'
 
 const SOURCEGRAPH_SEARCH_TOGGLE_ID = 'sourcegraph-search-toggle'
@@ -73,7 +73,6 @@ function sourcegraphSearchToggle(toggled: boolean): void {
         container.style.cursor = 'pointer'
         container.onclick = () => {
             toggled = !toggled
-            eventLogger.logSourcegraphRepoSearchToggled({ toggled })
             storage.setSync({ sourcegraphRepoSearchToggled: toggled })
             a.setAttribute('aria-label', toggled ? ENABLED_HOVER_TEXT : DISABLED_HOVER_TEXT)
             icon.style.opacity = toggled ? '1.0' : '0.5'
@@ -113,7 +112,6 @@ function sourcegraphSearchToggle(toggled: boolean): void {
                     const searchQuery = labelInput.value
                     const linkProps = getSourcegraphURLProps(searchQuery)
                     if (linkProps) {
-                        eventLogger.logSourcegraphRepoSearchSubmitted({ ...linkProps, query: searchQuery })
                         window.open(linkProps.url, '_blank')
                     }
                 }
@@ -150,9 +148,6 @@ function renderSourcegraphSearchResultCountItem(): void {
                     resultListItem.id = 'sourcegraph-search-result-count'
                     resultListItem.textContent = 'Code (Sourcegraph)'
                     resultListItem.target = '_blank'
-                    resultListItem.onclick = () => {
-                        eventLogger.logSourcegraphRepoSearchSubmitted({ ...linkProps, query: searchQuery })
-                    }
                     resultListItem.appendChild(resultCount)
                     insertAfter(resultListItem, menuContainer.firstElementChild!)
                 }

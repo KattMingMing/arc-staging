@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { render } from 'react-dom'
 import { Subject } from 'rxjs/Subject'
-import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
 import { Alerts } from '../components/Alerts'
 import { BlobAnnotator } from '../components/BlobAnnotator'
@@ -11,9 +10,8 @@ import { WithResolvedRev } from '../components/WithResolvedRev'
 import { findElementWithOffset, getTargetLineAndOffset, GitHubBlobUrl } from '../github/index'
 import { CodeCell } from '../repo/index'
 import { getTableDataCell, hideTooltip } from '../repo/tooltips'
-import { ExtensionEventLogger } from '../tracking/ExtensionEventLogger'
 import { RepoRevSidebar } from '../tree/RepoRevSidebar'
-import { eventLogger, getPlatformName, repositoryFileTreeEnabled, sourcegraphUrl } from '../util/context'
+import { getPlatformName, repositoryFileTreeEnabled, sourcegraphUrl } from '../util/context'
 
 import {
     createBlobAnnotatorMount,
@@ -58,12 +56,6 @@ window.addEventListener('pjax:end', () => {
 export function injectGitHubApplication(marker: HTMLElement): void {
     document.body.appendChild(marker)
     inject()
-    runtime.sendMessage({ type: 'getIdentity' }, identity => {
-        if (identity) {
-            const e = eventLogger as ExtensionEventLogger
-            e.updatePropsForUser(identity)
-        }
-    })
 }
 
 function inject(): void {

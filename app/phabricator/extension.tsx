@@ -1,10 +1,9 @@
 import '../util/polyfill'
 
-import { InPageEventLogger } from '../tracking/InPageEventLogger'
-import { eventLogger, getDomainUsername, setEventLogger, setSourcegraphUrl } from '../util/context'
+import { setSourcegraphUrl } from '../util/context'
 import { getPhabricatorCSS, getSourcegraphURLFromConduit } from './backend'
 import { injectPhabricatorBlobAnnotators } from './inject'
-import { expanderListen, getPhabricatorUsername, metaClickOverride, setupPageLoadListener } from './util'
+import { expanderListen, metaClickOverride, setupPageLoadListener } from './util'
 
 // NOTE: injectModules is idempotent, so safe to call multiple times on the same page.
 function injectModules(): void {
@@ -17,12 +16,6 @@ function injectModules(): void {
 }
 
 export function init(): void {
-    const phabricatorUsername = getPhabricatorUsername()
-    if (phabricatorUsername !== null) {
-        const e = eventLogger as InPageEventLogger
-        e.setUserId(getDomainUsername(window.SOURCEGRAPH_URL!, phabricatorUsername))
-    }
-
     /**
      * This is the main entry point for the phabricator in-page JavaScript plugin.
      */
@@ -74,5 +67,4 @@ const url = window.SOURCEGRAPH_URL || window.localStorage.SOURCEGRAPH_URL
 if (url) {
     setSourcegraphUrl(url)
 }
-setEventLogger(new InPageEventLogger())
 init()

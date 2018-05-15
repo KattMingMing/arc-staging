@@ -24,6 +24,7 @@ export interface StorageItems {
     repoLocations: RepoLocations
     phabricatorMappings: PhabricatorMapping[]
     openFileOnSourcegraph: boolean
+    sourcegraphAnonymousUid: string
 }
 
 export const defaultStorageItems: StorageItems = {
@@ -43,6 +44,7 @@ export const defaultStorageItems: StorageItems = {
     repoLocations: {},
     phabricatorMappings: [],
     openFileOnSourcegraph: true,
+    sourcegraphAnonymousUid: '',
 }
 
 export type StorageChange = { [key in keyof StorageItems]: chrome.storage.StorageChange }

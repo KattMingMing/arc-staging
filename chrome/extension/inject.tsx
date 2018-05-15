@@ -5,10 +5,8 @@ import '../../app/util/polyfill'
 import { injectGitHubApplication } from '../../app/github/inject'
 import { injectPhabricatorApplication } from '../../app/phabricator/app'
 import { injectSourcegraphApp } from '../../app/sourcegraph/inject'
-import { ExtensionEventLogger } from '../../app/tracking/ExtensionEventLogger'
 import {
     isOnlySourcegraphDotCom,
-    setEventLogger,
     setEventTrackingEnabled,
     setRepositoryFileTreeEnabled,
     setRepositorySearchEnabled,
@@ -19,10 +17,6 @@ import {
 import { getURL } from '../../extension/extension'
 import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
-
-// set the event logger before anything else proceeds, to avoid logging events before we have it set
-const eventLogger = new ExtensionEventLogger()
-setEventLogger(eventLogger)
 
 /**
  * Main entry point into browser extension.
@@ -58,21 +52,9 @@ function injectApplication(): void {
         const ogSiteName = document.head.querySelector(`meta[property='og:site_name']`) as HTMLMetaElement
         const isGitHubEnterprise = ogSiteName ? ogSiteName.content === 'GitHub Enterprise' : false
 
-        let codeHost = ''
-
-        if (isGitHub) {
-            codeHost = 'github'
-        } else if (isGitHubEnterprise) {
-            codeHost = 'github-enterprise'
-        } else if (isPhabricator) {
-            codeHost = 'phabricator'
-        }
-
         if (isOnlySourcegraphDotCom(items.serverUrls) && !items.hasSeenServerModal) {
             runtime.sendMessage({ type: 'setBadgeText', payload: '1' })
         }
-
-        eventLogger.setCodeHost(codeHost)
 
         if (!isSourcegraphServer && !document.getElementById('ext-style-sheet')) {
             if (window.safari) {

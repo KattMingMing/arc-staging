@@ -1,7 +1,3 @@
-import { ExtensionEventLogger } from '../../app/tracking/ExtensionEventLogger'
-import { eventLogger } from '../../app/util/context'
-import * as runtime from '../../extension/runtime'
-
 export function injectSourcegraphApp(marker: HTMLElement): void {
     if (document.getElementById(marker.id)) {
         return
@@ -9,16 +5,6 @@ export function injectSourcegraphApp(marker: HTMLElement): void {
 
     window.addEventListener('load', () => {
         dispatchSourcegraphEvents(marker)
-    })
-
-    document.addEventListener('sourcegraph:identify', (ev: CustomEvent) => {
-        if (ev && ev.detail) {
-            const e = eventLogger as ExtensionEventLogger
-            e.updatePropsForUser(ev.detail)
-            runtime.sendMessage({ type: 'setIdentity', payload: { identity: ev.detail } })
-        } else {
-            console.error('sourcegraph:identify missing details')
-        }
     })
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {

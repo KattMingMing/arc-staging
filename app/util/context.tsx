@@ -2,14 +2,7 @@ import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
 
-export let eventLogger: EventLogger
-
-export function setEventLogger(logger: EventLogger): void {
-    if (eventLogger) {
-        console.error(`event logger is being set twice, currently is ${eventLogger} and being set to ${logger}`)
-    }
-    eventLogger = logger
-}
+export let eventLogger = new EventLogger()
 
 export let sourcegraphUrl = window.localStorage.SOURCEGRAPH_URL || window.SOURCEGRAPH_URL || 'https://sourcegraph.com'
 
