@@ -110,6 +110,9 @@ Click reload for Sourcegraph at `about:debugging`
 
 ### Safari
 
+* Make sure developer tools are enabled
+  * Open Safari > Preferences (or `Cmd+,`) and click Advanced
+  * Check "Show Develop menu in menu bar"
 * Open `Develop -> Show Extension Builder`
 * Click the `+` at the bottom left of the Extension Builder and select `browser-extension/Sourcegraph.safariextension`
 * Click `Install`
