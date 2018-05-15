@@ -112,7 +112,11 @@ Click reload for Sourcegraph at `about:debugging`
 
 * Open `Develop -> Show Extension Builder`
 * Click the `+` at the bottom left of the Extension Builder and select `browser-extension/Sourcegraph.safariextension`
-* Click `Install`
+* Click `Install` and `Add extension...` and open `~/path/to/browser-extension/Sourcegraph.safariextension`
+* To test against localhost, follow https://about.sourcegraph.com/docs/features/safari-extension:
+  * Set `"corsOrigin": "https://github.com"` in your localhost site configuration
+  * Download the `ngrok` executable https://dashboard.ngrok.com/get-started, authenticate, and run `./ngrok localhost 3080`
+  * Visit the URL it spits out, sign in, and add the URL to your Safari extension (to the left of the address bar - don't change Settings in the Extension Builder)
 
 ## Testing
 
