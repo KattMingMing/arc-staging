@@ -1,3 +1,4 @@
+import * as path from 'path'
 import * as runtime from '../../extension/runtime'
 import storage from '../../extension/storage'
 import { EventLogger } from '../tracking/EventLogger'
@@ -83,61 +84,286 @@ export function setRepositoryFileTreeEnabled(enabled: boolean): void {
 }
 
 /**
- * supportedExtensions are the file extensions
- * the extension will apply annotations to
+ * getModeFromPath returns the LSP mode for the provided file path.
  */
-export const supportedExtensions = new Set<string>([
-    'go', // Golang
-    'ts',
-    'tsx', // TypeScript
-    'js',
-    'jsx', // JavaScript
-    'java', // Java
-    'py', // Python
-    'php', // PHP
-    'bash', // Bash
-    'clojure', // Clojure
-    'cpp', // C++
-    'cs', // C#
-    'css', // CSS
-    'elixir', // Elixir
-    'html', // HTML
-    'lua', // Lua
-    'ocaml', // OCaml
-    'r', // R
-    'ruby', // Ruby
-    'rust', // Rust
-])
+export function getModeFromPath(filePath: string): string | undefined {
+    const fileName = path.basename(filePath)
+    const ext = getPathExtension(filePath)
+
+    return getModeFromExactFilename(fileName) || getModeFromExtension(ext)
+}
 
 /**
- * supportedFilenames are the filenames
- * the extension will apply annotations to
+ * getModeFromExactFilename returns the LSP mode for the
+ * provided file name (e.g. "dockerfile")
+ *
+ * Cherry picked from https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
  */
-export const supportedFilenames = new Set<string>(['Dockerfile'])
+function getModeFromExactFilename(fileName: string): string | undefined {
+    switch (fileName.toLowerCase()) {
+        case 'dockerfile':
+            return 'dockerfile'
+
+        default:
+            return undefined
+    }
+}
 
 /**
  * getModeFromExtension returns the LSP mode for the
  * provided file extension (e.g. "jsx")
+ *
+ * Cherry picked from https://github.com/isagalaev/highlight.js/tree/master/src/languages
+ * and https://github.com/github/linguist/blob/master/lib/linguist/languages.yml.
  */
-export function getModeFromExtension(ext: string): string {
-    switch (ext) {
+function getModeFromExtension(ext: string): string | undefined {
+    switch (ext.toLowerCase()) {
+        // Ada
+        case 'adb':
+        case 'ada':
+        case 'ads':
+            return 'ada'
+
+        // Actionscript
+        case 'as':
+            return 'actionscript'
+
+        // Apache
+        case 'apacheconf':
+            return 'apache'
+
+        // Applescript
+        case 'applescript':
+        case 'scpt':
+            return 'applescript'
+
+        // Bash
+        case 'sh':
+        case 'bash':
+        case 'zsh':
+            return 'bash'
+
+        // Clojure
+        case 'clj':
+        case 'cljs':
+        case 'cljx':
+            return 'clojure'
+
+        // CSS
+        case 'css':
+            return 'css'
+
+        // CMake
+        case 'cmake':
+        case 'cmake.in':
+        case 'in': // TODO(john): hack b/c we don't properly parse extensions w/ '.' in them
+            return 'cmake'
+
+        // Coffeescript
+        case 'coffee':
+        case 'cake':
+        case 'cson':
+        case 'cjsx':
+        case 'iced':
+            return 'coffescript'
+
+        // C#
+        case 'cs':
+        case 'csx':
+            return 'cs'
+
+        // C++
+        case 'c':
+        case 'cc':
+        case 'cpp':
+        case 'c++':
+        case 'h++':
+        case 'hh':
+        case 'h':
+            return 'cpp'
+
+        // Dart
+        case 'dart':
+            return 'dart'
+
+        // Diff
+        case 'diff':
+        case 'patch':
+            return 'diff'
+
+        // Django
+        case 'jinja':
+            return 'django'
+
+        // DOS
+        case 'bat':
+        case 'cmd':
+            return 'dos'
+
+        // Elixir
+        case 'ex':
+        case 'exs':
+            return 'elixir'
+
+        // Elm
+        case 'elm':
+            return 'elm'
+
+        // Erlang
+        case 'erl':
+            return 'erlang'
+
+        // Fortran
+        case 'f':
+        case 'for':
+        case 'frt':
+        case 'fr':
+        case 'fs':
+        case 'forth':
+        case '4th':
+        case 'fth':
+            return 'fortran'
+
+        // F#
+        case 'fs':
+            return 'fsharp'
+
+        // Go
         case 'go':
             return 'go'
-        case 'ts':
-        case 'tsx':
-            return 'typescript'
-        case 'js':
-        case 'jsx':
-            return 'javascript'
+
+        // HAML
+        case 'haml':
+            return 'haml'
+
+        // Handlebars
+        case 'hbs':
+        case 'handlebars':
+            return 'handlebars'
+
+        // Haskell
+        case 'hs':
+        case 'hsc':
+            return 'haskell'
+
+        // HTML
+        case 'htm':
+        case 'html':
+        case 'xhtml':
+            return 'html'
+
+        // INI
+        case 'ini':
+        case 'cfg':
+        case 'prefs':
+        case 'pro':
+        case 'properties':
+            return 'ini'
+
+        // Java
         case 'java':
             return 'java'
-        case 'py':
-        case 'pyc':
-        case 'pyd':
-        case 'pyo':
-        case 'pyw':
-        case 'pyz':
-            return 'python'
+
+        // JavaScript
+        case 'js':
+        case 'jsx':
+        case 'es':
+        case 'es6':
+        case 'jss':
+        case 'jsm':
+            return 'javascript'
+
+        // JSON
+        case 'json':
+        case 'sublime_metrics':
+        case 'sublime_session':
+        case 'sublime-keymap':
+        case 'sublime-mousemap':
+        case 'sublime-project':
+        case 'sublime-settings':
+        case 'sublime-workspace':
+            return 'json'
+
+        // Julia
+        case 'jl':
+            return 'julia'
+
+        // Kotlin
+        case 'kt':
+        case 'ktm':
+        case 'kts':
+            return 'kotlin'
+
+        // Less
+        case 'less':
+            return 'less'
+
+        // Lisp
+        case 'lisp':
+        case 'asd':
+        case 'cl':
+        case 'lsp':
+        case 'l':
+        case 'ny':
+        case 'podsl':
+        case 'sexp':
+        case 'el':
+            return 'lisp'
+
+        // Lua
+        case 'lua':
+        case 'fcgi':
+        case 'nse':
+        case 'pd_lua':
+        case 'rbxs':
+        case 'wlua':
+            return 'lua'
+
+        // Makefile
+        case 'mk':
+        case 'mak':
+            return 'makefile'
+
+        // Markdown
+        case 'md':
+        case 'mkdown':
+        case 'mkd':
+            return 'markdown'
+
+        // nginx
+        case 'nginxconf':
+            return 'nginx'
+
+        // Objective-C
+        case 'm':
+        case 'mm':
+            return 'objectivec'
+
+        // OCaml
+        case 'ml':
+        case 'eliom':
+        case 'eliomi':
+        case 'ml4':
+        case 'mli':
+        case 'mll':
+        case 'mly':
+            return 'ocaml'
+
+        // Perl
+        case 'pl':
+        case 'al':
+        case 'cgi':
+        case 'fcgi':
+        case 'perl':
+        case 'ph':
+        case 'plx':
+        case 'pm':
+        case 'pod':
+        case 'psgi':
+        case 't':
+            return 'perl'
+
+        // PHP
         case 'php':
         case 'phtml':
         case 'php3':
@@ -147,53 +373,33 @@ export function getModeFromExtension(ext: string): string {
         case 'php7':
         case 'phps':
             return 'php'
-        case 'sh':
-        case 'bash':
-        case 'zsh':
-            return 'bash'
-        case 'clj':
-        case 'cljs':
-        case 'cljx':
-            return 'clojure'
-        case 'c':
-        case 'cc':
-        case 'cpp':
-        case 'c++':
-        case 'h++':
-        case 'hh':
-        case 'h':
-            return 'cpp'
-        case 'cs':
-        case 'csx':
-            return 'cs'
-        case 'css':
-            return 'css'
-        case 'ex':
-        case 'exs':
-            return 'elixir'
-        case 'htm':
-        case 'html':
-        case 'xhtml':
-            return 'html'
-        case 'lua':
-        case 'fcgi':
-        case 'nse':
-        case 'pd_lua':
-        case 'rbxs':
-        case 'wlua':
-            return 'lua'
-        case 'ml':
-        case 'eliom':
-        case 'eliomi':
-        case 'ml4':
-        case 'mli':
-        case 'mll':
-        case 'mly':
-            return 'ocaml'
+
+        // Powershell
+        case 'ps1':
+        case 'psd1':
+        case 'psm1':
+            return 'powershell'
+
+        // Proto
+        case 'proto':
+            return 'protobuf'
+
+        // Python
+        case 'py':
+        case 'pyc':
+        case 'pyd':
+        case 'pyo':
+        case 'pyw':
+        case 'pyz':
+            return 'python'
+
+        // R
         case 'r':
         case 'rd':
         case 'rsx':
             return 'r'
+
+        // Ruby
         case 'rb':
         case 'builder':
         case 'eye':
@@ -215,11 +421,176 @@ export function getModeFromExtension(ext: string): string {
         case 'thor':
         case 'watchr':
             return 'ruby'
+
+        // Rust
         case 'rs':
         case 'rs.in':
             return 'rust'
+
+        // SASS
+        case 'sass':
+        case 'scss':
+            return 'scss'
+
+        // Scala
+        case 'sbt':
+        case 'sc':
+        case 'scala':
+            return 'scala'
+
+        // Scheme
+        case 'scm':
+        case 'sch':
+        case 'sls':
+        case 'sps':
+        case 'ss':
+            return 'scheme'
+
+        // Smalltalk
+        case 'st':
+            return 'smalltalk'
+
+        // SQL
+        case 'sql':
+            return 'sql'
+
+        // Stylus
+        case 'styl':
+            return 'stylus'
+
+        // Swift
+        case 'swift':
+            return 'swift'
+
+        // Thrift
+        case 'thrift':
+            return 'thrift'
+
+        // TypeScript
+        case 'ts':
+        case 'tsx':
+            return 'typescript'
+
+        // Twig
+        case 'twig':
+            return 'twig'
+
+        // Visual Basic
+        case 'vb':
+            return 'vbnet'
+        case 'vbs':
+            return 'vbscrip'
+
+        // Verilog
+        case 'v':
+        case 'veo':
+            return 'verilog'
+
+        // VIM
+        case 'vim':
+            return 'vim'
+
+        // XML
+        case 'xml':
+        case 'adml':
+        case 'admx':
+        case 'ant':
+        case 'axml':
+        case 'builds':
+        case 'ccxml':
+        case 'clixml':
+        case 'cproject':
+        case 'csl':
+        case 'csproj':
+        case 'ct':
+        case 'dita':
+        case 'ditamap':
+        case 'ditaval':
+        case 'dll.config':
+        case 'dotsettings':
+        case 'filters':
+        case 'fsproj':
+        case 'fxml':
+        case 'glade':
+        case 'gml':
+        case 'grxml':
+        case 'iml':
+        case 'ivy':
+        case 'jelly':
+        case 'jsproj':
+        case 'kml':
+        case 'launch':
+        case 'mdpolicy':
+        case 'mjml':
+        case 'mod':
+        case 'mxml':
+        case 'nproj':
+        case 'nuspec':
+        case 'odd':
+        case 'osm':
+        case 'pkgproj':
+        case 'plist':
+        case 'pluginspec':
+        case 'props':
+        case 'ps1xml':
+        case 'psc1':
+        case 'pt':
+        case 'rdf':
+        case 'resx':
+        case 'rss':
+        case 'sch':
+        case 'scxml':
+        case 'sfproj':
+        case 'srdf':
+        case 'storyboard':
+        case 'stTheme':
+        case 'sublime-snippet':
+        case 'targets':
+        case 'tmCommand':
+        case 'tml':
+        case 'tmLanguage':
+        case 'tmPreferences':
+        case 'tmSnippet':
+        case 'tmTheme':
+        case 'ts':
+        case 'tsx':
+        case 'ui':
+        case 'urdf':
+        case 'ux':
+        case 'vbproj':
+        case 'vcxproj':
+        case 'vsixmanifest':
+        case 'vssettings':
+        case 'vstemplate':
+        case 'vxml':
+        case 'wixproj':
+        case 'wsdl':
+        case 'wsf':
+        case 'wxi':
+        case 'wxl':
+        case 'wxs':
+        case 'x3d':
+        case 'xacro':
+        case 'xaml':
+        case 'xib':
+        case 'xlf':
+        case 'xliff':
+        case 'xmi':
+        case 'xml.dist':
+        case 'xproj':
+        case 'xsd':
+        case 'xspec':
+        case 'xul':
+        case 'zcml':
+            return 'xml'
+
+        // YAML
+        case 'yml':
+        case 'yaml':
+            return 'yaml'
+
         default:
-            return 'unknown'
+            return undefined
     }
 }
 
