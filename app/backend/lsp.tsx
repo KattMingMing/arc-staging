@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
-import { getModeFromExtension, getPathExtension, repoUrlCache, supportedExtensions } from '../util/context'
+import { getModeFromPath, repoUrlCache, supportedModes } from '../util/context'
 import { memoizeObservable } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
 import { getHeaders } from './headers'
@@ -25,7 +25,7 @@ function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
             method: 'initialize',
             params: {
                 rootUri: `git://${ctx.repoPath}?${ctx.commitID}`,
-                mode: `${getModeFromExtension(getPathExtension(path))}`,
+                mode: `${getModeFromPath(path)}`,
             },
         },
         {
@@ -44,8 +44,8 @@ function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
 }
 
 export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Observable<Hover> => {
-    const ext = getPathExtension(pos.filePath)
-    if (!supportedExtensions.has(ext)) {
+    const mode = getModeFromPath(pos.filePath)
+    if (!mode || !supportedModes.has(mode)) {
         return Observable.of({ contents: [] })
     }
 
@@ -88,6 +88,11 @@ export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Obs
 }, makeRepoURI)
 
 export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition): Observable<Definition> => {
+    const mode = getModeFromPath(pos.filePath)
+    if (!mode || !supportedModes.has(mode)) {
+        return Observable.of([])
+    }
+
     const body = wrapLSP(
         {
             method: 'textDocument/definition',

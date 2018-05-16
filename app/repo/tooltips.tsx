@@ -4,7 +4,7 @@ import marked from 'marked'
 import { Hover, MarkedString } from 'vscode-languageserver-types'
 import { makeCloseIcon, makeSourcegraphIcon } from '../components/Icons'
 import { AbsoluteRepoFile, AbsoluteRepoFilePosition, parseBrowserRepoURL } from '../repo/index'
-import { getModeFromExtension, sourcegraphUrl } from '../util/context'
+import { getModeFromPath, sourcegraphUrl } from '../util/context'
 import { toAbsoluteBlobURL } from '../util/url'
 
 registerLanguage('go', require('highlight.js/lib/languages/go'))
@@ -13,6 +13,19 @@ registerLanguage('typescript', require('highlight.js/lib/languages/typescript'))
 registerLanguage('java', require('highlight.js/lib/languages/java'))
 registerLanguage('python', require('highlight.js/lib/languages/python'))
 registerLanguage('php', require('highlight.js/lib/languages/php'))
+registerLanguage('bash', require('highlight.js/lib/languages/bash'))
+registerLanguage('clojure', require('highlight.js/lib/languages/clojure'))
+registerLanguage('cpp', require('highlight.js/lib/languages/cpp'))
+registerLanguage('cs', require('highlight.js/lib/languages/cs'))
+registerLanguage('css', require('highlight.js/lib/languages/css'))
+registerLanguage('dockerfile', require('highlight.js/lib/languages/dockerfile'))
+registerLanguage('elixir', require('highlight.js/lib/languages/elixir'))
+registerLanguage('html', require('highlight.js/lib/languages/xml'))
+registerLanguage('lua', require('highlight.js/lib/languages/lua'))
+registerLanguage('ocaml', require('highlight.js/lib/languages/ocaml'))
+registerLanguage('r', require('highlight.js/lib/languages/r'))
+registerLanguage('ruby', require('highlight.js/lib/languages/ruby'))
+registerLanguage('rust', require('highlight.js/lib/languages/rust'))
 
 let tooltip: HTMLElement
 let loadingTooltip: HTMLElement
@@ -209,7 +222,7 @@ export function updateTooltip(data: TooltipData, docked: boolean, actions: Actio
         container.className = 'sg-tooltip__title-container'
 
         const tooltipText = document.createElement('DIV')
-        tooltipText.className = `${getModeFromExtension(ctx.filePath)} sg-tooltip__title`
+        tooltipText.className = `${getModeFromPath(ctx.filePath)} sg-tooltip__title`
         tooltipText.appendChild(document.createTextNode(title))
 
         const icon = makeSourcegraphIcon()
