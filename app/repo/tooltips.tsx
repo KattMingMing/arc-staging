@@ -4,8 +4,12 @@ import marked from 'marked'
 import { Hover, MarkedString } from 'vscode-languageserver-types'
 import { makeCloseIcon, makeSourcegraphIcon } from '../components/Icons'
 import { AbsoluteRepoFile, AbsoluteRepoFilePosition, parseBrowserRepoURL } from '../repo/index'
-import { getModeFromPath, sourcegraphUrl } from '../util/context'
+import { getModeFromPath, modeToHighlightJsName, sourcegraphUrl, supportedModes } from '../util/context'
 import { toAbsoluteBlobURL } from '../util/url'
+
+for (const mode of supportedModes) {
+    registerLanguage(mode, require('highlight.js/lib/languages/' + modeToHighlightJsName(mode)))
+}
 
 let tooltip: HTMLElement
 let loadingTooltip: HTMLElement

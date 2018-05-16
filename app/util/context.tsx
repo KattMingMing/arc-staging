@@ -84,6 +84,46 @@ export function setRepositoryFileTreeEnabled(enabled: boolean): void {
 }
 
 /**
+ * supportedModes are the language modes for which hover and definition calls
+ * will be made. Each of these modes corresponds to a built-in
+ * language server.
+ */
+export const supportedModes = new Set<string>([
+    'go',
+    'javascript',
+    'typescript',
+    'java',
+    'python',
+    'php',
+    'bash',
+    'clojure',
+    'cpp',
+    'cs',
+    'css',
+    'dockerfile',
+    'elixir',
+    'html',
+    'lua',
+    'ocaml',
+    'r',
+    'ruby',
+    'rust',
+])
+
+/**
+ * modeToHighlightJsName gets the highlight.js name of the language given a
+ * mode.
+ */
+export function modeToHighlightJsName(mode: string): string {
+    switch (mode) {
+        case 'html':
+            return 'xml'
+        default:
+            return mode
+    }
+}
+
+/**
  * getModeFromPath returns the LSP mode for the provided file path.
  */
 export function getModeFromPath(filePath: string): string | undefined {
