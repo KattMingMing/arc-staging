@@ -425,11 +425,11 @@ function convertConduitRepoToRepoDetails(repo: ConduitRepo): Promise<Phabricator
             const callsignMappings =
                 window.localStorage.PHABRICATOR_CALLSIGN_MAPPINGS || window.PHABRICATOR_CALLSIGN_MAPPINGS
             const details = convertToDetails(repo)
-            if (callsignMappings && details) {
+            if (callsignMappings) {
                 for (const mapping of JSON.parse(callsignMappings)) {
-                    if (mapping.callsign === details.callsign) {
+                    if (mapping.callsign === repo.fields.callsign) {
                         return resolve({
-                            callsign: details.callsign,
+                            callsign: repo.fields.callsign,
                             repoPath: mapping.path,
                         })
                     }
