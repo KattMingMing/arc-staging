@@ -83,24 +83,6 @@ export function toTreeURL(ctx: RepoFile): string {
     return `${url}/${ctx.repoPath}${rev ? '@' + rev : ''}/-/tree/${ctx.filePath}`
 }
 
-export function toEditorURL(repoPath: string, rev?: string, filePath?: string, position?: { line?: number }): string {
-    let query = 'repo=' + encodeURIComponent('ssh://git@' + repoPath + '.git')
-    query += '&vcs=git'
-    if (rev) {
-        query += '&revision=' + encodeURIComponent(rev)
-    }
-    if (filePath) {
-        if (filePath.startsWith('/')) {
-            filePath = filePath.substr(1)
-        }
-        query += '&path=' + encodeURIComponent(filePath)
-    }
-    if (position && position.line) {
-        query += '&selection=' + encodeURIComponent('' + position.line)
-    }
-    return 'https://about.sourcegraph.com/open/#open?' + query
-}
-
 /**
  * Correctly handle use of meta/ctrl/alt keys during onClick events that open new pages
  */
