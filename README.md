@@ -172,11 +172,12 @@ $ make deploy
 * ALWAYS INCLUDE NOTES FOR REVIEWERS: (Copy paste what is below, if a significant change happened include it and update the README.)
   Running from source:
 
-1. npm run build
-2. Go to about:debugging
-3. Select "Enable add-on debugging"
-4. Load Temporary Add-on
-5. Click "Load Temporary Add-on" and select "firefox-bundle.xpi"
+1. With npm 6 installed, run `npm install`
+2. npm run build
+3. Go to about:debugging
+4. Select "Enable add-on debugging"
+5. Load Temporary Add-on
+6. Click "Load Temporary Add-on" and select "build/bundles/firefox-bundle.xpi"
 
 NOTE: This extension includes an opt-in for event tracking on GitHub.com for the purposes of personalization.
 
