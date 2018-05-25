@@ -36,7 +36,7 @@
         }
         &-title {
             font-size: 14px;
-            padding-left: 0px;
+            padding-left: 0;
         }
         &-icon {
             height: 24px;
@@ -69,7 +69,7 @@
         }
 
         &-subheader {
-            padding: 8px 0px;
+            padding: 8px 0;
             font-size: 14px;
             font-weight: 200;
         }
@@ -161,8 +161,8 @@
         cursor: pointer;
         font-size: 14px;
         line-height: 14px;
-        border-left: 0px;
-        border-right: 0px;
+        border-left: 0;
+        border-right: 0;
         padding-left: 10px;
 
         &-text {
@@ -219,8 +219,8 @@
 }
 
 .sg-option-container {
-    padding-top: 0px;
-    padding-left: 0px;
+    padding-top: 0;
+    padding-left: 0;
     padding-bottom: 5px;
 }
 
@@ -229,7 +229,7 @@
 }
 
 .sg-section-subheader {
-    margin-top: 0px;
+    margin-top: 0;
 }
 
 .sg-advanced-options-label {

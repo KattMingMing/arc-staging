@@ -16,6 +16,7 @@ import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
 import { fetchHover, fetchJumpURL, isEmptyHover } from '../backend/lsp'
+import { CodeIntelStatusIndicator } from '../components/CodeIntelStatusIndicator'
 import { OpenOnSourcegraph } from '../components/OpenOnSourcegraph'
 import * as github from '../github/util'
 import {
@@ -36,7 +37,7 @@ import {
     TooltipData,
     updateTooltip,
 } from '../repo/tooltips'
-import { eventLogger, getPathExtension } from '../util/context'
+import { eventLogger, getModeFromPath, getPathExtension } from '../util/context'
 import { parseHash } from '../util/url'
 
 export interface ButtonProps {
@@ -130,6 +131,28 @@ export class BlobAnnotator extends React.Component<Props, State> {
         createTooltips()
     }
 
+    private toggleCodeIntelligence = (enabled: boolean) => {
+        const disabledCodeIntelStorage = localStorage.getItem('disabledCodeIntelligenceFiles') || '{}'
+        const disabledFiles = JSON.parse(disabledCodeIntelStorage)
+        if (enabled) {
+            delete disabledFiles[`${window.location.pathname}:${this.props.filePath}`]
+        } else {
+            disabledFiles[`${window.location.pathname}:${this.props.filePath}`] = true
+            // Get all annotated elements.
+            const annotatedElements = this.props.fileElement.querySelectorAll('span[style]')
+            for (const element of Array.from(annotatedElements)) {
+                const styleElement = element as HTMLElement
+                styleElement.style.cursor = ''
+            }
+        }
+        localStorage.setItem('disabledCodeIntelligenceFiles', JSON.stringify(disabledFiles))
+    }
+
+    private isCodeIntelligenceEnabled = () => {
+        const disabledFiles = localStorage.getItem('disabledCodeIntelligenceFiles') || '{}'
+        return !JSON.parse(disabledFiles)[`${window.location.pathname}:${this.props.filePath}`]
+    }
+
     public render(): JSX.Element | null {
         let props: OpenInSourcegraphProps
         if (this.isDelta) {
@@ -155,9 +178,22 @@ export class BlobAnnotator extends React.Component<Props, State> {
         if (this.isDelta) {
             label += this.props.isBase ? ' (base)' : ' (head)'
         }
+        const showStatus = !this.isDelta || (this.isDelta && this.props.isBase)
 
         return (
-            <div style={{ display: 'inline-block' }}>
+            <div style={{ display: 'inline-flex', verticalAlign: 'middle', alignItems: 'center' }}>
+                {showStatus && (
+                    <CodeIntelStatusIndicator
+                        key="code-intel-status"
+                        userIsSiteAdmin={false}
+                        repoPath={this.props.repoPath}
+                        commitID={this.props.commitID}
+                        filePath={this.props.filePath}
+                        language={getModeFromPath(this.props.filePath)}
+                        onClick={this.toggleCodeIntelligence}
+                        enabled={this.isCodeIntelligenceEnabled()}
+                    />
+                )}
                 <OpenOnSourcegraph
                     label={label}
                     ariaLabel="View file on Sourcegraph"
@@ -182,7 +218,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
                 })
                 .filter(props => {
                     const position = props.position
-                    if (!position) {
+                    if (!position || !this.isCodeIntelligenceEnabled()) {
                         this.setFixedTooltip()
                         return false
                     }
@@ -276,6 +312,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
             Observable.fromEvent<MouseEvent>(ref, 'mouseover', { passive: true })
                 .debounceTime(50)
                 .map(e => e.target as HTMLElement)
+                .filter(this.isCodeIntelligenceEnabled)
                 .filter(this.props.filterTarget)
                 .filter(target => {
                     if (!target.lastChild) {
@@ -345,6 +382,7 @@ export class BlobAnnotator extends React.Component<Props, State> {
             Observable.fromEvent<MouseEvent>(ref, 'mouseup', { passive: true })
                 .debounceTime(50)
                 .map(e => e.target as HTMLElement)
+                .filter(this.isCodeIntelligenceEnabled)
                 .filter(this.props.filterTarget)
                 .filter(target => {
                     if (!target) {
@@ -592,6 +630,8 @@ export class BlobAnnotator extends React.Component<Props, State> {
     }
 
     private onTooltipDismissed = () => {
-        this.setState({ fixedTooltip: undefined })
+        if (this.state.fixedTooltip) {
+            this.setState({ fixedTooltip: undefined })
+        }
     }
 }

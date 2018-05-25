@@ -1,3 +1,5 @@
+// stylelint-disable
+
 /**
  * styles for highlight.js
  */
@@ -27,7 +29,7 @@
 .hljs-variable,
 .hljs-template-variable,
 .hljs-tag .hljs-attr {
-    color: #008080;
+    color: teal;
 }
 
 .hljs-string,
@@ -55,7 +57,7 @@
 .hljs-tag,
 .hljs-name,
 .hljs-attribute {
-    color: #000080;
+    color: navy;
     font-weight: normal;
 }
 

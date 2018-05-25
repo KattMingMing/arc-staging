@@ -42,6 +42,11 @@ declare namespace GQL {
         repository: IRepository | null
 
         /**
+     * List all repositories.
+     */
+        repositories: IRepositoryConnection
+
+        /**
      * Looks up a Phabricator repository by name.
      */
         phabricatorRepo: IPhabricatorRepo | null
@@ -57,9 +62,19 @@ declare namespace GQL {
         user: IUser | null
 
         /**
+     * List all users.
+     */
+        users: IUserConnection
+
+        /**
      * Looks up an organization by name.
      */
         organization: IOrg | null
+
+        /**
+     * List all organizations.
+     */
+        organizations: IOrgConnection
 
         /**
      * The current site settings.
@@ -129,6 +144,84 @@ declare namespace GQL {
         uri?: string | null
     }
 
+    export interface IRepositoriesOnQueryArguments {
+        /**
+     * Returns the first n repositories from the list.
+     */
+        first?: number | null
+
+        /**
+     * Return repositories whose names match the query.
+     */
+        query?: string | null
+
+        /**
+     * Include enabled repositories.
+     * @default true
+     */
+        enabled?: boolean | null
+
+        /**
+     * Include disabled repositories.
+     * @default false
+     */
+        disabled?: boolean | null
+
+        /**
+     * Include cloned repositories.
+     * @default true
+     */
+        cloned?: boolean | null
+
+        /**
+     * Include repositories that are currently being cloned.
+     * @default true
+     */
+        cloneInProgress?: boolean | null
+
+        /**
+     * Include repositories that are not yet cloned and for which cloning is not in progress.
+     * @default true
+     */
+        notCloned?: boolean | null
+
+        /**
+     * Include repositories that have a text search index.
+     * @default true
+     */
+        indexed?: boolean | null
+
+        /**
+     * Include repositories that do not have a text search index.
+     * @default true
+     */
+        notIndexed?: boolean | null
+
+        /**
+     * Filter for repositories that have been indexed for cross-repository code intelligence.
+     * @default false
+     */
+        ciIndexed?: boolean | null
+
+        /**
+     * Filter for repositories that have not been indexed for cross-repository code intelligence.
+     * @default false
+     */
+        notCIIndexed?: boolean | null
+
+        /**
+     * Sort field.
+     * @default REPO_URI
+     */
+        orderBy?: RepoOrderBy | null
+
+        /**
+     * Sort direction.
+     * @default false
+     */
+        descending?: boolean | null
+    }
+
     export interface IPhabricatorRepoOnQueryArguments {
         /**
      * The name, for example "github.com/gorilla/mux".
@@ -145,8 +238,37 @@ declare namespace GQL {
         username: string
     }
 
+    export interface IUsersOnQueryArguments {
+        /**
+     * Returns the first n users from the list.
+     */
+        first?: number | null
+
+        /**
+     * Return users whose usernames or display names match the query.
+     */
+        query?: string | null
+
+        /**
+     * Returns users who have been active in a given period of time.
+     */
+        activePeriod?: UserActivePeriod | null
+    }
+
     export interface IOrganizationOnQueryArguments {
         name: string
+    }
+
+    export interface IOrganizationsOnQueryArguments {
+        /**
+     * Returns the first n organizations from the list.
+     */
+        first?: number | null
+
+        /**
+     * Return organizations whose names or display names match the query.
+     */
+        query?: string | null
     }
 
     export interface ISearchOnQueryArguments {
@@ -182,6 +304,7 @@ declare namespace GQL {
         | IOrg
         | IThread
         | IAccessToken
+        | IExternalAccount
         | IPackage
         | IDependency
         | IGitRef
@@ -749,26 +872,6 @@ declare namespace GQL {
         username: string
 
         /**
-     * The auth ID.
-     * @deprecated use externalID instead
-     */
-        authID: string
-
-        /**
-     * The auth0 ID.
-     * @deprecated use externalID instead
-     */
-        auth0ID: string
-
-        /**
-     *  The external authentication system's ID for this user, if applicable. For example, if this user is
-     *  authenticated via an SSO provider (using OpenID, SAML, etc.), then this is the ID from that provider.
-     *
-     *  Only the user and site admins can access this field.
-     */
-        externalID: string | null
-
-        /**
      * The unique numeric ID for the user.
      * @deprecated use id instead
      */
@@ -853,14 +956,28 @@ declare namespace GQL {
         emails: IUserEmail[]
 
         /**
-     *  The users' access tokens (which grant to the holder the privileges of the user).
+     *  The users' access tokens (which grant to the holder the privileges of the user). This consists
+     *  of all access tokens whose subject is this user.
      *
      *  Only the user and site admins can access this field.
      */
         accessTokens: IAccessTokenConnection
 
         /**
-     * Whether the viewer has admin privileges on this user. The user had admin privileges on their own user, and
+     * A list of external accounts that are associated with the user.
+     */
+        externalAccounts: IExternalAccount[]
+
+        /**
+     *  The user's currently active session.
+     *
+     *  Only the currently authenticated user can access this field. Site admins are not able to access sessions for
+     *  other users.
+     */
+        session: ISession
+
+        /**
+     * Whether the viewer has admin privileges on this user. The user has admin privileges on their own user, and
      * site admins have admin privileges on all users.
      */
         viewerCanAdminister: boolean
@@ -1541,12 +1658,23 @@ declare namespace GQL {
         /**
      * The user whose privileges the access token grants.
      */
-        user: IUser
+        subject: IUser
+
+        /**
+     * The scopes that define the allowed set of operations that can be performed using this access token.
+     */
+        scopes: string[]
 
         /**
      * A user-supplied descriptive note for the access token.
      */
         note: string
+
+        /**
+     * The user who created the access token. This is either the subject user (if the access token
+     * was created by the same user) or a site admin (who can create access tokens for any user).
+     */
+        creator: IUser
 
         /**
      * The date when the access token was created.
@@ -1569,6 +1697,65 @@ declare namespace GQL {
      * Whether there is a next page of nodes in the connection.
      */
         hasNextPage: boolean
+    }
+
+    /**
+ * An external account associated with a user.
+ */
+    export interface IExternalAccount {
+        __typename: 'ExternalAccount'
+
+        /**
+     * The unique ID for the external account.
+     */
+        id: ID
+
+        /**
+     * The user on Sourcegraph.
+     */
+        user: IUser
+
+        /**
+     * The type of the external service where the external account resides.
+     */
+        serviceType: string
+
+        /**
+     * An identifier for the external service where the external account resides.
+     */
+        serviceID: string
+
+        /**
+     * An identifier for the external account (typically equal to or derived from the ID on the external service).
+     */
+        accountID: string
+
+        /**
+     * The creation date of this external account on Sourcegraph.
+     */
+        createdAt: string
+
+        /**
+     * The last-updated date of this external account on Sourcegraph.
+     */
+        updatedAt: string
+
+        /**
+     * A URL that, when visited, re-initiates the authentication process.
+     */
+        refreshURL: string | null
+    }
+
+    /**
+ * An active user session.
+ */
+    export interface ISession {
+        __typename: 'Session'
+
+        /**
+     * Whether the user can sign out of this session on Sourcegraph.
+     */
+        canSignOut: boolean
     }
 
     /**
@@ -3041,6 +3228,48 @@ declare namespace GQL {
     }
 
     /**
+ * RepoOrderBy enumerates the ways a repositories-list result set can
+ * be ordered.
+ */
+    export enum RepoOrderBy {
+        REPO_URI = 'REPO_URI',
+        REPO_CREATED_AT = 'REPO_CREATED_AT',
+    }
+
+    /**
+ * A list of repositories.
+ */
+    export interface IRepositoryConnection {
+        __typename: 'RepositoryConnection'
+
+        /**
+     * A list of repositories.
+     */
+        nodes: IRepository[]
+
+        /**
+     *  The total count of repositories in the connection. This total count may be larger
+     *  than the number of nodes in this object when the result is paginated.
+     *
+     *  In some cases, the total count can't be computed quickly; if so, it is null. Pass
+     *  precise: true to always compute total counts even if it takes a while.
+     */
+        totalCount: number | null
+
+        /**
+     * Pagination information.
+     */
+        pageInfo: IPageInfo
+    }
+
+    export interface ITotalCountOnRepositoryConnectionArguments {
+        /**
+     * @default false
+     */
+        precise?: boolean | null
+    }
+
+    /**
  * A Phabricator repository.
  */
     export interface IPhabricatorRepo {
@@ -3066,6 +3295,49 @@ declare namespace GQL {
      * The URL to the phabricator instance (e.g. http://phabricator.sgdev.org)
      */
         url: string
+    }
+
+    /**
+ * A period of time in which a set of users have been active.
+ */
+    export enum UserActivePeriod {
+        /**
+     * Since today at 00:00 UTC.
+     */
+        TODAY = 'TODAY',
+
+        /**
+     * Since the latest Monday at 00:00 UTC.
+     */
+        THIS_WEEK = 'THIS_WEEK',
+
+        /**
+     * Since the first day of the current month at 00:00 UTC.
+     */
+        THIS_MONTH = 'THIS_MONTH',
+
+        /**
+     * All time.
+     */
+        ALL_TIME = 'ALL_TIME',
+    }
+
+    /**
+ * A list of organizations.
+ */
+    export interface IOrgConnection {
+        __typename: 'OrgConnection'
+
+        /**
+     * A list of organizations.
+     */
+        nodes: IOrg[]
+
+        /**
+     * The total count of organizations in the connection. This total count may be larger
+     * than the number of nodes in this object when the result is paginated.
+     */
+        totalCount: number
     }
 
     /**
@@ -3373,18 +3645,6 @@ declare namespace GQL {
         /**
      * The query.
      */
-        query: ISearchQuery
-    }
-
-    /**
- * A search query.
- */
-    export interface ISearchQuery {
-        __typename: 'SearchQuery'
-
-        /**
-     * The query.
-     */
         query: string
     }
 
@@ -3485,7 +3745,7 @@ declare namespace GQL {
         /**
      * The query.
      */
-        query: ISearchQuery
+        query: string
 
         /**
      * Whether or not to show on the homepage.
@@ -3861,21 +4121,6 @@ declare namespace GQL {
         canReloadSite: boolean
 
         /**
-     * List all repositories.
-     */
-        repositories: IRepositoryConnection
-
-        /**
-     * List all users.
-     */
-        users: IUserConnection
-
-        /**
-     * List all organizations.
-     */
-        orgs: IOrgConnection
-
-        /**
      * List all threads. This is an experimental feature.
      */
         threads: IThreadConnection
@@ -3886,32 +4131,30 @@ declare namespace GQL {
         langServers: ILangServer[]
 
         /**
+     * The language server for a given language (if exists, otherwise null)
+     */
+        langServer: ILangServer | null
+
+        /**
      * A list of all access tokens on this site.
      */
         accessTokens: IAccessTokenConnection
 
         /**
-     * The build version of the Sourcegraph Server software that is running on this site (of the form
+     * The build version of the Sourcegraph software that is running on this site (of the form
      * NNNNN_YYYY-MM-DD_XXXXX, like 12345_2018-01-01_abcdef).
      */
         buildVersion: string
 
         /**
-     * The product version of the Sourcegraph Server software that is running on this site (in SemVer
-     * form, like 1.2.3).
+     * The product version of the Sourcegraph software that is running on this site.
      */
         productVersion: string
 
         /**
-     * Information about software updates for version of Sourcegraph Server that
-     * this site is running.
+     * Information about software updates for the version of Sourcegraph that this site is running.
      */
         updateCheck: IUpdateCheck
-
-        /**
-     * Samples of recent telemetry payloads, visible to the site administrator only.
-     */
-        telemetrySamples: string[]
 
         /**
      * Whether the site needs to be configured to add repositories.
@@ -3922,6 +4165,11 @@ declare namespace GQL {
      * Whether the site has zero access-enabled repositories.
      */
         noRepositoriesEnabled: boolean
+
+        /**
+     * Whether the site configuration has validation problems or deprecation notices.
+     */
+        configurationNotice: boolean
 
         /**
      * Whether the site has code intelligence. This field will be expanded in the future to describe
@@ -3952,108 +4200,6 @@ declare namespace GQL {
         activity: ISiteActivity
     }
 
-    export interface IRepositoriesOnSiteArguments {
-        /**
-     * Returns the first n repositories from the list.
-     */
-        first?: number | null
-
-        /**
-     * Return repositories whose names match the query.
-     */
-        query?: string | null
-
-        /**
-     * Include enabled repositories.
-     * @default true
-     */
-        enabled?: boolean | null
-
-        /**
-     * Include disabled repositories.
-     * @default false
-     */
-        disabled?: boolean | null
-
-        /**
-     * Include cloned repositories.
-     * @default true
-     */
-        cloned?: boolean | null
-
-        /**
-     * Include repositories that are currently being cloned.
-     * @default true
-     */
-        cloneInProgress?: boolean | null
-
-        /**
-     * Include repositories that are not yet cloned and for which cloning is not in progress.
-     * @default true
-     */
-        notCloned?: boolean | null
-
-        /**
-     * Include repositories that have a text search index.
-     * @default true
-     */
-        indexed?: boolean | null
-
-        /**
-     * Include repositories that do not have a text search index.
-     * @default true
-     */
-        notIndexed?: boolean | null
-
-        /**
-     * Filter for repositories that have been indexed for cross-repository code intelligence.
-     * @default false
-     */
-        ciIndexed?: boolean | null
-
-        /**
-     * Filter for repositories that have not been indexed for cross-repository code intelligence.
-     * @default false
-     */
-        notCIIndexed?: boolean | null
-
-        /**
-     * Sort field.
-     * @default REPO_URI
-     */
-        orderBy?: RepoOrderBy | null
-
-        /**
-     * Sort direction.
-     * @default false
-     */
-        descending?: boolean | null
-    }
-
-    export interface IUsersOnSiteArguments {
-        /**
-     * Returns the first n users from the list.
-     */
-        first?: number | null
-
-        /**
-     * Return users whose usernames or display names match the query.
-     */
-        query?: string | null
-    }
-
-    export interface IOrgsOnSiteArguments {
-        /**
-     * Returns the first n organizations from the list.
-     */
-        first?: number | null
-
-        /**
-     * Return organizations whose names or display names match the query.
-     */
-        query?: string | null
-    }
-
     export interface IThreadsOnSiteArguments {
         /**
      * Returns the first n threads from the list.
@@ -4061,11 +4207,32 @@ declare namespace GQL {
         first?: number | null
     }
 
+    export interface ILangServerOnSiteArguments {
+        language: string
+    }
+
     export interface IAccessTokensOnSiteArguments {
         /**
      * Returns the first n access tokens from the list.
      */
         first?: number | null
+    }
+
+    export interface IActivityOnSiteArguments {
+        /**
+     * Days of history.
+     */
+        days?: number | null
+
+        /**
+     * Weeks of history.
+     */
+        weeks?: number | null
+
+        /**
+     * Months of history.
+     */
+        months?: number | null
     }
 
     /**
@@ -4088,11 +4255,12 @@ declare namespace GQL {
         pendingContents: string | null
 
         /**
-     * Validation errors on the configuration JSON (pendingContents if it exists, otherwise
-     * effectiveContents). These are different from the JSON Schema validation errors;
-     * they are errors from validations that can't be expressed in the JSON Schema.
+     * Messages describing validation errors or usage of deprecated configuration in the configuration JSON
+     * (pendingContents if it exists, otherwise effectiveContents). This includes both JSON Schema validation errors
+     * and other messages that perform more advanced checks on the configuration (that can't be expressed in the
+     * JSON Schema).
      */
-        extraValidationErrors: string[]
+        validationMessages: string[]
 
         /**
      * Whether the viewer can update the site configuration (using the
@@ -4106,66 +4274,6 @@ declare namespace GQL {
      * env var.
      */
         source: string
-    }
-
-    /**
- * RepoOrderBy enumerates the ways a repositories-list result set can
- * be ordered.
- */
-    export enum RepoOrderBy {
-        REPO_URI = 'REPO_URI',
-        REPO_CREATED_AT = 'REPO_CREATED_AT',
-    }
-
-    /**
- * A list of repositories.
- */
-    export interface IRepositoryConnection {
-        __typename: 'RepositoryConnection'
-
-        /**
-     * A list of repositories.
-     */
-        nodes: IRepository[]
-
-        /**
-     *  The total count of repositories in the connection. This total count may be larger
-     *  than the number of nodes in this object when the result is paginated.
-     *
-     *  In some cases, the total count can't be computed quickly; if so, it is null. Pass
-     *  precise: true to always compute total counts even if it takes a while.
-     */
-        totalCount: number | null
-
-        /**
-     * Pagination information.
-     */
-        pageInfo: IPageInfo
-    }
-
-    export interface ITotalCountOnRepositoryConnectionArguments {
-        /**
-     * @default false
-     */
-        precise?: boolean | null
-    }
-
-    /**
- * A list of organizations.
- */
-    export interface IOrgConnection {
-        __typename: 'OrgConnection'
-
-        /**
-     * A list of organizations.
-     */
-        nodes: IOrg[]
-
-        /**
-     * The total count of organizations in the connection. This total count may be larger
-     * than the number of nodes in this object when the result is paginated.
-     */
-        totalCount: number
     }
 
     /**
@@ -4183,6 +4291,13 @@ declare namespace GQL {
      * "Go", "Java", "TypeScript", "PHP", etc.
      */
         displayName: string
+
+        /**
+     *  Whether or not this language server should be considered experimental.
+     *
+     *  Has no effect on behavior, only effects how the language server is presented e.g. in the UI.
+     */
+        experimental: boolean
 
         /**
      * URL to the language server's homepage, if available.
@@ -4294,7 +4409,7 @@ declare namespace GQL {
     }
 
     /**
- * Information about software updates for Sourcegraph Server.
+ * Information about software updates for Sourcegraph.
  */
     export interface IUpdateCheck {
         __typename: 'UpdateCheck'
@@ -4643,8 +4758,15 @@ declare namespace GQL {
         updatePassword: IEmptyResponse | null
 
         /**
-     *  Creates an access token that grants the privileges of the specified user. The result is the access token
-     *  value, which the caller is responsible for storing (it is not accessible by Sourcegraph after creation).
+     *  Creates an access token that grants the privileges of the specified user (referred to as the access token's
+     *  "subject" user after token creation). The result is the access token value, which the caller is responsible
+     *  for storing (it is not accessible by Sourcegraph after creation).
+     *
+     *  The supported scopes are:
+     *
+     *  - "user:all": Full control of all resources accessible to the user account.
+     *  - "site-admin:sudo": Ability to perform any action as any other user. (Only site admins may create tokens
+     *    with this scope.)
      *
      *  Only the user or site admins may perform this mutation.
      */
@@ -4657,6 +4779,14 @@ declare namespace GQL {
      *  Only site admins or the user who owns the token may perform this mutation.
      */
         deleteAccessToken: IEmptyResponse
+
+        /**
+     *  Deletes the association between an external account and its Sourcegraph user. It does NOT delete the external
+     *  account on the external service where it resides.
+     *
+     *  Only site admins or the user who is associated with the external account may perform this mutation.
+     */
+        deleteExternalAccount: IEmptyResponse
 
         /**
      * Accepts a user invite.
@@ -4678,7 +4808,7 @@ declare namespace GQL {
         removeUserFromOrg: IEmptyResponse | null
 
         /**
-     * Adds a Phabricator repository to the Sourcegraph server.
+     * Adds a Phabricator repository to Sourcegraph.
      */
         addPhabricatorRepo: IEmptyResponse | null
 
@@ -4720,7 +4850,7 @@ declare namespace GQL {
      *  Sets whether the user with the specified user ID is a site admin.
      * !
      * ! 🚨 SECURITY: Only trusted users should be given site admin permissions.
-     * ! Site admins have full access to the server's site configuration and other
+     * ! Site admins have full access to the site configuration and other
      * ! sensitive data, and they can perform destructive actions such as
      * ! restarting the site.
      */
@@ -4902,12 +5032,17 @@ declare namespace GQL {
 
     export interface ICreateAccessTokenOnMutationArguments {
         user: ID
+        scopes: string[]
         note: string
     }
 
     export interface IDeleteAccessTokenOnMutationArguments {
         byID?: ID | null
         byToken?: string | null
+    }
+
+    export interface IDeleteExternalAccountOnMutationArguments {
+        externalAccount: ID
     }
 
     export interface IAcceptUserInviteOnMutationArguments {
@@ -4963,18 +5098,30 @@ declare namespace GQL {
         baseRev: string
 
         /**
-     *  The Phabricator instance's origin.
-     * !
-     * ! This is not required, but would cause one less round trip to the DB
-     * ! and is easily sent from the UI.
-     */
-        origin?: string | null
-
-        /**
      * The raw contents of the diff from Phabricator.
      * Required if Sourcegraph doesn't have a Conduit API token.
      */
-        contents?: string | null
+        patch?: string | null
+
+        /**
+     * The description of the diff. This will be used as the commit message.
+     */
+        description?: string | null
+
+        /**
+     * The name of author of the diff.
+     */
+        authorName?: string | null
+
+        /**
+     * The author's email.
+     */
+        authorEmail?: string | null
+
+        /**
+     * When the diff was created.
+     */
+        date?: string | null
     }
 
     export interface ILogUserEventOnMutationArguments {
@@ -5219,8 +5366,6 @@ declare namespace GQL {
         CODEINTEL = 'CODEINTEL',
         CODEINTELINTEGRATION = 'CODEINTELINTEGRATION',
     }
-
-    export type IUserEventEnum = 'PAGEVIEW' | 'SEARCHQUERY' | 'CODEINTEL' | 'CODEINTELINTEGRATION'
 
     /**
  * Input for Mutation.configuration, which contains fields that all configuration

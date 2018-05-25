@@ -31,7 +31,9 @@ export function createBlobAnnotatorMount(fileContainer: HTMLElement, isBase?: bo
     }
 
     const mountEl = document.createElement('div')
-    mountEl.style.display = 'inline-block'
+    mountEl.style.display = 'inline-flex'
+    mountEl.style.verticalAlign = 'middle'
+    mountEl.style.alignItems = 'center'
     mountEl.className = className
 
     const fileActions = fileContainer.querySelector('.file-actions')

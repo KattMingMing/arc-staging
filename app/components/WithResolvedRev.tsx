@@ -10,7 +10,8 @@ import { Subject } from 'rxjs/Subject'
 import { Subscription } from 'rxjs/Subscription'
 import { setServerUrls } from '../../app/util/context'
 import storage from '../../extension/storage'
-import { ECLONEINPROGESS, EREPONOTFOUND, resolveRev } from '../repo/backend'
+import { ECLONEINPROGESS, EREPONOTFOUND } from '../backend/errors'
+import { resolveRev } from '../repo/backend'
 
 interface WithResolvedRevProps {
     component: any

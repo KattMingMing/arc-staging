@@ -8,7 +8,7 @@ import { repoUrlCache } from '../util/context'
  *
  * Not used at all for public/sourcegraph.com usage.
  */
-export const logUserEvent = (event: GQL.IUserEventEnum, uid: string): void => {
+export const logUserEvent = (event: string, uid: string): void => {
     const ctx = getContext({ isRepoSpecific: true })
     const url = repoUrlCache[ctx.repoKey]
     if (!url || url === 'https://sourcegraph.com') {

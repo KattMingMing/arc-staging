@@ -1,4 +1,5 @@
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
+import sassImportOnce from 'node-sass-import-once'
 import * as path from 'path'
 import * as webpack from 'webpack'
 
@@ -66,6 +67,10 @@ export default {
                         loader: 'sass-loader',
                         options: {
                             includePaths: [__dirname + '/node_modules'],
+                            importer: sassImportOnce,
+                            importOnce: {
+                                css: true,
+                            },
                         },
                     },
                 ]),

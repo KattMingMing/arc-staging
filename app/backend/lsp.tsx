@@ -3,7 +3,8 @@ import 'rxjs/add/operator/map'
 import { Observable } from 'rxjs/Observable'
 import { map } from 'rxjs/operators/map'
 import { Definition, Hover } from 'vscode-languageserver-types'
-import { AbsoluteRepo, AbsoluteRepoFilePosition, makeRepoURI, parseRepoURI } from '../repo'
+import { DidOpenTextDocumentParams, ServerCapabilities } from 'vscode-languageserver/lib/main'
+import { AbsoluteRepo, AbsoluteRepoFilePosition, AbsoluteRepoLanguageFile, makeRepoURI, parseRepoURI } from '../repo'
 import { getModeFromPath, repoUrlCache, supportedModes } from '../util/context'
 import { memoizeObservable } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
@@ -13,6 +14,9 @@ interface LSPRequest {
     method: string
     params: any
 }
+
+/** LSP proxy error code for unsupported modes */
+export const EMODENOTFOUND = -32000
 
 export function isEmptyHover(hover: Hover): boolean {
     return !hover.contents || (Array.isArray(hover.contents) && hover.contents.length === 0)
@@ -146,3 +150,38 @@ export function fetchJumpURL(pos: AbsoluteRepoFilePosition): Observable<string |
         })
     )
 }
+
+export const fetchServerCapabilities = memoizeObservable((pos: AbsoluteRepoLanguageFile): Observable<
+    ServerCapabilities | undefined
+> => {
+    const body = wrapLSP(
+        {
+            method: 'textDocument/didOpen',
+            params: {
+                textDocument: {
+                    uri: `git://${pos.repoPath}?${pos.commitID}#${pos.filePath}`,
+                },
+            } as DidOpenTextDocumentParams,
+        },
+        pos,
+        pos.filePath
+    )
+    const url = repoUrlCache[pos.repoPath]
+    if (!url) {
+        throw new Error('Error fetching server capabilities. No URL found.')
+    }
+    return Observable.ajax({
+        method: 'POST',
+        url: `${url}/.api/xlang/textDocument/didOpen`,
+        headers: getHeaders(),
+        crossDomain: true,
+        withCredentials: true,
+        body: JSON.stringify(body),
+        async: true,
+    }).map(({ response }) => {
+        if (!response || !response[0] || !response[0].result) {
+            return
+        }
+        return response[0].result.capabilities
+    })
+})

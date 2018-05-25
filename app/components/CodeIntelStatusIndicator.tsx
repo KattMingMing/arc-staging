@@ -1,0 +1,239 @@
+import Loader from '@sourcegraph/icons/lib/Loader'
+import { ServerCapabilities } from 'javascript-typescript-langserver/lib/request-type'
+import { isEqual, upperFirst } from 'lodash'
+import CheckIcon from 'mdi-react/CheckIcon'
+import CloseIcon from 'mdi-react/CloseIcon'
+import PowerPlugIcon from 'mdi-react/PowerPlugIcon'
+import React from 'react'
+import { Link } from 'react-router-dom'
+import 'rxjs/add/observable/forkJoin'
+import { Observable } from 'rxjs/Observable'
+import { catchError, distinctUntilChanged, map, switchMap } from 'rxjs/operators'
+import { Subject } from 'rxjs/Subject'
+import { asError, ErrorLike, isErrorLike } from '../backend/errors'
+import { EMODENOTFOUND, fetchServerCapabilities } from '../backend/lsp'
+import { isPhabricator } from '../context'
+import { fetchLangServer } from '../repo/backend'
+import { AbsoluteRepoFile } from '../repo/index'
+import { getModeFromPath } from '../util/context'
+
+interface LangServer {
+    displayName?: string
+    homepageURL?: string
+    issuesURL?: string
+    /** defaults to `false` */
+    experimental?: boolean
+    capabilities?: ServerCapabilities
+}
+
+function hasCrossRepositoryCodeIntelligence(capabilities: ServerCapabilities): boolean {
+    return !!capabilities.xdefinitionProvider && !!capabilities.xworkspaceReferencesProvider
+}
+
+const CapabilityStatus: React.StatelessComponent<{ label: string; provided: boolean }> = ({ label, provided }) => (
+    <li>
+        {provided ? (
+            <CheckIcon className="icon-inline text-success" />
+        ) : (
+            <CloseIcon className="icon-inline text-danger" />
+        )}{' '}
+        {label}
+    </li>
+)
+
+const propsToStateUpdate = (obs: Observable<CodeIntelStatusIndicatorProps>) =>
+    obs.pipe(
+        distinctUntilChanged((a, b) => a.language === b.language),
+        switchMap(({ repoPath, commitID, filePath, language }) => {
+            if (!language) {
+                return [null]
+            }
+            return Observable.forkJoin(
+                fetchLangServer(language),
+                fetchServerCapabilities({ repoPath, commitID, filePath, language })
+            ).pipe(
+                map(([langServer, capabilities]): LangServer => ({
+                    displayName: (langServer && langServer.displayName) || undefined,
+                    homepageURL: (langServer && langServer.homepageURL) || undefined,
+                    issuesURL: (langServer && langServer.issuesURL) || undefined,
+                    experimental: (langServer && langServer.experimental) || undefined,
+                    capabilities,
+                })),
+                catchError(err => (err.code === EMODENOTFOUND ? [null] : [asError(err)]))
+            )
+        }),
+        map(langServerOrError => ({ langServerOrError }))
+    )
+
+interface CodeIntelStatusIndicatorProps extends AbsoluteRepoFile {
+    userIsSiteAdmin: boolean
+    language?: string
+    enabled: boolean
+    onClick: (toggled: boolean) => void
+}
+interface CodeIntelStatusIndicatorState {
+    /** The language server, error, undefined while loading or null if no langserver registered */
+
+    langServerOrError?: LangServer | ErrorLike | null
+    enabled?: boolean
+}
+export class CodeIntelStatusIndicator extends React.Component<
+    CodeIntelStatusIndicatorProps,
+    CodeIntelStatusIndicatorState
+> {
+    public state: CodeIntelStatusIndicatorState = {}
+    private componentUpdates = new Subject<CodeIntelStatusIndicatorProps>()
+    private subscription = this.componentUpdates
+        .pipe(propsToStateUpdate)
+        .subscribe(stateUpdate => this.setState({ ...stateUpdate, enabled: this.props.enabled }))
+
+    public shouldComponentUpdate(
+        nextProps: CodeIntelStatusIndicatorProps,
+        nextState: CodeIntelStatusIndicatorState
+    ): boolean {
+        return (
+            !isEqual(this.state, nextState) ||
+            this.props.userIsSiteAdmin !== nextProps.userIsSiteAdmin ||
+            this.props.language !== nextProps.language
+        )
+    }
+
+    public componentDidMount(): void {
+        this.componentUpdates.next(this.props)
+    }
+
+    public componentDidUpdate(oldProps: CodeIntelStatusIndicatorProps): void {
+        this.componentUpdates.next(this.props)
+    }
+
+    public componentWillUnmount(): void {
+        this.subscription.unsubscribe()
+    }
+
+    private getButtonColorCSSClass(): string {
+        if (!this.state.enabled) {
+            return 'text-dark'
+        }
+
+        if (this.state.langServerOrError === undefined) {
+            return ''
+        }
+        if (this.state.langServerOrError === null || isErrorLike(this.state.langServerOrError)) {
+            return 'text-danger'
+        }
+        if (!this.state.langServerOrError.capabilities ||
+            !this.state.langServerOrError.capabilities.hoverProvider ||
+            !this.state.langServerOrError.capabilities.referencesProvider ||
+            !this.state.langServerOrError.capabilities.definitionProvider ||
+            this.state.langServerOrError.experimental ||
+            !hasCrossRepositoryCodeIntelligence(this.state.langServerOrError.capabilities)
+        ) {
+            return 'text-warning'
+        }
+        return 'text-success'
+    }
+
+    private toggleCodeIntelligence = () => {
+        this.setState(() => ({ enabled: !this.state.enabled }))
+        this.props.onClick(!this.state.enabled)
+    }
+
+    public render(): JSX.Element {
+        const language = getModeFromPath(this.props.filePath)
+        const buttonClass = isPhabricator ? 'button button-grey has-icon has-text phui-button-default  msl' : 'btn btn-sm mr-1'
+        return (
+            <div className="code-intel-status-indicator">
+                <button
+                    onClick={this.toggleCodeIntelligence}
+                    className={`${buttonClass} composite-container__header-action ${this.getButtonColorCSSClass()}`}
+                >
+                    <PowerPlugIcon className="composite-container__icon icon-inline" />
+                </button>
+                <div className="code-intel-status-indicator__popover card">
+                    <div className="card-body">
+                        {this.state.langServerOrError === undefined ? (
+                            <div className="text-center">
+                                <Loader className="icon-inline" />
+                            </div>
+                        ) : isErrorLike(this.state.langServerOrError) ? (
+                            <span className="text-danger">{upperFirst(this.state.langServerOrError.message)}</span>
+                        ) : this.state.langServerOrError === null ? (
+                            <>
+                                <h3>No language server connected</h3>
+                                Check{' '}
+                                <a href="http://langserver.org/" target="_blank">
+                                    langserver.org
+                                </a>{' '}
+                                for {language} language servers
+                            </>
+                        ) : (
+                            <>
+                                <h3>
+                                    Connected to the <wbr />
+                                    <a href={this.state.langServerOrError.homepageURL} target="_blank">
+                                        {this.state.langServerOrError.displayName || language} language server
+                                    </a>
+                                </h3>
+                                <h4 className="mt-2 mb-0">Provides:</h4>
+                                <ul className="list-unstyled">
+                                    <CapabilityStatus
+                                        label="Hovers"
+                                        provided={!!this.state.langServerOrError.capabilities && !!this.state.langServerOrError.capabilities.hoverProvider}
+                                    />
+                                    <CapabilityStatus
+                                        label="Definitions"
+                                        provided={!!this.state.langServerOrError.capabilities && !!this.state.langServerOrError.capabilities.definitionProvider}
+                                    />
+                                    <CapabilityStatus
+                                        label="References"
+                                        provided={!!this.state.langServerOrError.capabilities && !!this.state.langServerOrError.capabilities.referencesProvider}
+                                    />
+                                    <CapabilityStatus
+                                        label="Implementations"
+                                        provided={!!this.state.langServerOrError.capabilities && !!(this.state.langServerOrError.capabilities as any).implementationProvider}
+                                    />
+                                </ul>
+                                <h4 className="mt-2 mb-0">Scope:</h4>
+                                <ul className="list-unstyled">
+                                    <CapabilityStatus label="Local" provided={true} />
+                                    <CapabilityStatus
+                                        label="Cross-repository"
+                                        provided={!!this.state.langServerOrError.capabilities && hasCrossRepositoryCodeIntelligence(
+                                            this.state.langServerOrError.capabilities
+                                        )}
+                                    />
+                                </ul>
+                                {this.state.langServerOrError.experimental && (
+                                    <p className="mt-2 mb-0 text-warning font-weight-light">
+                                        <em>
+                                            This language server is experimental - some code intelligence actions might
+                                            not work correctly.
+                                        </em>
+                                    </p>
+                                    // TODO - Add docs link about experimental code intelligence when written
+                                )}
+                                {this.props.userIsSiteAdmin && (
+                                    <p className="mt-2 mb-0">
+                                        <Link to="/site-admin/code-intelligence">Manage</Link>
+                                    </p>
+                                )}
+                                {this.state.langServerOrError.issuesURL && (
+                                    <p className="mt-2 mb-0">
+                                        <a href={this.state.langServerOrError.issuesURL} target="_blank">
+                                            Report issue
+                                        </a>
+                                    </p>
+                                )}
+                                <p className="mt-2 mb-0">
+                                    <a onClick={this.toggleCodeIntelligence} style={{cursor: 'pointer'}} target="_blank">
+                                        {this.state.enabled ? 'Disable' : 'Enable'} code intelligence
+                                    </a>
+                                </p>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}

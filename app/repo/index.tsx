@@ -286,3 +286,10 @@ export function makeRepoURI(parsed: ParsedRepoURI): RepoURI {
     uri += parsed.range ? positionStr(parsed.range.start) + '-' + positionStr(parsed.range.end) : ''
     return uri
 }
+
+/**
+ * A file at an exact commit of a known programming language
+ */
+export interface AbsoluteRepoLanguageFile extends AbsoluteRepoFile {
+    language: string
+}

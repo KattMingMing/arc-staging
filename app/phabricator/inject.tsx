@@ -216,11 +216,12 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
 
             file.classList.add('sg-blob-annotated')
 
-            const actionLinks = file.querySelector('.differential-changeset-buttons')
+            const actionLinks = file.querySelector('.differential-changeset-buttons') as HTMLElement
             if (!actionLinks) {
                 console.warn('Unable to find actionLinks', file)
                 return
             }
+            actionLinks.style.display = 'inline-flex'
 
             const mountBase = createBlobAnnotatorMount(file, actionLinks, true)
             // TODO(isaac): Find a better way to patch the components.

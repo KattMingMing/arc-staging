@@ -28,7 +28,6 @@ $emphasis-color: #666;
     perspective: 1000;
     will-change: transform;
 
-
     .tooltip__title {
         font-family: $code-font-family;
     }
@@ -52,7 +51,7 @@ $emphasis-color: #666;
         padding: 16px;
         max-height: 150px;
         overflow: auto;
-        margin-bottom: 0px;
+        margin-bottom: 0;
         font-family: $font-family;
         border-bottom: 1px solid $divider-color;
 

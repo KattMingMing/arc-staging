@@ -4,32 +4,43 @@ import { Observable } from 'rxjs/Observable'
 import { catchError } from 'rxjs/operators/catchError'
 import { map } from 'rxjs/operators/map'
 import { getContext } from '../backend/context'
+import { CloneInProgressError, createAggregateError, RepoNotFoundError, RevNotFoundError } from '../backend/errors'
 import { queryGraphQL } from '../backend/graphql'
 import { memoizeAsync, memoizeObservable } from '../util/memoize'
 import { AbsoluteRepoFile, makeRepoURI, parseBrowserRepoURL } from './index'
 
-export const ECLONEINPROGESS = 'ECLONEINPROGESS'
-class CloneInProgressError extends Error {
-    public readonly code = ECLONEINPROGESS
-    constructor(repoPath: string) {
-        super(`${repoPath} is clone in progress`)
-    }
-}
-
-export const EREPONOTFOUND = 'EREPONOTFOUND'
-class RepoNotFoundError extends Error {
-    public readonly code = EREPONOTFOUND
-    constructor(repoPath: string) {
-        super(`repo ${repoPath} not found`)
-    }
-}
-
-export const EREVNOTFOUND = 'EREVNOTFOUND'
-class RevNotFoundError extends Error {
-    public readonly code = EREVNOTFOUND
-    constructor(rev?: string) {
-        super(`rev ${rev} not found`)
-    }
+/**
+ * Fetches the language server for a given language
+ *
+ * @return Observable that emits the language server for the given language or null if not exists
+ */
+export function fetchLangServer(
+    language: string
+    // tslint:disable-next-line
+): Observable<Pick<GQL.ILangServer, 'displayName' | 'homepageURL' | 'issuesURL' | 'experimental'> | null> {
+    return queryGraphQL(
+        getContext({}),
+        `
+            query LangServer($language: String!) {
+                site {
+                    langServer(language: $language) {
+                        displayName
+                        homepageURL
+                        issuesURL
+                        experimental
+                    }
+                }
+            }
+        `,
+        { language }
+    ).pipe(
+        map(({ data, errors }) => {
+            if (!data || !data.site) {
+                throw createAggregateError(errors)
+            }
+            return data.site.langServer
+        })
+    )
 }
 
 /**
