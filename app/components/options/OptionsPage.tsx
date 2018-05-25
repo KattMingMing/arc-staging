@@ -14,7 +14,7 @@ import { SupportedCodeHosts } from './SupportedCodeHosts'
 
 interface State {
     repositoryFileTreeEnabled: boolean
-    repositorySearchEnabled: boolean
+    executeSearchEnabled: boolean
     eventTrackingEnabled: boolean
     displayHeader: boolean
     isPopup: boolean
@@ -40,7 +40,7 @@ export class OptionsPage extends React.Component<{}, State> {
 
         this.state = {
             repositoryFileTreeEnabled: false,
-            repositorySearchEnabled: false,
+            executeSearchEnabled: false,
             eventTrackingEnabled: false,
             displayHeader: params.popup || params.fullPage,
             isPopup: params.popup,
@@ -55,7 +55,7 @@ export class OptionsPage extends React.Component<{}, State> {
             this.setState(() => ({
                 repositoryFileTreeEnabled:
                     items.repositoryFileTreeEnabled === undefined || items.repositoryFileTreeEnabled,
-                repositorySearchEnabled: items.repositorySearchEnabled === undefined || items.repositorySearchEnabled,
+                executeSearchEnabled: items.executeSearchEnabled === undefined || items.executeSearchEnabled,
                 eventTrackingEnabled: items.eventTrackingEnabled,
             }))
         })
@@ -71,9 +71,9 @@ export class OptionsPage extends React.Component<{}, State> {
         })
     }
 
-    private onRepositorySearchToggled = () => {
-        storage.setSync({ repositorySearchEnabled: !this.state.repositorySearchEnabled }, () => {
-            this.setState(() => ({ repositorySearchEnabled: !this.state.repositorySearchEnabled }))
+    private onExecuteSearchToggled = () => {
+        storage.setSync({ executeSearchEnabled: !this.state.executeSearchEnabled }, () => {
+            this.setState(state => ({ executeSearchEnabled: !state.executeSearchEnabled }))
         })
     }
 
@@ -106,14 +106,15 @@ export class OptionsPage extends React.Component<{}, State> {
                             <FormGroup check={true}>
                                 <Label className="options__input">
                                     <Input
-                                        onClick={this.onRepositorySearchToggled}
-                                        checked={Boolean(this.state.repositorySearchEnabled)}
+                                        onClick={this.onExecuteSearchToggled}
+                                        checked={Boolean(this.state.executeSearchEnabled)}
                                         className="options__input-checkbox"
                                         type="checkbox"
                                         {...safariInputAttributes as any}
                                     />{' '}
                                     <div className="options__input-label">
-                                        Display Sourcegraph search toggle in code host search input.
+                                        Open a new window with Sourcegraph search results when you perform a search on
+                                        your code host.
                                     </div>
                                 </Label>
                             </FormGroup>

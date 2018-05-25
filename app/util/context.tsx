@@ -11,9 +11,7 @@ export let serverUrls = [sourcegraphUrl]
 
 export let eventTrackingEnabled = false
 
-export let sourcegraphRepoSearchToggled = false
-
-export let repositorySearchEnabled = false
+export let executeSearchEnabled = false
 
 export let repositoryFileTreeEnabled = false
 
@@ -30,9 +28,7 @@ if (window.SG_ENV === 'EXTENSION') {
 
         eventTrackingEnabled = items.eventTrackingEnabled
 
-        sourcegraphRepoSearchToggled = items.sourcegraphRepoSearchToggled
-
-        repositorySearchEnabled = items.repositorySearchEnabled
+        executeSearchEnabled = items.executeSearchEnabled
 
         repositoryFileTreeEnabled = items.repositoryFileTreeEnabled
     })
@@ -67,16 +63,12 @@ export function checkIsOnlySourcegraphDotCom(handler: (res: boolean) => void): v
     }
 }
 
-export function setSourcegraphRepoSearchToggled(enabled: boolean): void {
-    sourcegraphRepoSearchToggled = enabled
-}
-
 export function setEventTrackingEnabled(enabled: boolean): void {
     eventTrackingEnabled = enabled
 }
 
-export function setRepositorySearchEnabled(enabled: boolean): void {
-    repositorySearchEnabled = enabled
+export function setExecuteSearchEnabled(enabled: boolean): void {
+    executeSearchEnabled = enabled
 }
 
 export function setRepositoryFileTreeEnabled(enabled: boolean): void {

@@ -5,13 +5,14 @@ import storage from '../../extension/storage'
 import { Alerts } from '../components/Alerts'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { ContextualSourcegraphButton } from '../components/ContextualSourcegraphButton'
-import { injectRepositorySearchToggle } from '../components/SearchToggle'
 import { WithResolvedRev } from '../components/WithResolvedRev'
 import { findElementWithOffset, getTargetLineAndOffset, GitHubBlobUrl } from '../github/index'
 import { CodeCell } from '../repo/index'
 import { getTableDataCell, hideTooltip } from '../repo/tooltips'
 import { RepoRevSidebar } from '../tree/RepoRevSidebar'
 import { getPlatformName, repositoryFileTreeEnabled, sourcegraphUrl } from '../util/context'
+
+import { initSearch } from './search'
 
 import {
     createBlobAnnotatorMount,
@@ -62,10 +63,12 @@ function inject(): void {
     injectBlobAnnotators()
     injectServerBanner()
     injectOpenOnSourcegraphButton()
-    injectRepositorySearchToggle()
+
     injectCodeSnippetAnnotator(getCodeCommentContainers(), '.border.rounded-1.my-2', false)
     injectCodeSnippetAnnotator(getRepoCodeSearchContainers(), '.d-inline-block', true)
     injectFileTree()
+
+    initSearch()
 }
 
 function hideFileTree(): void {

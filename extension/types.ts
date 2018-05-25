@@ -12,7 +12,7 @@ export interface StorageItems {
     gitHubEnterpriseURL: string
     phabricatorURL: string
     repositoryFileTreeEnabled: boolean
-    repositorySearchEnabled: boolean
+    executeSearchEnabled: boolean
     sourcegraphRepoSearchToggled: boolean
     eventTrackingEnabled: boolean
     openEditorEnabled: boolean
@@ -33,7 +33,7 @@ export const defaultStorageItems: StorageItems = {
     gitHubEnterpriseURL: '',
     phabricatorURL: '',
     repositoryFileTreeEnabled: true,
-    repositorySearchEnabled: true,
+    executeSearchEnabled: false,
     sourcegraphRepoSearchToggled: true,
     eventTrackingEnabled: true,
     openEditorEnabled: false,

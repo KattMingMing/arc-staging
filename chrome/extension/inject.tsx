@@ -8,10 +8,9 @@ import { injectSourcegraphApp } from '../../app/sourcegraph/inject'
 import {
     isOnlySourcegraphDotCom,
     setEventTrackingEnabled,
+    setExecuteSearchEnabled,
     setRepositoryFileTreeEnabled,
-    setRepositorySearchEnabled,
     setServerUrls,
-    setSourcegraphRepoSearchToggled,
     setSourcegraphUrl,
 } from '../../app/util/context'
 import { getURL } from '../../extension/extension'
@@ -78,10 +77,7 @@ function injectApplication(): void {
             setRepositoryFileTreeEnabled(
                 items.repositoryFileTreeEnabled === undefined ? true : items.repositoryFileTreeEnabled
             )
-            setRepositorySearchEnabled(
-                items.repositoryFileTreeEnabled === undefined ? true : items.repositorySearchEnabled
-            )
-            setSourcegraphRepoSearchToggled(items.sourcegraphRepoSearchToggled)
+            setExecuteSearchEnabled(items.executeSearchEnabled === undefined ? true : items.executeSearchEnabled)
 
             // This value should default to true unless opted out in the options menu.
             const trackEvents = items.eventTrackingEnabled === undefined || items.eventTrackingEnabled
