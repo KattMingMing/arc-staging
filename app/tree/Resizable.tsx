@@ -73,7 +73,12 @@ export class Resizable<C extends React.ReactElement<any>> extends React.PureComp
 
     public componentDidMount(): void {
         this.subscriptions.add(
-            this.sizeUpdates.pipe(distinctUntilChanged(), debounceTime(250)).subscribe(size => this.setSize(size))
+            this.sizeUpdates
+                .pipe(
+                    distinctUntilChanged(),
+                    debounceTime(250)
+                )
+                .subscribe(size => this.setSize(size))
         )
         this.repoContentContainer = document.querySelector('.repository-content') as HTMLElement
         this.updateMargin(this.getSize())
@@ -100,9 +105,9 @@ export class Resizable<C extends React.ReactElement<any>> extends React.PureComp
                 />
                 {this.props.element}
                 <div
-                    className={`resizable__handle resizable__handle--${this.props.handlePosition} ${this.state.resizing
-                        ? 'resizable__handle--resizing'
-                        : ''}`}
+                    className={`resizable__handle resizable__handle--${this.props.handlePosition} ${
+                        this.state.resizing ? 'resizable__handle--resizing' : ''
+                    }`}
                     onMouseDown={this.onMouseDown}
                 />
             </div>

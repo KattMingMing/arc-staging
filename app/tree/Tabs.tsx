@@ -35,9 +35,9 @@ class TabBar<T extends string> extends React.PureComponent<TabBarProps<T>> {
                     <button
                         key={i}
                         className={`tab-btn tab-bar__tab ${!this.props.endFragment &&
-                            'tab-bar__tab--flex-grow'} tab-bar__tab--${this.props.activeTab === tab.id
-                            ? 'active'
-                            : 'inactive'} ${this.props.tabClassName || ''}`}
+                            'tab-bar__tab--flex-grow'} tab-bar__tab--${
+                            this.props.activeTab === tab.id ? 'active' : 'inactive'
+                        } ${this.props.tabClassName || ''}`}
                         // tslint:disable-next-line:jsx-no-lambda
                         onClick={() => this.props.onSelect(tab.id)}
                     >

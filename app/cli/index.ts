@@ -21,8 +21,7 @@ interface InitOptions {
 export default function initialize({ onInputEntered, onInputChanged }: InitOptions): void {
     onInputChanged((query, suggest) => {
         if (cli.hasPrefix(query)) {
-            cli
-                .onInputChanged(query)
+            cli.onInputChanged(query)
                 .then(suggest)
                 .catch(err => console.error('error getting suggestions', err))
             return

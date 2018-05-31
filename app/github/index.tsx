@@ -79,7 +79,9 @@ export function getTargetLineAndOffset(
             line = parseInt(lineEl.getAttribute('data-line-number')!, 10) || parseInt(lineEl.textContent!, 10)
         } else {
             const lineEl = (isDelta
-                ? opt.isBase ? target.previousElementSibling!.previousElementSibling : target.previousElementSibling
+                ? opt.isBase
+                    ? target.previousElementSibling!.previousElementSibling
+                    : target.previousElementSibling
                 : target.previousElementSibling) as HTMLElement
             line = parseInt(lineEl.getAttribute('data-line-number')!, 10) || parseInt(lineEl.textContent!, 10)
         }

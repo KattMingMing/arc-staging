@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators/map'
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { DidOpenTextDocumentParams, ServerCapabilities } from 'vscode-languageserver/lib/main'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, AbsoluteRepoLanguageFile, makeRepoURI, parseRepoURI } from '../repo'
-import { getModeFromPath, repoUrlCache, supportedModes } from '../util/context'
+import { getModeFromPath, repoUrlCache, sourcegraphUrl, supportedModes } from '../util/context'
 import { memoizeObservable } from '../util/memoize'
 import { toAbsoluteBlobURL } from '../util/url'
 import { getHeaders } from './headers'
@@ -70,7 +70,7 @@ export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Obs
         pos.filePath
     )
 
-    const url = repoUrlCache[pos.repoPath]
+    const url = repoUrlCache[pos.repoPath] || sourcegraphUrl
     if (!url) {
         throw new Error('Error fetching hover: No URL found.')
     }
@@ -114,7 +114,7 @@ export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition)
         pos.filePath
     )
 
-    const url = repoUrlCache[pos.repoPath]
+    const url = repoUrlCache[pos.repoPath] || sourcegraphUrl
     if (!url) {
         throw new Error('Error fetching definition: No URL found.')
     }
@@ -151,37 +151,37 @@ export function fetchJumpURL(pos: AbsoluteRepoFilePosition): Observable<string |
     )
 }
 
-export const fetchServerCapabilities = memoizeObservable((pos: AbsoluteRepoLanguageFile): Observable<
-    ServerCapabilities | undefined
-> => {
-    const body = wrapLSP(
-        {
-            method: 'textDocument/didOpen',
-            params: {
-                textDocument: {
-                    uri: `git://${pos.repoPath}?${pos.commitID}#${pos.filePath}`,
-                },
-            } as DidOpenTextDocumentParams,
-        },
-        pos,
-        pos.filePath
-    )
-    const url = repoUrlCache[pos.repoPath]
-    if (!url) {
-        throw new Error('Error fetching server capabilities. No URL found.')
-    }
-    return Observable.ajax({
-        method: 'POST',
-        url: `${url}/.api/xlang/textDocument/didOpen`,
-        headers: getHeaders(),
-        crossDomain: true,
-        withCredentials: true,
-        body: JSON.stringify(body),
-        async: true,
-    }).map(({ response }) => {
-        if (!response || !response[0] || !response[0].result) {
-            return
+export const fetchServerCapabilities = memoizeObservable(
+    (pos: AbsoluteRepoLanguageFile): Observable<ServerCapabilities | undefined> => {
+        const body = wrapLSP(
+            {
+                method: 'textDocument/didOpen',
+                params: {
+                    textDocument: {
+                        uri: `git://${pos.repoPath}?${pos.commitID}#${pos.filePath}`,
+                    },
+                } as DidOpenTextDocumentParams,
+            },
+            pos,
+            pos.filePath
+        )
+        const url = repoUrlCache[pos.repoPath] || sourcegraphUrl
+        if (!url) {
+            throw new Error('Error fetching server capabilities. No URL found.')
         }
-        return response[0].result.capabilities
-    })
-})
+        return Observable.ajax({
+            method: 'POST',
+            url: `${url}/.api/xlang/textDocument/didOpen`,
+            headers: getHeaders(),
+            crossDomain: true,
+            withCredentials: true,
+            body: JSON.stringify(body),
+            async: true,
+        }).map(({ response }) => {
+            if (!response || !response[0] || !response[0].result) {
+                return
+            }
+            return response[0].result.capabilities
+        })
+    }
+)

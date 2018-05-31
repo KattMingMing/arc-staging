@@ -94,9 +94,9 @@ function getSetOpenFileOnSuggestions(): Promise<OmniCLI.Suggestion[]> {
             resolve([
                 {
                     content: openFileOnSourcegraph ? 'false' : 'true',
-                    description: `Open files from the fuzzy finder on ${openFileOnSourcegraph
-                        ? 'your code host'
-                        : 'Sourcegraph'}`,
+                    description: `Open files from the fuzzy finder on ${
+                        openFileOnSourcegraph ? 'your code host' : 'Sourcegraph'
+                    }`,
                 },
             ])
         )

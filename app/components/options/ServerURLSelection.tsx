@@ -83,9 +83,9 @@ export class ServerURLSelection extends React.Component<Props, State> {
             <ListGroup className="options__list-group">
                 {this.state.serverUrls.map((url, i) => (
                     <ListGroupItem
-                        className={`options__group-item ${url === this.state.sourcegraphUrl
-                            ? 'options__group-item-disabled'
-                            : ''} justify-content-between`}
+                        className={`options__group-item ${
+                            url === this.state.sourcegraphUrl ? 'options__group-item-disabled' : ''
+                        } justify-content-between`}
                         key={i}
                         disabled={url === this.state.sourcegraphUrl}
                         action={true}

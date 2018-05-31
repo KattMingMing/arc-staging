@@ -571,8 +571,9 @@ export class BlobAnnotator extends React.Component<Props, State> {
                     const anchorPath = header.dataset.path
                     if (anchorPath === defCtx.filePath) {
                         const anchorUrl = header.dataset.anchor
-                        const url = `${window.location.origin}${window.location.pathname}#${anchorUrl}R${defCtx.position
-                            .line}`
+                        const url = `${window.location.origin}${window.location.pathname}#${anchorUrl}R${
+                            defCtx.position.line
+                        }`
                         window.location.href = url
                         return
                     }
@@ -580,11 +581,14 @@ export class BlobAnnotator extends React.Component<Props, State> {
             }
 
             const rev = sameRepo
-                ? this.props.commitID === defCtx.commitID ? this.props.rev : defCtx.commitID || defCtx.rev
+                ? this.props.commitID === defCtx.commitID
+                    ? this.props.rev
+                    : defCtx.commitID || defCtx.rev
                 : defCtx.commitID || defCtx.rev
             // tslint:disable-next-line
-            const url = `https://${defCtx.repoPath}/blob/${rev || 'HEAD'}/${defCtx.filePath}#L${defCtx.position
-                .line}${defCtx.position.character ? ':' + defCtx.position.character : ''}`
+            const url = `https://${defCtx.repoPath}/blob/${rev || 'HEAD'}/${defCtx.filePath}#L${defCtx.position.line}${
+                defCtx.position.character ? ':' + defCtx.position.character : ''
+            }`
             window.location.href = url
         }
     }

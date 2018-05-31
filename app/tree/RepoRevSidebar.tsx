@@ -179,9 +179,9 @@ export class RepoRevSidebar extends React.PureComponent<Props, State> {
                             </span>
                         }
                         id="explorer"
-                        className={`repo-rev-sidebar ${this.props.className} ${this.state.showSidebar
-                            ? `repo-rev-sidebar--open ${this.props.className}--open`
-                            : ''} ${showSymbols ? '' : 'repo-rev-sidebar--no-symbols'}`}
+                        className={`repo-rev-sidebar ${this.props.className} ${
+                            this.state.showSidebar ? `repo-rev-sidebar--open ${this.props.className}--open` : ''
+                        } ${showSymbols ? '' : 'repo-rev-sidebar--no-symbols'}`}
                         tabClassName="repo-rev-sidebar__tab"
                     >
                         {this.state.files && (

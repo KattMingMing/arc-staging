@@ -117,16 +117,18 @@ function monitorFileContainers(
             continue
         }
 
-        const observer = new MutationObserver((records: MutationRecord[]): void => {
-            for (const rec of records) {
-                for (const n of rec.addedNodes) {
-                    const maybeTable = n as HTMLElement
-                    if (maybeTable.tagName === 'TABLE') {
-                        handler(file, maybeTable as HTMLTableElement, true)
+        const observer = new MutationObserver(
+            (records: MutationRecord[]): void => {
+                for (const rec of records) {
+                    for (const n of rec.addedNodes) {
+                        const maybeTable = n as HTMLElement
+                        if (maybeTable.tagName === 'TABLE') {
+                            handler(file, maybeTable as HTMLTableElement, true)
+                        }
                     }
                 }
             }
-        })
+        )
 
         observer.observe(container, { childList: true })
 
@@ -175,6 +177,11 @@ function injectDiffusion(state: DiffusionState): void {
         if (!actionLinks) {
             console.warn('Unable to find actionLinks', file)
             return
+        }
+        // Set the parent overflow to visible so that our tooltips show correctly.
+        const shellHeader = actionLinks.closest('.phui-header-shell') as HTMLElement
+        if (shellHeader) {
+            shellHeader.style.overflow = 'visible'
         }
         const mount = createBlobAnnotatorMount(file, actionLinks, true)
         if (!mount) {

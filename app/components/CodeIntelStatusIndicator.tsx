@@ -52,13 +52,15 @@ const propsToStateUpdate = (obs: Observable<CodeIntelStatusIndicatorProps>) =>
                 fetchLangServer(language),
                 fetchServerCapabilities({ repoPath, commitID, filePath, language })
             ).pipe(
-                map(([langServer, capabilities]): LangServer => ({
-                    displayName: (langServer && langServer.displayName) || undefined,
-                    homepageURL: (langServer && langServer.homepageURL) || undefined,
-                    issuesURL: (langServer && langServer.issuesURL) || undefined,
-                    experimental: (langServer && langServer.experimental) || undefined,
-                    capabilities,
-                })),
+                map(
+                    ([langServer, capabilities]): LangServer => ({
+                        displayName: (langServer && langServer.displayName) || undefined,
+                        homepageURL: (langServer && langServer.homepageURL) || undefined,
+                        issuesURL: (langServer && langServer.issuesURL) || undefined,
+                        experimental: (langServer && langServer.experimental) || undefined,
+                        capabilities,
+                    })
+                ),
                 catchError(err => (err.code === EMODENOTFOUND ? [null] : [asError(err)]))
             )
         }),
@@ -121,7 +123,8 @@ export class CodeIntelStatusIndicator extends React.Component<
         if (this.state.langServerOrError === null || isErrorLike(this.state.langServerOrError)) {
             return 'text-danger'
         }
-        if (!this.state.langServerOrError.capabilities ||
+        if (
+            !this.state.langServerOrError.capabilities ||
             !this.state.langServerOrError.capabilities.hoverProvider ||
             !this.state.langServerOrError.capabilities.referencesProvider ||
             !this.state.langServerOrError.capabilities.definitionProvider ||
@@ -140,7 +143,9 @@ export class CodeIntelStatusIndicator extends React.Component<
 
     public render(): JSX.Element {
         const language = getModeFromPath(this.props.filePath)
-        const buttonClass = isPhabricator ? 'button button-grey has-icon has-text phui-button-default  msl' : 'btn btn-sm mr-1'
+        const buttonClass = isPhabricator
+            ? 'button grey button-grey has-icon has-text phui-button-default  msl'
+            : 'btn btn-sm mr-1'
         return (
             <div className="code-intel-status-indicator">
                 <button
@@ -178,19 +183,31 @@ export class CodeIntelStatusIndicator extends React.Component<
                                 <ul className="list-unstyled">
                                     <CapabilityStatus
                                         label="Hovers"
-                                        provided={!!this.state.langServerOrError.capabilities && !!this.state.langServerOrError.capabilities.hoverProvider}
+                                        provided={
+                                            !!this.state.langServerOrError.capabilities &&
+                                            !!this.state.langServerOrError.capabilities.hoverProvider
+                                        }
                                     />
                                     <CapabilityStatus
                                         label="Definitions"
-                                        provided={!!this.state.langServerOrError.capabilities && !!this.state.langServerOrError.capabilities.definitionProvider}
+                                        provided={
+                                            !!this.state.langServerOrError.capabilities &&
+                                            !!this.state.langServerOrError.capabilities.definitionProvider
+                                        }
                                     />
                                     <CapabilityStatus
                                         label="References"
-                                        provided={!!this.state.langServerOrError.capabilities && !!this.state.langServerOrError.capabilities.referencesProvider}
+                                        provided={
+                                            !!this.state.langServerOrError.capabilities &&
+                                            !!this.state.langServerOrError.capabilities.referencesProvider
+                                        }
                                     />
                                     <CapabilityStatus
                                         label="Implementations"
-                                        provided={!!this.state.langServerOrError.capabilities && !!(this.state.langServerOrError.capabilities as any).implementationProvider}
+                                        provided={
+                                            !!this.state.langServerOrError.capabilities &&
+                                            !!(this.state.langServerOrError.capabilities as any).implementationProvider
+                                        }
                                     />
                                 </ul>
                                 <h4 className="mt-2 mb-0">Scope:</h4>
@@ -198,9 +215,12 @@ export class CodeIntelStatusIndicator extends React.Component<
                                     <CapabilityStatus label="Local" provided={true} />
                                     <CapabilityStatus
                                         label="Cross-repository"
-                                        provided={!!this.state.langServerOrError.capabilities && hasCrossRepositoryCodeIntelligence(
-                                            this.state.langServerOrError.capabilities
-                                        )}
+                                        provided={
+                                            !!this.state.langServerOrError.capabilities &&
+                                            hasCrossRepositoryCodeIntelligence(
+                                                this.state.langServerOrError.capabilities
+                                            )
+                                        }
                                     />
                                 </ul>
                                 {this.state.langServerOrError.experimental && (
@@ -225,7 +245,11 @@ export class CodeIntelStatusIndicator extends React.Component<
                                     </p>
                                 )}
                                 <p className="mt-2 mb-0">
-                                    <a onClick={this.toggleCodeIntelligence} style={{cursor: 'pointer'}} target="_blank">
+                                    <a
+                                        onClick={this.toggleCodeIntelligence}
+                                        style={{ cursor: 'pointer' }}
+                                        target="_blank"
+                                    >
                                         {this.state.enabled ? 'Disable' : 'Enable'} code intelligence
                                     </a>
                                 </p>
