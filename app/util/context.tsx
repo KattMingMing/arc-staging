@@ -94,6 +94,7 @@ export const supportedModes = new Set<string>([
     'css',
     'dockerfile',
     'elixir',
+    'haskell',
     'html',
     'lua',
     'ocaml',
