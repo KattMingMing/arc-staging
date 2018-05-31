@@ -180,7 +180,7 @@ export class CodeIntelStatusIndicator extends React.Component<
                                     </a>
                                 </h3>
                                 <h4 className="mt-2 mb-0">Provides:</h4>
-                                <ul className="list-unstyled">
+                                <ul className="code-intel-status-indicator__unstyled-list list-unstyled">
                                     <CapabilityStatus
                                         label="Hovers"
                                         provided={
@@ -211,7 +211,7 @@ export class CodeIntelStatusIndicator extends React.Component<
                                     />
                                 </ul>
                                 <h4 className="mt-2 mb-0">Scope:</h4>
-                                <ul className="list-unstyled">
+                                <ul className="code-intel-status-indicator__unstyled-list list-unstyled">
                                     <CapabilityStatus label="Local" provided={true} />
                                     <CapabilityStatus
                                         label="Cross-repository"

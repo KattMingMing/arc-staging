@@ -18,6 +18,10 @@
     &__popover:hover {
         display: block;
     }
+
+    &__unstyled-list {
+        list-style-type: none;
+    }
 }
 
 // A full-width container with a horizontal header.
