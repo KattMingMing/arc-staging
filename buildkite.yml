@@ -1,11 +1,11 @@
 steps:
-  - label: ':typescript: Build'
+  - label: ':typescript:'
     command: |-
       npm ci
       npm run tslint
       npm run build
 
-  - label: ':hammer: Test'
+  - label: ':cypress:'
     command: |-
       ./ci/test.sh
     artifact_paths: 'cypress/screenshots/*;cypress/videos/*'
