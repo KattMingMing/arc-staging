@@ -10,6 +10,8 @@ type MigrateFunc = (
 ) => void
 
 export interface Storage {
+    getManaged: (callback: (items: StorageItems) => void) => void
+    getManagedItem: (key: keyof StorageItems, callback: (items: StorageItems) => void) => void
     getSync: (callback: (items: StorageItems) => void) => void
     getSyncItem: (key: keyof StorageItems, callback: (items: StorageItems) => void) => void
     setSync: (items: Partial<StorageItems>, callback?: (() => void) | undefined) => void
@@ -49,12 +51,20 @@ export default ((): Storage => {
                 ? chrome.storage.sync
                 : new SafariStorageArea((safari.extension as SafariExtension).settings, 'sync')
 
+        const managedStorageArea: chrome.storage.StorageArea =
+            typeof chrome !== 'undefined'
+                ? chrome.storage.managed
+                : new SafariStorageArea((safari.extension as SafariExtension).settings, 'managed')
+
         const localStorageArea: chrome.storage.StorageArea =
             typeof chrome !== 'undefined'
                 ? chrome.storage.local
                 : new SafariStorageArea(stringifyStorageArea(window.localStorage), 'local')
 
         return {
+            getManaged: get(managedStorageArea),
+            getManagedItem: getItem(managedStorageArea),
+
             getSync: get(syncStorageArea),
             getSyncItem: getItem(syncStorageArea),
             setSync: set(syncStorageArea),
@@ -100,6 +110,8 @@ export default ((): Storage => {
 
     // Running natively in the webpage(in Phabricator patch) so we don't need any storage.
     return {
+        getManaged: throwNoopErr,
+        getManagedItem: throwNoopErr,
         getSync: throwNoopErr,
         getSyncItem: throwNoopErr,
         setSync: throwNoopErr,

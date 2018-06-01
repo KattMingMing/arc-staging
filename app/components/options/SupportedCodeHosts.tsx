@@ -51,7 +51,7 @@ export class SupportedCodeHosts extends React.Component<{}, State> {
             }
 
             permissions
-                .request(this.state.customCodeHost)
+                .request([this.state.customCodeHost])
                 .then(granted => {
                     if (!granted) {
                         console.log('access not granted', granted)

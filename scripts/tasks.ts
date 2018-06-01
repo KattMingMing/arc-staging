@@ -3,6 +3,7 @@ import _ from 'lodash'
 import path from 'path'
 import shelljs from 'shelljs'
 import extensionInfo from '../chrome/extension.info.json'
+import schema from '../chrome/schema.json'
 
 export type BuildEnv = 'dev' | 'prod'
 
@@ -51,6 +52,10 @@ const browserWhitelist = {
     safari: ['version'],
 }
 
+function writeSchema(env, browser, writeDir): void {
+    fs.writeFileSync(`${writeDir}/schema.json`, JSON.stringify(schema, null, 4))
+}
+
 function writeManifest(env, browser, writeDir): void {
     let envInfo = omit(extensionInfo[env], browserBlacklist[browser])
 
@@ -67,6 +72,7 @@ function writeManifest(env, browser, writeDir): void {
 
     if (browser === 'firefox') {
         manifest.permissions.push('<all_urls>')
+        delete manifest.storage
     }
 
     fs.writeFileSync(`${writeDir}/manifest.json`, JSON.stringify(manifest, null, 4))
@@ -80,6 +86,7 @@ function buildForBrowser(browser): (env: string) => () => void {
         const buildDir = path.resolve(process.cwd(), `${BUILDS_DIR}/${browser}`)
 
         writeManifest(env, browser, buildDir)
+        writeSchema(env, browser, buildDir)
 
         return () => {
             console.log(`Building ${title} ${env} bundle...`)

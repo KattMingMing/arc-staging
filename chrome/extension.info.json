@@ -5,7 +5,6 @@
     "description": "Gives your Code Host IDE powers: jump to definition and hover tooltips in code, PRs, and diffs",
     "browser_action": {
         "default_title": "Sourcegraph",
-        "default_popup": "options.html?popup=true",
         "default_icon": {
             "16": "img/icon-16.png",
             "48": "img/icon-48.png",
@@ -22,6 +21,9 @@
     },
     "options_ui": {
         "page": "options.html"
+    },
+    "storage": {
+        "managed_schema": "schema.json"
     },
     "optional_permissions": ["tabs", "http://*/*", "https://*/*"],
     "web_accessible_resources": ["img/*", "js/link.bundle.js", "link.html", "css/style.bundle.css"],

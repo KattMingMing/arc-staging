@@ -40,7 +40,37 @@ initializeCli(omnibox)
 
 storage.getSync(({ sourcegraphURL }) => configureOmnibox(sourcegraphURL))
 
-storage.onChanged(changes => {
+storage.getManaged(items => {
+    if (!items.enterpriseUrls || !items.enterpriseUrls.length) {
+        setDefaultBrowserAction()
+        return
+    }
+    const urls = items.enterpriseUrls.map(item => {
+        if (item.endsWith('/')) {
+            return item.substr(item.length - 1)
+        }
+        return item
+    })
+    handleManagedPermissionRequest(urls)
+})
+
+storage.onChanged((changes, areaName) => {
+    if (areaName === 'managed') {
+        storage.getSync(items => {
+            if (changes.serverUrls && changes.serverUrls.newValue) {
+                const serverUrls = [...new Set([...items.serverUrls, ...changes.serverUrls.newValue])]
+                setServerUrls(serverUrls)
+                if (serverUrls.length) {
+                    storage.setSync({ serverUrls, sourcegraphURL: serverUrls[0] })
+                }
+            }
+            if (changes.enterpriseUrls && changes.enterpriseUrls.newValue) {
+                handleManagedPermissionRequest(changes.enterpriseUrls.newValue)
+            }
+        })
+        return
+    }
+
     if (changes.sourcegraphURL && changes.sourcegraphURL.newValue) {
         setSourcegraphUrl(changes.sourcegraphURL.newValue)
         configureOmnibox(changes.sourcegraphURL.newValue)
@@ -140,7 +170,7 @@ runtime.onMessage((message, _, cb) => {
             return true
 
         case 'setEnterpriseUrl':
-            requestPermissionsForEnterpriseUrl(message.payload, cb)
+            requestPermissionsForEnterpriseUrls([message.payload], cb)
             return true
 
         case 'setSourcegraphUrl':
@@ -170,12 +200,12 @@ runtime.onMessage((message, _, cb) => {
     return
 })
 
-function requestPermissionsForEnterpriseUrl(url: string, cb: (res?: any) => void): void {
+function requestPermissionsForEnterpriseUrls(urls: string[], cb: (res?: any) => void): void {
     storage.getSync(items => {
         const enterpriseUrls = items.enterpriseUrls || []
         storage.setSync(
             {
-                enterpriseUrls: [...new Set([...enterpriseUrls, url])],
+                enterpriseUrls: [...new Set([...enterpriseUrls, ...urls])],
             },
             cb
         )
@@ -183,7 +213,7 @@ function requestPermissionsForEnterpriseUrl(url: string, cb: (res?: any) => void
 }
 
 function requestPermissionsForSourcegraphUrl(url: string): void {
-    permissions.request(url).then(granted => {
+    permissions.request([url]).then(granted => {
         if (granted) {
             storage.setSync({ sourcegraphURL: url })
         }
@@ -200,7 +230,8 @@ function removeEnterpriseUrl(url: string, cb: (res?: any) => void): void {
 
 runtime.setUninstallURL('https://about.sourcegraph.com/uninstall/')
 
-runtime.onInstalled(() =>
+runtime.onInstalled(() => {
+    setDefaultBrowserAction()
     storage.getSync(items => {
         if (window.safari) {
             // Safari settings returns null for getters of values that don't exist so
@@ -209,10 +240,52 @@ runtime.onInstalled(() =>
                 ...defaultStorageItems,
             })
         } else {
-            storage.setSync({
-                ...defaultStorageItems,
-                ...items,
+            // Enterprise deployments of Sourcegraph are passed a configuration file.
+            storage.getManaged(managedItems => {
+                storage.setSync(
+                    {
+                        ...defaultStorageItems,
+                        ...items,
+                        ...managedItems,
+                    },
+                    () => {
+                        if (managedItems && managedItems.enterpriseUrls && managedItems.enterpriseUrls.length) {
+                            handleManagedPermissionRequest(managedItems.enterpriseUrls)
+                        } else {
+                            setDefaultBrowserAction()
+                        }
+                    }
+                )
             })
         }
     })
-)
+})
+
+function handleManagedPermissionRequest(managedUrls: string[]): void {
+    setDefaultBrowserAction()
+    if (managedUrls.length === 0) {
+        return
+    }
+    permissions.getAll().then(perms => {
+        const origins = perms.origins || []
+        if (managedUrls.every(val => origins.indexOf(`${val}/*`) >= 0)) {
+            setDefaultBrowserAction()
+            return
+        }
+        browserAction.setPopup({ popup: '' })
+        browserAction.setBadgeText({ text: '1' })
+        browserAction.onClicked(() => {
+            permissions.request(managedUrls).then(added => {
+                if (!added) {
+                    return
+                }
+                setDefaultBrowserAction()
+            })
+        })
+    })
+}
+
+function setDefaultBrowserAction(): void {
+    browserAction.setBadgeText({ text: '' })
+    browserAction.setPopup({ popup: 'options.html?popup=true' })
+}
