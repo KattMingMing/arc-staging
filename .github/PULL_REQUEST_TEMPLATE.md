@@ -13,7 +13,7 @@ You Don't have to test each environment before opening this PR, but provide whic
 tested so each can get tested by someone before this gets merged.
 -->
 
--   [ ] Chrome
--   [ ] Firefox
--   [ ] Safari
--   [ ] Phabricator Bundle
+- [ ] Chrome
+- [ ] Firefox
+- [ ] Safari
+- [ ] Phabricator Bundle

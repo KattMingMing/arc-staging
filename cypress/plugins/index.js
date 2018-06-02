@@ -11,10 +11,10 @@
 const extensionLoader = require('cypress-browser-extension-plugin/loader')
 
 module.exports = (on, config) => {
-    on(
-        'before:browser:launch',
-        extensionLoader.load({
-            source: 'build/chrome',
-        })
-    )
+  on(
+    'before:browser:launch',
+    extensionLoader.load({
+      source: 'build/chrome',
+    })
+  )
 }
