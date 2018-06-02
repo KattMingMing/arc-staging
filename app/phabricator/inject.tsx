@@ -1,8 +1,6 @@
 import * as React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import 'rxjs/add/observable/zip'
-import 'rxjs/add/operator/toPromise'
-import { Observable } from 'rxjs/Observable'
+import { zip } from 'rxjs'
 import { BlobAnnotator } from '../components/BlobAnnotator'
 import { fetchBlobContentLines, resolveRepo, resolveRev } from '../repo/backend'
 import { getTableDataCell } from '../repo/tooltips'
@@ -395,7 +393,7 @@ function injectChangeset(state: DifferentialState | RevisionState | ChangeState)
 
                 case PhabricatorMode.Revision: {
                     const { repoPath, baseCommitID, headCommitID } = state as RevisionState
-                    Observable.zip(
+                    zip(
                         fetchBlobContentLines({
                             repoPath,
                             commitID: baseCommitID,

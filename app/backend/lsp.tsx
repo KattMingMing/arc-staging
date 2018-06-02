@@ -1,7 +1,6 @@
-import 'rxjs/add/observable/of'
-import 'rxjs/add/operator/map'
-import { Observable } from 'rxjs/Observable'
-import { map } from 'rxjs/operators/map'
+import { Observable, of } from 'rxjs'
+import { ajax } from 'rxjs/ajax'
+import { map } from 'rxjs/operators'
 import { Definition, Hover } from 'vscode-languageserver-types'
 import { DidOpenTextDocumentParams, ServerCapabilities } from 'vscode-languageserver/lib/main'
 import { AbsoluteRepo, AbsoluteRepoFilePosition, AbsoluteRepoLanguageFile, makeRepoURI, parseRepoURI } from '../repo'
@@ -50,7 +49,7 @@ function wrapLSP(req: LSPRequest, ctx: AbsoluteRepo, path: string): any[] {
 export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Observable<Hover> => {
     const mode = getModeFromPath(pos.filePath)
     if (!mode || !supportedModes.has(mode)) {
-        return Observable.of({ contents: [] })
+        return of({ contents: [] })
     }
 
     const body = wrapLSP(
@@ -75,7 +74,7 @@ export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Obs
         throw new Error('Error fetching hover: No URL found.')
     }
 
-    return Observable.ajax({
+    return ajax({
         method: 'POST',
         url: `${url}/.api/xlang/textDocument/hover`,
         headers: getHeaders(),
@@ -83,18 +82,20 @@ export const fetchHover = memoizeObservable((pos: AbsoluteRepoFilePosition): Obs
         withCredentials: true,
         body: JSON.stringify(body),
         async: true,
-    }).map(({ response }) => {
-        if (!response || !response[1] || !response[1].result) {
-            return []
-        }
-        return response[1].result
-    })
+    }).pipe(
+        map(({ response }) => {
+            if (!response || !response[1] || !response[1].result) {
+                return []
+            }
+            return response[1].result
+        })
+    )
 }, makeRepoURI)
 
 export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition): Observable<Definition> => {
     const mode = getModeFromPath(pos.filePath)
     if (!mode || !supportedModes.has(mode)) {
-        return Observable.of([])
+        return of([])
     }
 
     const body = wrapLSP(
@@ -119,7 +120,7 @@ export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition)
         throw new Error('Error fetching definition: No URL found.')
     }
 
-    return Observable.ajax({
+    return ajax({
         method: 'POST',
         url: `${url}/.api/xlang/textDocument/definition`,
         headers: getHeaders(),
@@ -127,12 +128,14 @@ export const fetchDefinition = memoizeObservable((pos: AbsoluteRepoFilePosition)
         withCredentials: true,
         body: JSON.stringify(body),
         async: true,
-    }).map(({ response }) => {
-        if (!response || !response[1] || !response[1].result) {
-            return []
-        }
-        return response[1].result
-    })
+    }).pipe(
+        map(({ response }) => {
+            if (!response || !response[1] || !response[1].result) {
+                return []
+            }
+            return response[1].result
+        })
+    )
 }, makeRepoURI)
 
 export function fetchJumpURL(pos: AbsoluteRepoFilePosition): Observable<string | null> {
@@ -169,7 +172,7 @@ export const fetchServerCapabilities = memoizeObservable(
         if (!url) {
             throw new Error('Error fetching server capabilities. No URL found.')
         }
-        return Observable.ajax({
+        return ajax({
             method: 'POST',
             url: `${url}/.api/xlang/textDocument/didOpen`,
             headers: getHeaders(),
@@ -177,11 +180,13 @@ export const fetchServerCapabilities = memoizeObservable(
             withCredentials: true,
             body: JSON.stringify(body),
             async: true,
-        }).map(({ response }) => {
-            if (!response || !response[0] || !response[0].result) {
-                return
-            }
-            return response[0].result.capabilities
-        })
+        }).pipe(
+            map(({ response }) => {
+                if (!response || !response[0] || !response[0].result) {
+                    return
+                }
+                return response[0].result.capabilities
+            })
+        )
     }
 )

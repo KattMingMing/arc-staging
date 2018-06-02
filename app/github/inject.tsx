@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { render } from 'react-dom'
-import { Subject } from 'rxjs/Subject'
+import { Subject } from 'rxjs'
 import storage from '../../extension/storage'
 import { Alerts } from '../components/Alerts'
 import { BlobAnnotator } from '../components/BlobAnnotator'
@@ -11,7 +11,6 @@ import { CodeCell } from '../repo/index'
 import { getTableDataCell, hideTooltip } from '../repo/tooltips'
 import { RepoRevSidebar } from '../tree/RepoRevSidebar'
 import { getPlatformName, repositoryFileTreeEnabled, sourcegraphUrl } from '../util/context'
-
 import { initSearch } from './search'
 
 import {

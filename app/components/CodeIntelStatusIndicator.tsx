@@ -6,10 +6,8 @@ import CloseIcon from 'mdi-react/CloseIcon'
 import PowerPlugIcon from 'mdi-react/PowerPlugIcon'
 import React from 'react'
 import { Link } from 'react-router-dom'
-import 'rxjs/add/observable/forkJoin'
-import { Observable } from 'rxjs/Observable'
+import { forkJoin, Observable, Subject } from 'rxjs'
 import { catchError, distinctUntilChanged, map, switchMap } from 'rxjs/operators'
-import { Subject } from 'rxjs/Subject'
 import { asError, ErrorLike, isErrorLike } from '../backend/errors'
 import { EMODENOTFOUND, fetchServerCapabilities } from '../backend/lsp'
 import { isPhabricator } from '../context'
@@ -48,7 +46,7 @@ const propsToStateUpdate = (obs: Observable<CodeIntelStatusIndicatorProps>) =>
             if (!language) {
                 return [null]
             }
-            return Observable.forkJoin(
+            return forkJoin(
                 fetchLangServer(language),
                 fetchServerCapabilities({ repoPath, commitID, filePath, language })
             ).pipe(

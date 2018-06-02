@@ -1,13 +1,6 @@
 import * as React from 'react'
-import 'rxjs/add/observable/defer'
-import 'rxjs/add/operator/catch'
-import 'rxjs/add/operator/delay'
-import 'rxjs/add/operator/do'
-import 'rxjs/add/operator/retryWhen'
-import 'rxjs/add/operator/switchMap'
-import { Observable } from 'rxjs/Observable'
-import { Subject } from 'rxjs/Subject'
-import { Subscription } from 'rxjs/Subscription'
+import { defer, Subject, Subscription } from 'rxjs'
+import { catchError, delay, retryWhen, switchMap, tap } from 'rxjs/operators'
 import { setServerUrls } from '../../app/util/context'
 import storage from '../../extension/storage'
 import { ECLONEINPROGESS, EREPONOTFOUND } from '../backend/errors'
@@ -37,35 +30,40 @@ export class WithResolvedRev extends React.Component<WithResolvedRevProps, WithR
         super(props)
         this.subscriptions.add(
             this.componentUpdates
-                .switchMap(({ repoPath, rev }) => {
-                    if (!repoPath) {
-                        return [undefined]
-                    }
-                    // Defer Observable so it retries the request on resubscription
-                    return (
-                        Observable.defer(() => resolveRev({ repoPath, rev }))
-                            // On a CloneInProgress error, retry after 5s
-                            .retryWhen(errors =>
-                                errors
-                                    .do(err => {
-                                        if (err.code === ECLONEINPROGESS) {
-                                            // Display cloning screen to the user and retry
-                                            this.setState({ cloneInProgress: true })
-                                            return
-                                        }
-                                        if (err.code === EREPONOTFOUND) {
-                                            // Display 404to the user and do not retry
-                                            this.setState({ notFound: true })
-                                        }
-                                        // Don't retry other errors
-                                        throw err
-                                    })
-                                    .delay(1000)
-                            )
-                            // Don't break the stream
-                            .catch(err => [])
-                    )
-                })
+                .pipe(
+                    switchMap(({ repoPath, rev }) => {
+                        if (!repoPath) {
+                            return [undefined]
+                        }
+                        // Defer Observable so it retries the request on resubscription
+                        return (
+                            defer(() => resolveRev({ repoPath, rev }))
+                                // On a CloneInProgress error, retry after 5s
+                                .pipe(
+                                    retryWhen(errors =>
+                                        errors.pipe(
+                                            tap(err => {
+                                                if (err.code === ECLONEINPROGESS) {
+                                                    // Display cloning screen to the user and retry
+                                                    this.setState({ cloneInProgress: true })
+                                                    return
+                                                }
+                                                if (err.code === EREPONOTFOUND) {
+                                                    // Display 404to the user and do not retry
+                                                    this.setState({ notFound: true })
+                                                }
+                                                // Don't retry other errors
+                                                throw err
+                                            }),
+                                            delay(1000)
+                                        )
+                                    ),
+                                    // Don't break the stream
+                                    catchError(err => [])
+                                )
+                        )
+                    })
+                )
                 .subscribe(
                     commitID => {
                         this.setState({ commitID, cloneInProgress: false })

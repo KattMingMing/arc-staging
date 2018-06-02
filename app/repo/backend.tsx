@@ -1,8 +1,5 @@
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/toPromise'
-import { Observable } from 'rxjs/Observable'
-import { catchError } from 'rxjs/operators/catchError'
-import { map } from 'rxjs/operators/map'
+import { Observable } from 'rxjs'
+import { catchError, map } from 'rxjs/operators'
 import { getContext } from '../backend/context'
 import { CloneInProgressError, createAggregateError, RepoNotFoundError, RevNotFoundError } from '../backend/errors'
 import { queryGraphQL } from '../backend/graphql'
@@ -57,13 +54,15 @@ export const resolveRepo = memoizeObservable(
                 }
             }`,
             { ...ctx }
-        ).map(result => {
-            if (!result.data || !result.data.repository) {
-                throw new RepoNotFoundError(ctx.repoPath)
-            }
+        ).pipe(
+            map(result => {
+                if (!result.data || !result.data.repository) {
+                    throw new RepoNotFoundError(ctx.repoPath)
+                }
 
-            return result.data.repository.url
-        }, catchError((err, caught) => caught)),
+                return result.data.repository.url
+            }, catchError((err, caught) => caught))
+        ),
     makeRepoURI
 )
 
@@ -86,21 +85,23 @@ export const resolveRev = memoizeObservable(
                 }
             }`,
             { ...ctx, rev: ctx.rev || '' }
-        ).map(result => {
-            if (!result.data) {
-                throw new Error('invalid response received from graphql endpoint')
-            }
-            if (!result.data.repository || !result.data.repository.commit) {
-                throw new RepoNotFoundError(ctx.repoPath)
-            }
-            if (result.data.repository.mirrorInfo.cloneInProgress) {
-                throw new CloneInProgressError(ctx.repoPath)
-            }
-            if (!result.data.repository.commit) {
-                throw new RevNotFoundError(ctx.rev)
-            }
-            return result.data.repository.commit.oid
-        }),
+        ).pipe(
+            map(result => {
+                if (!result.data) {
+                    throw new Error('invalid response received from graphql endpoint')
+                }
+                if (!result.data.repository || !result.data.repository.commit) {
+                    throw new RepoNotFoundError(ctx.repoPath)
+                }
+                if (result.data.repository.mirrorInfo.cloneInProgress) {
+                    throw new CloneInProgressError(ctx.repoPath)
+                }
+                if (!result.data.repository.commit) {
+                    throw new RevNotFoundError(ctx.rev)
+                }
+                return result.data.repository.commit.oid
+            })
+        ),
     makeRepoURI
 )
 

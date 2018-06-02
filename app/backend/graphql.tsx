@@ -1,10 +1,8 @@
 import { without } from 'lodash'
-import 'rxjs/add/observable/dom/ajax'
-import 'rxjs/add/operator/catch'
-import 'rxjs/add/operator/map'
-import { Observable } from 'rxjs/Observable'
-
 import sortBy from 'lodash/sortBy'
+import { Observable } from 'rxjs'
+import { ajax } from 'rxjs/ajax'
+import { catchError, map } from 'rxjs/operators'
 import { isPhabricator } from '../context'
 import { repoUrlCache, serverUrls, sourcegraphUrl } from '../util/context'
 import { RequestContext } from './context'
@@ -56,7 +54,7 @@ function requestGraphQL(
     const nameMatch = request.match(/^\s*(?:query|mutation)\s+(\w+)/)
     const queryName = nameMatch ? '?' + nameMatch[1] : ''
 
-    return Observable.ajax({
+    return ajax({
         method: 'POST',
         url: `${url}/.api/graphql` + queryName,
         headers: getHeaders(),
@@ -64,8 +62,8 @@ function requestGraphQL(
         withCredentials: true,
         body: JSON.stringify({ query: request, variables }),
         async: true,
-    })
-        .map(({ response }) => {
+    }).pipe(
+        map(({ response }) => {
             // If the query should return a repository and the response is null, throw an error
             // to trigger a refetch for the next possible Server URL.
             if (
@@ -81,8 +79,8 @@ function requestGraphQL(
                 repoUrlCache[ctx.repoKey] = url
             }
             return response
-        })
-        .catch(err => {
+        }),
+        catchError(err => {
             if (!retry || urls.length === 1) {
                 delete repoUrlCache[ctx.repoKey]
                 // We just tried the last url
@@ -90,6 +88,7 @@ function requestGraphQL(
             }
             return requestGraphQL(ctx, request, variables, urls.slice(1))
         })
+    )
 }
 
 /**

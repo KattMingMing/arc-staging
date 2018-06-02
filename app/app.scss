@@ -28,7 +28,9 @@ $warning: $yellow;
 $danger: $red;
 $secondary-light: #f2f4f8;
 
-$theme-colors-light: ('secondary': $secondary-light);
+$theme-colors-light: (
+    'secondary': $secondary-light,
+);
 
 // Formats an icon so that it appears inline in the text
 // with height matching the text

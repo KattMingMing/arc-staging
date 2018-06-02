@@ -1,5 +1,5 @@
-import 'rxjs/add/operator/map'
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
+import { map } from 'rxjs/operators'
 import { isExtension } from '../../app/context'
 import storage from '../../extension/storage'
 import { getContext } from '../backend/context'
@@ -266,11 +266,13 @@ export const createPhabricatorRepo = memoizeObservable(
             addPhabricatorRepo(callsign: $callsign, uri: $repoPath, url: $phabricatorURL) { alwaysNil }
         }`,
             options
-        ).map(({ data, errors }) => {
-            if (!data || (errors && errors.length > 0)) {
-                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
-            }
-        }),
+        ).pipe(
+            map(({ data, errors }) => {
+                if (!data || (errors && errors.length > 0)) {
+                    throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
+                }
+            })
+        ),
     ({ callsign }) => callsign
 )
 
@@ -384,7 +386,7 @@ export function getRepoDetailsFromRepoPHID(phid: string): Promise<PhabricatorRep
                             repoPath: details.repoPath,
                             phabricatorURL: window.location.origin,
                         })
-                            .map(() => details)
+                            .pipe(map(() => details))
                             .subscribe(() => {
                                 resolve(details)
                             })
@@ -497,12 +499,14 @@ export const resolveStagingRev = memoizeObservable(
                }
             }`,
             options
-        ).map(({ data, errors }) => {
-            if (!(data && data.resolvePhabricatorDiff) || (errors && errors.length > 0)) {
-                throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
-            }
+        ).pipe(
+            map(({ data, errors }) => {
+                if (!(data && data.resolvePhabricatorDiff) || (errors && errors.length > 0)) {
+                    throw Object.assign(new Error((errors || []).map(e => e.message).join('\n')), { errors })
+                }
 
-            return data.resolvePhabricatorDiff.oid
-        }),
+                return data.resolvePhabricatorDiff.oid
+            })
+        ),
     ({ diffID }: ResolveStagingOptions) => diffID.toString()
 )

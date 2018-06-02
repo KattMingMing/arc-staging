@@ -1,3 +1,8 @@
+// This file is going away soon and was copy+pasted from the webapp,
+// so I don't want to do the work to migrate it
+// Once it is deleted the rxjs-compat dependency can be removed too.
+// tslint:disable
+
 import { isEmpty } from 'lodash'
 import * as React from 'react'
 import 'rxjs/add/observable/fromEvent'

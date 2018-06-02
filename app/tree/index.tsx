@@ -1,7 +1,7 @@
 import flatten from 'lodash/flatten'
 import groupBy from 'lodash/groupBy'
 import sortBy from 'lodash/sortBy'
-import { BehaviorSubject } from 'rxjs/BehaviorSubject'
+import { BehaviorSubject } from 'rxjs'
 
 export interface TreeNode {
     text: string

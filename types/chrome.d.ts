@@ -13,9 +13,9 @@ interface Window {
     chrome: typeof chrome
 }
 
-declare module NodeJS {
+declare namespace NodeJS {
     interface Global {
-        chrome: typeof  chrome
+        chrome: typeof chrome
     }
 }
 

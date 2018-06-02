@@ -1,15 +1,17 @@
-import { debounceTime } from 'rxjs/operators/debounceTime'
-import { distinctUntilChanged } from 'rxjs/operators/distinctUntilChanged'
-import { filter } from 'rxjs/operators/filter'
-import { map } from 'rxjs/operators/map'
-import { mergeMap } from 'rxjs/operators/mergeMap'
-import { publishReplay } from 'rxjs/operators/publishReplay'
-import { refCount } from 'rxjs/operators/refCount'
-import { repeat } from 'rxjs/operators/repeat'
-import { switchMap } from 'rxjs/operators/switchMap'
-import { take } from 'rxjs/operators/take'
-import { toArray } from 'rxjs/operators/toArray'
-import { Subject } from 'rxjs/Subject'
+import { Subject } from 'rxjs'
+import {
+    debounceTime,
+    distinctUntilChanged,
+    filter,
+    map,
+    mergeMap,
+    publishReplay,
+    refCount,
+    repeat,
+    switchMap,
+    take,
+    toArray,
+} from 'rxjs/operators'
 import { getContext } from './context'
 import { createAggregateError } from './errors'
 import { queryGraphQL } from './graphql'

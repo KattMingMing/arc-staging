@@ -1,5 +1,4 @@
 import * as React from 'react'
-import 'rxjs/add/operator/toPromise'
 import storage from '../../extension/storage'
 import { resolveRev } from '../repo/backend'
 import { sourcegraphUrl } from '../util/context'

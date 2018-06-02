@@ -1,9 +1,11 @@
 interface Window {
     SOURCEGRAPH_URL: string | undefined
-    PHABRICATOR_CALLSIGN_MAPPINGS: {
-        callsign: string
-        path: string
-    }[] | undefined
+    PHABRICATOR_CALLSIGN_MAPPINGS:
+        | {
+              callsign: string
+              path: string
+          }[]
+        | undefined
     SOURCEGRAPH_PHABRICATOR_EXTENSION: boolean | undefined
     SG_ENV: 'EXTENSION' | 'PAGE'
     EXTENSION_ENV: 'CONTENT' | 'BACKGROUND' | null
