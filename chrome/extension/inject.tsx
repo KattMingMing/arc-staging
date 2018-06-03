@@ -47,9 +47,9 @@ function injectApplication(): void {
             Boolean(document.querySelector('.phabricator-wordmark')) &&
             Boolean(items.enterpriseUrls.find(url => url === window.location.origin))
 
-        const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
         const ogSiteName = document.head.querySelector(`meta[property='og:site_name']`) as HTMLMetaElement
         const isGitHubEnterprise = ogSiteName ? ogSiteName.content === 'GitHub Enterprise' : false
+        const isGitHub = /^https?:\/\/(www.)?github.com/.test(href)
 
         if (isOnlySourcegraphDotCom(items.serverUrls) && !items.hasSeenServerModal) {
             runtime.sendMessage({ type: 'setBadgeText', payload: '1' })

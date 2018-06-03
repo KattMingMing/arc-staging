@@ -38,8 +38,6 @@ const configureOmnibox = (serverUrl: string) => {
 
 initializeCli(omnibox)
 
-storage.getSync(({ sourcegraphURL }) => configureOmnibox(sourcegraphURL))
-
 storage.getManaged(items => {
     if (!items.enterpriseUrls || !items.enterpriseUrls.length) {
         setDefaultBrowserAction()
@@ -53,6 +51,8 @@ storage.getManaged(items => {
     })
     handleManagedPermissionRequest(urls)
 })
+
+storage.getSync(({ sourcegraphURL }) => configureOmnibox(sourcegraphURL))
 
 storage.onChanged((changes, areaName) => {
     if (areaName === 'managed') {
